@@ -78,8 +78,9 @@ require('packer').startup(function(use)
   use 'nvim-lualine/lualine.nvim' -- Fancier statusline
   use 'numToStr/Comment.nvim' -- "gc" to comment visual regions/lines
   use 'tpope/vim-sleuth' -- Detect tabstop and shiftwidth automatically
-  use 'ThePrimeagen/harpoon' -- Detect tabstop and shiftwidth automatically
-  use 'nvim-lua/plenary.nvim' -- Detect tabstop and shiftwidth automatically
+  use 'ThePrimeagen/harpoon'
+  use 'nvim-lua/plenary.nvim'
+  use 'christoomey/vim-tmux-navigator'
 
   -- Fuzzy Finder (files, lsp, etc)
   use { 'nvim-telescope/telescope.nvim', branch = '0.1.x', requires = { 'nvim-lua/plenary.nvim' } }
@@ -87,6 +88,31 @@ require('packer').startup(function(use)
   -- Fuzzy Finder Algorithm which requires local dependencies to be built. Only load if `make` is available
   use { 'nvim-telescope/telescope-fzf-native.nvim', run = 'make', cond = vim.fn.executable 'make' == 1 }
 
+--   use {"akinsho/toggleterm.nvim", tag = '*', config = function()
+--   require("toggleterm").setup({
+--       size=20,
+--       open_mapping=[[<C-/>]],
+--       hide_numbers=true,
+--       shade_filetypes={},
+--       shade_terminals=true,
+--       shading_factor=2,
+--       start_in_insert=true,
+--       inserts_mappings=true,
+--       persist_size=true,
+--       direction="float",
+--       close_on_exit=true,
+--       shell=vim.o.shell,
+--       float_opts= {
+--         border="curved",
+--         winblenf=0,
+--         highlights= {
+--           border="Normal",
+--           background="Normal",
+--         }
+--       }
+--     })
+-- end}
+--
   -- Add custom plugins to packer from ~/.config/nvim/lua/custom/plugins.lua
   local has_plugins, plugins = pcall(require, 'custom.plugins')
   if has_plugins then
@@ -357,6 +383,9 @@ vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float)
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist)
 
+-- Open lazygit in new tmux window
+vim.keymap.set("n", "<leader>gg", "<cmd>!tmux new-window -c " .. vim.fn.getcwd() .. " -- lazygit <CR><CR>", { desc = "Git Go" })
+
 
 --  This function gets run when an LSP connects to a particular buffer.
 local on_attach = function(_, bufnr)
@@ -500,4 +529,14 @@ cmp.setup {
   },
 }
 
+-- toggleterm and lazygit popup configuration
+-- local Terminal  = require('toggleterm.terminal').Terminal
+-- local lazygit = Terminal:new({ cmd = "lazygit", hidden = true })
+--
+-- function _lazygit_toggle()
+--   lazygit:toggle()
+-- end
+--
+-- vim.api.nvim_set_keymap("n", "<leader>g", "<cmd>lua _lazygit_toggle()<CR>", {noremap = true, silent = true})
+--
 -- The line beneath this is called `modeline`. See `:help modeline`
