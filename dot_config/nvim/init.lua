@@ -87,32 +87,6 @@ require('packer').startup(function(use)
 
   -- Fuzzy Finder Algorithm which requires local dependencies to be built. Only load if `make` is available
   use { 'nvim-telescope/telescope-fzf-native.nvim', run = 'make', cond = vim.fn.executable 'make' == 1 }
-
---   use {"akinsho/toggleterm.nvim", tag = '*', config = function()
---   require("toggleterm").setup({
---       size=20,
---       open_mapping=[[<C-/>]],
---       hide_numbers=true,
---       shade_filetypes={},
---       shade_terminals=true,
---       shading_factor=2,
---       start_in_insert=true,
---       inserts_mappings=true,
---       persist_size=true,
---       direction="float",
---       close_on_exit=true,
---       shell=vim.o.shell,
---       float_opts= {
---         border="curved",
---         winblenf=0,
---         highlights= {
---           border="Normal",
---           background="Normal",
---         }
---       }
---     })
--- end}
---
   -- Add custom plugins to packer from ~/.config/nvim/lua/custom/plugins.lua
   local has_plugins, plugins = pcall(require, 'custom.plugins')
   if has_plugins then
@@ -197,7 +171,8 @@ vim.g.maplocalleader = ' '
 -- Keymaps for better default experience
 -- See `:help vim.keymap.set()`
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
-
+vim.keymap.set('i', 'kj', '<Esc>', {})
+vim.keymap.set('i', 'jk', '<Esc>', {})
 -- Remap for dealing with word wrap
 vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
 vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
