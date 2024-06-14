@@ -26,6 +26,13 @@ require('packer').startup(function(use)
     },
   }
 
+  use {
+    "windwp/nvim-autopairs",
+    event = "InsertEnter",
+    config = function()
+        require("nvim-autopairs").setup {}
+    end
+}
   use { -- Autocompletion
     'hrsh7th/nvim-cmp',
     requires = { 'hrsh7th/cmp-nvim-lsp', 'L3MON4D3/LuaSnip', 'saadparwaiz1/cmp_luasnip' },
@@ -68,7 +75,6 @@ require('packer').startup(function(use)
   }
   use {"shortcuts/no-neck-pain.nvim", tag = "*" } -- center code in the middle of screen
   -- Git related plugins
-  use 'tpope/vim-fugitive'
   use 'tpope/vim-rhubarb'
   use 'lewis6991/gitsigns.nvim'
   -- make background transparent with transparentenable 
@@ -296,7 +302,7 @@ require('nvim-treesitter.configs').setup {
   ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'typescript','vim', 'sql' },
 
   highlight = { enable = true },
-  indent = { enable = true, disable = { 'python' } },
+  indent = { enable = false, disable = { 'python', 'c', 'rust', 'Makefile'} },
   incremental_selection = {
     enable = true,
     keymaps = {

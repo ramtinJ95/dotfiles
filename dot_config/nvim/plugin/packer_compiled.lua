@@ -49,8 +49,8 @@ local function save_profiles(threshold)
 end
 
 time([[Luarocks path setup]], true)
-local package_path_str = "/Users/ramtinj/.cache/nvim/packer_hererocks/2.1.1700008891/share/lua/5.1/?.lua;/Users/ramtinj/.cache/nvim/packer_hererocks/2.1.1700008891/share/lua/5.1/?/init.lua;/Users/ramtinj/.cache/nvim/packer_hererocks/2.1.1700008891/lib/luarocks/rocks-5.1/?.lua;/Users/ramtinj/.cache/nvim/packer_hererocks/2.1.1700008891/lib/luarocks/rocks-5.1/?/init.lua"
-local install_cpath_pattern = "/Users/ramtinj/.cache/nvim/packer_hererocks/2.1.1700008891/lib/lua/5.1/?.so"
+local package_path_str = "/Users/ramtinj/.cache/nvim/packer_hererocks/2.1.1703358377/share/lua/5.1/?.lua;/Users/ramtinj/.cache/nvim/packer_hererocks/2.1.1703358377/share/lua/5.1/?/init.lua;/Users/ramtinj/.cache/nvim/packer_hererocks/2.1.1703358377/lib/luarocks/rocks-5.1/?.lua;/Users/ramtinj/.cache/nvim/packer_hererocks/2.1.1703358377/lib/luarocks/rocks-5.1/?/init.lua"
+local install_cpath_pattern = "/Users/ramtinj/.cache/nvim/packer_hererocks/2.1.1703358377/lib/lua/5.1/?.so"
 if not string.find(package.path, package_path_str, 1, true) then
   package.path = package.path .. ';' .. package_path_str
 end
@@ -109,11 +109,6 @@ _G.packer_plugins = {
     path = "/Users/ramtinj/.local/share/nvim/site/pack/packer/start/harpoon",
     url = "https://github.com/ThePrimeagen/harpoon"
   },
-  ["indent-blankline.nvim"] = {
-    loaded = true,
-    path = "/Users/ramtinj/.local/share/nvim/site/pack/packer/start/indent-blankline.nvim",
-    url = "https://github.com/lukas-reineke/indent-blankline.nvim"
-  },
   ["lualine.nvim"] = {
     loaded = true,
     path = "/Users/ramtinj/.local/share/nvim/site/pack/packer/start/lualine.nvim",
@@ -138,6 +133,14 @@ _G.packer_plugins = {
     loaded = true,
     path = "/Users/ramtinj/.local/share/nvim/site/pack/packer/start/no-neck-pain.nvim",
     url = "https://github.com/shortcuts/no-neck-pain.nvim"
+  },
+  ["nvim-autopairs"] = {
+    config = { "\27LJ\2\n@\0\0\3\0\3\0\a6\0\0\0'\2\1\0B\0\2\0029\0\2\0004\2\0\0B\0\2\1K\0\1\0\nsetup\19nvim-autopairs\frequire\0" },
+    loaded = false,
+    needs_bufread = false,
+    only_cond = false,
+    path = "/Users/ramtinj/.local/share/nvim/site/pack/packer/opt/nvim-autopairs",
+    url = "https://github.com/windwp/nvim-autopairs"
   },
   ["nvim-cmp"] = {
     loaded = true,
@@ -204,11 +207,6 @@ _G.packer_plugins = {
     path = "/Users/ramtinj/.local/share/nvim/site/pack/packer/start/transparent.nvim",
     url = "https://github.com/xiyaowong/transparent.nvim"
   },
-  ["vim-fugitive"] = {
-    loaded = true,
-    path = "/Users/ramtinj/.local/share/nvim/site/pack/packer/start/vim-fugitive",
-    url = "https://github.com/tpope/vim-fugitive"
-  },
   ["vim-rhubarb"] = {
     loaded = true,
     path = "/Users/ramtinj/.local/share/nvim/site/pack/packer/start/vim-rhubarb",
@@ -219,8 +217,13 @@ _G.packer_plugins = {
     path = "/Users/ramtinj/.local/share/nvim/site/pack/packer/start/vim-sleuth",
     url = "https://github.com/tpope/vim-sleuth"
   },
+  ["vim-tmux-navigator"] = {
+    loaded = true,
+    path = "/Users/ramtinj/.local/share/nvim/site/pack/packer/start/vim-tmux-navigator",
+    url = "https://github.com/christoomey/vim-tmux-navigator"
+  },
   vimwiki = {
-    config = { "\27LJ\2\nÀ\1\0\0\3\0\6\0\v6\0\0\0009\0\1\0004\1\3\0005\2\3\0>\2\1\1=\1\2\0006\0\0\0009\0\1\0005\1\5\0=\1\4\0K\0\1\0\1\0\3\b.md\rmarkdown\v.mdown\rmarkdown\14.markdown\rmarkdown\23vimwiki_ext2syntax\1\0\3\tpath\24~/workspace/Mywiki:\bext\b.md\vsyntax\rmarkdown\17vimwiki_list\6g\bvim\0" },
+    config = { "\27LJ\2\nÀ\1\0\0\3\0\6\0\v6\0\0\0009\0\1\0004\1\3\0005\2\3\0>\2\1\1=\1\2\0006\0\0\0009\0\1\0005\1\5\0=\1\4\0K\0\1\0\1\0\3\14.markdown\rmarkdown\b.md\rmarkdown\v.mdown\rmarkdown\23vimwiki_ext2syntax\1\0\3\vsyntax\rmarkdown\tpath\24~/workspace/Mywiki:\bext\b.md\17vimwiki_list\6g\bvim\0" },
     loaded = true,
     path = "/Users/ramtinj/.local/share/nvim/site/pack/packer/start/vimwiki",
     url = "https://github.com/vimwiki/vimwiki"
@@ -230,7 +233,7 @@ _G.packer_plugins = {
 time([[Defining packer_plugins]], false)
 -- Config for: vimwiki
 time([[Config for vimwiki]], true)
-try_loadstring("\27LJ\2\nÀ\1\0\0\3\0\6\0\v6\0\0\0009\0\1\0004\1\3\0005\2\3\0>\2\1\1=\1\2\0006\0\0\0009\0\1\0005\1\5\0=\1\4\0K\0\1\0\1\0\3\b.md\rmarkdown\v.mdown\rmarkdown\14.markdown\rmarkdown\23vimwiki_ext2syntax\1\0\3\tpath\24~/workspace/Mywiki:\bext\b.md\vsyntax\rmarkdown\17vimwiki_list\6g\bvim\0", "config", "vimwiki")
+try_loadstring("\27LJ\2\nÀ\1\0\0\3\0\6\0\v6\0\0\0009\0\1\0004\1\3\0005\2\3\0>\2\1\1=\1\2\0006\0\0\0009\0\1\0005\1\5\0=\1\4\0K\0\1\0\1\0\3\14.markdown\rmarkdown\b.md\rmarkdown\v.mdown\rmarkdown\23vimwiki_ext2syntax\1\0\3\vsyntax\rmarkdown\tpath\24~/workspace/Mywiki:\bext\b.md\17vimwiki_list\6g\bvim\0", "config", "vimwiki")
 time([[Config for vimwiki]], false)
 -- Conditional loads
 time([[Conditional loading of telescope-fzf-native.nvim]], true)
@@ -241,6 +244,13 @@ time([[Sequenced loading]], true)
 vim.cmd [[ packadd nvim-treesitter ]]
 vim.cmd [[ packadd nvim-treesitter-textobjects ]]
 time([[Sequenced loading]], false)
+vim.cmd [[augroup packer_load_aucmds]]
+vim.cmd [[au!]]
+  -- Event lazy-loads
+time([[Defining lazy-load event autocommands]], true)
+vim.cmd [[au InsertEnter * ++once lua require("packer.load")({'nvim-autopairs'}, { event = "InsertEnter *" }, _G.packer_plugins)]]
+time([[Defining lazy-load event autocommands]], false)
+vim.cmd("augroup END")
 
 _G._packer.inside_compile = false
 if _G._packer.needs_bufread == true then
