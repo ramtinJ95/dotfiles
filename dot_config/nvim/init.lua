@@ -87,7 +87,6 @@ require('packer').startup(function(use)
   use 'ThePrimeagen/harpoon'
   use 'nvim-lua/plenary.nvim'
   use 'christoomey/vim-tmux-navigator'
-  use 'lukas-reineke/lsp-format.nvim'
 
   -- Fuzzy Finder (files, lsp, etc)
   use { 'nvim-telescope/telescope.nvim', branch = '0.1.x', requires = { 'nvim-lua/plenary.nvim' } }
@@ -439,9 +438,6 @@ local servers = {
   },
 }
 
--- Setup auto format on buffer save
-require("lsp-format").setup {}
-require("lspconfig").gopls.setup { on_attach = require("lsp-format").on_attach }
 -- Setup neovim lua configuration
 require('neodev').setup()
 --
