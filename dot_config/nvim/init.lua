@@ -87,6 +87,7 @@ require('packer').startup(function(use)
   use 'ThePrimeagen/harpoon'
   use 'nvim-lua/plenary.nvim'
   use 'christoomey/vim-tmux-navigator'
+  use 'lukas-reineke/lsp-format.nvim'
 
   -- Fuzzy Finder (files, lsp, etc)
   use { 'nvim-telescope/telescope.nvim', branch = '0.1.x', requires = { 'nvim-lua/plenary.nvim' } }
@@ -182,6 +183,8 @@ vim.keymap.set('i', 'jk', '<Esc>', {})
 -- Remap for dealing with word wrap
 vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
 vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
+vim.keymap.set('n', 'J', ":bp")
+vim.keymap.set('n', 'KK', ":bf")
 
 -- plugin keymaps
 -- nvim-tree
@@ -190,8 +193,6 @@ vim.keymap.set('n', '<leader>f', ':NvimTreeToggle<CR>')
 vim.keymap.set('n', '<leader>cc', ':NoNeckPain<CR>')
 -- Moving a line or a block of text up and down 
 
-vim.keymap.set("n", "<C-j>", ":m .+1<CR>==") -- move line up(n)
-vim.keymap.set("n", "<C-k>", ":m .-2<CR>==") -- move line down(n)
 vim.keymap.set("v", "<C-j>", ":m '>+1<CR>gv=gv") -- move line up(v)
 vim.keymap.set("v", "<C-k>", ":m '<-2<CR>gv=gv") -- move line down(v)
 -- LSP settings.
@@ -438,6 +439,9 @@ local servers = {
   },
 }
 
+-- Setup auto format on buffer save
+require("lsp-format").setup {}
+require("lspconfig").gopls.setup { on_attach = require("lsp-format").on_attach }
 -- Setup neovim lua configuration
 require('neodev').setup()
 --
