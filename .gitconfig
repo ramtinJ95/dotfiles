@@ -22,3 +22,7 @@
         prune = true
         pruneTags = true
         all = true
+
+[alias]
+        graph = log --oneline --graph --decorate
+        df = diff --word-diff
