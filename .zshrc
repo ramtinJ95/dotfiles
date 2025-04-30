@@ -47,3 +47,4 @@ if [ -f '/Users/ramjav/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/ramjav/g
 if [ -f '/Users/ramjav/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/ramjav/google-cloud-sdk/completion.zsh.inc'; fi
 
 alias cursor="/Applications/Cursor.app/Contents/MacOS/Cursor"
+alias vim="nvim"
