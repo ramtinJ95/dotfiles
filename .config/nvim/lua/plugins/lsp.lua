@@ -138,67 +138,8 @@ return {
     local capabilities = vim.lsp.protocol.make_client_capabilities()
     capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
 
-    -- Note: Most LSP server setup is now handled in mason.lua via mason-lspconfig handlers
+    -- Note: All LSP server setup is handled in mason.lua via mason-lspconfig handlers
     -- This ensures servers are automatically configured when Mason installs them
-    
-    -- However, we can still manually set up any servers that might be available immediately
-    -- or for servers not managed by Mason
-    local servers = {
-      clangd = {},
-      rust_analyzer = {},
-      ruff = {},
-      pylsp = {
-        settings = {
-          pylsp = {
-            plugins = {
-              pyflakes = { enabled = false },
-              pycodestyle = { enabled = false },
-              autopep8 = { enabled = false },
-              yapf = { enabled = false },
-              mccabe = { enabled = false },
-              pylsp_mypy = { enabled = false },
-              pylsp_black = { enabled = false },
-              pylsp_isort = { enabled = false },
-            },
-          },
-        },
-      },
-      dockerls = {},
-      sqlls = {},
-      terraformls = {},
-      jsonls = {},
-      yamlls = {},
-      lua_ls = {
-        settings = {
-          Lua = {
-            completion = {
-              callSnippet = 'Replace',
-            },
-            runtime = { version = 'LuaJIT' },
-            workspace = {
-              checkThirdParty = false,
-              library = {
-                '${3rd}/luv/library',
-                unpack(vim.api.nvim_get_runtime_file('', true)),
-              },
-            },
-            diagnostics = { disable = { 'missing-fields' } },
-            format = {
-              enable = false,
-            },
-          },
-        },
-      },
-    }
-
-    -- Try to setup servers immediately if they're available
-    -- This provides immediate LSP functionality for already-installed servers
-    for server_name, server_config in pairs(servers) do
-      server_config.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server_config.capabilities or {})
-      -- Use pcall to avoid errors if server isn't installed yet
-      pcall(function()
-        require('lspconfig')[server_name].setup(server_config)
-      end)
-    end
+    -- The capabilities setup above is used by Mason's handlers
   end,
 }
