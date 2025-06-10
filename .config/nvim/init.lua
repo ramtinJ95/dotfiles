@@ -26,6 +26,7 @@ require("lazy").setup({
 	require("plugins.autoformatting"),
 	require("plugins.gitsigns"),
 	require("plugins.misc"),
+	require("plugins.render-markdown"),
 })
 
 vim.cmd.colorscheme("catppuccin")
