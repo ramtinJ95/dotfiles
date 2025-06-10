@@ -24,7 +24,6 @@ return { -- Highlight, edit, and navigate code
       "json",
       "go",
       "gitignore",
-      "graphql",
       "yaml",
       "make",
       "cmake",
