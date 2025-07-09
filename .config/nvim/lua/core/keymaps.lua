@@ -34,8 +34,8 @@ vim.keymap.set("v", "<C-j>", ":m '>+1<CR>gv=gv") -- move line up(v)
 vim.keymap.set("v", "<C-k>", ":m '<-2<CR>gv=gv") -- move line down(v)
 
 -- Diagnostic keymaps
-vim.keymap.set("n", "[d", vim.diagnostic.goto_prev)
-vim.keymap.set("n", "]d", vim.diagnostic.goto_next)
+-- vim.keymap.set("n", "[d", vim.diagnostic.goto_prev) Deprecated
+-- vim.keymap.set("n", "]d", vim.diagnostic.goto_next) Deprecated
 vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float)
 vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist)
 
@@ -64,4 +64,11 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 	callback = function()
 		vim.hl.on_yank()
 	end,
+})
+
+local md_line_length = vim.api.nvim_create_augroup("md_line_length", { clear = true })
+vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+	command = "setlocal textwidth=80",
+	group = md_line_length,
+	pattern = "*.md",
 })
