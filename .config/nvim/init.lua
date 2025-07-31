@@ -26,6 +26,7 @@ require("lazy").setup({
 	require("plugins.gitsigns"),
 	require("plugins.misc"),
 	require("plugins.render-markdown"),
+	require("plugins.which-key"),
 })
 
-vim.cmd.colorscheme("catppuccin")
+vim.cmd.colorscheme("catppuccin-mocha")
