@@ -7,8 +7,9 @@ alt - h : yabai -m window --focus west
 alt - l : yabai -m window --focus east
 
 #change focus between external displays (left and right)
-alt - s: yabai -m display --focus west
-alt - g: yabai -m display --focus east
+# alt - s: yabai -m display --focus west
+# alt - g: yabai -m display --focus east
+#
 
 # -- Modifying the Layout --
 
@@ -69,18 +70,15 @@ shift + alt - 7 : yabai -m window --space 7;
 cmd + ctrl + alt + shift - x : yabai -m window --toggle split
 
 # -- Shortcuts to launch/focus on my most used apps
-cmd + ctrl + alt + shift - s : open /Applications/Slack.app
-cmd + ctrl + alt + shift - g : open -a "Google Chrome" https://github.com/
-cmd + ctrl + alt + shift - b : open -a "Google Chrome" https://google.com
-cmd + ctrl + alt + shift - o : open -na /Applications/Obsidian.app
-cmd + ctrl + alt + shift - m : open -a /Applications/Spotify.app
+alt - s : open -a 'Slack'
+alt - a : open -a 'Alacritty'
+alt - b : open -a 'Google Chrome'
+alt - m : open -a 'Spotify'
+alt - g : open -a 'Google Chrome' https://github.com
+
 # -- Starting/Stopping/Restarting Yabai --
 
 # stop/start/restart yabai
 ctrl + alt - q : brew services stop yabai
 ctrl + alt - s : brew services start yabai
 ctrl + alt - r : brew services restart yabai
-
-# warpd hotkeys
-cmd + ctrl + alt + shift - x : exec warpd --hint
-cmd + ctrl + alt + shift - c : warpd --normal
