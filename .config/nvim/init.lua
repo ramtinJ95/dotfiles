@@ -29,4 +29,4 @@ require("lazy").setup({
 	require("plugins.which-key"),
 })
 
-vim.cmd.colorscheme("catppuccin-mocha")
+-- vim.cmd.colorscheme("catppuccin-mocha")
