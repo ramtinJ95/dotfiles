@@ -72,11 +72,10 @@ cmd + ctrl + alt + shift - x : yabai -m window --toggle split
 # -- Shortcuts to launch/focus on my most used apps
 alt - s : open -a 'Slack'
 alt - a : open -a 'Alacritty'
-alt - b : open -a 'Google Chrome'
+alt - b : open -a 'Google Chrome' https://google.com
 alt - m : open -a 'Spotify'
 alt - g : open -a 'Google Chrome' https://github.com
-
-# -- Starting/Stopping/Restarting Yabai --
+alt - c : open -a 'Google Chrome' https://chatgpt.com
 
 # stop/start/restart yabai
 ctrl + alt - q : brew services stop yabai
