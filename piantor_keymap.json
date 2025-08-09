@@ -42,7 +42,7 @@
       "KC_COMM",
       "KC_DOT",
       "KC_SLSH",
-      "HYPR(KC_NO)",
+      "MO(1)",
       "KC_LALT",
       "KC_LGUI",
       "KC_ENT",
@@ -86,13 +86,13 @@
       "KC_LCBR",
       "KC_RCBR",
       "KC_PIPE",
-      "KC_TILD",
+      "KC_TRNS",
       "TO(0)",
       "KC_LGUI",
       "KC_ENT",
       "KC_SPC",
       "KC_BSPC",
-      "TT(2)"
+      "MO(2)"
     ],
     [
       "QK_BOOT",
