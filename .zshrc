@@ -3,6 +3,8 @@ export ZSH="$HOME/.oh-my-zsh"
 export EZA_CONFIG_DIR="/Users/ramtinjavanmardi/.config/eza"
 export XDG_CONFIG_HOME=/Users/ramtinjavanmardi/.config
 
+export EDITOR="nvim"
+
 plugins=(git fzf)
 
 source $ZSH/oh-my-zsh.sh
@@ -11,6 +13,15 @@ DISABLE_AUTO_TITLE=true
 
 bindkey '^ ' autosuggest-accept
 source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+
+# Yazi function for cwd changes when moving around filesystem
+function y() {
+	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+	yazi "$@" --cwd-file="$tmp"
+	IFS= read -r -d '' cwd < "$tmp"
+	[ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && builtin cd -- "$cwd"
+	rm -f -- "$tmp"
+}
 
 # Neovim aliases
 alias vim='nvim'
