@@ -1,0 +1,13 @@
+# ~/.blerc for ble.sh 0.4.0-devel4
+
+# --- Suggestion color ---
+# Adjust number: 242 = light gray, 238 = dark gray
+ble-face auto_complete=fg=242
+
+# --- Keybindings inside the auto_complete keymap ---
+# Rebind Ctrl-Y to accept inline suggestion
+ble-bind -m auto_complete -f 'C-y' 'auto_complete/@end insert'
+
+# (Optional) disable Ctrl-F if you don't want it anymore
+ble-bind -m auto_complete -f 'C-f' ''
+
