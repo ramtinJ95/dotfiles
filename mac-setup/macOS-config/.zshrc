@@ -1,5 +1,3 @@
-# Path to your oh-my-zsh installation.
-export ZSH="$HOME/.oh-my-zsh"
 export EZA_CONFIG_DIR="/Users/ramtinjavanmardi/.config/eza"
 export XDG_CONFIG_HOME=/Users/ramtinjavanmardi/.config
 
@@ -7,11 +5,7 @@ export EDITOR="nvim"
 
 plugins=(git fzf)
 
-source $ZSH/oh-my-zsh.sh
-PROMPT='%~ %# '
-DISABLE_AUTO_TITLE=true
-
-bindkey '^ ' autosuggest-accept
+bindkey '^y' autosuggest-accept
 source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 # Yazi function for cwd changes when moving around filesystem
@@ -26,6 +20,13 @@ function y() {
 # Neovim aliases
 alias vim='nvim'
 alias n='nvim'
+
+# Git aliases
+alias gcm='git commit -m'
+alias gs='git status'
+alias gp='git push'
+alias gpl='git pull'
+
 # eza (better 'ls')
 alias ls='eza --icons'
 alias ll='eza -lg --icons'
@@ -42,6 +43,8 @@ alias lta3='eza -lTag --level=3 --icons'
 # Random c++ alias to make my life easier
 alias cr='cmake --build build && ./build/main'
 
+alias cursor="/Applications/Cursor.app/Contents/MacOS/Cursor"
+
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
 # Created by `pipx` on 2024-08-14 10:33:54
@@ -49,10 +52,10 @@ export PATH="$PATH:/Users/ramjav/.local/bin"
 export CPATH=/opt/homebrew/include:$CPATH
 export LIBRARY_PATH=/opt/homebrew/lib:$LIBRARY_PATH
 
-alias cursor="/Applications/Cursor.app/Contents/MacOS/Cursor"
-alias vim="nvim"
 
 # Created by `pipx` on 2025-06-28 08:41:46
 export PATH="$PATH:/Users/ramtinjavanmardi/.local/bin"
 
 export PATH=$PATH:/Users/ramtinjavanmardi/.spicetify
+
+source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
