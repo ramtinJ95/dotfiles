@@ -23,11 +23,6 @@
         pruneTags = true
         all = true
 
-[alias]
-        graph = log --oneline --graph --decorate
-        df = diff --word-diff
-        gc = git commit -m
-
 [core]
         excludesfile = /Users/ramjav/.gitignore
 	editor = nvim
