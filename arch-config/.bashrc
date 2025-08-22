@@ -18,6 +18,34 @@ source -- ~/share/blesh/ble.sh
 # Set a custom prompt with the directory revealed (alternatively use https://starship.rs)
 # PS1="\W \[\e]0;\w\a\]$PS1"
 
+# Battery information alias
+alias battime='upower -i $(upower -e | grep "BAT") | grep "time to empty" | awk "{print \$4\" \"\$5}"'
+alias batinfo='sudo tlp-stat -b && echo "Time remaining:" && upower -i $(upower -e | grep 'BAT') | grep "time to empty"'
+alias battery='upower -i $(upower -e | grep "BAT")'
+
+# System Performance profiles
+# Show current performance profile
+alias tlp-prof='echo -n "Platform: "; cat /sys/firmware/acpi/platform_profile; echo -n "Boost: "; cat /sys/devices/system/cpu/cpufreq/boost; echo -n "CPU min: "; cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq; echo -n "CPU max: "; cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq'
+# ⚡ Performance (min 1.1 GHz, max 4.77 GHz, boost on)
+alias tlp-perf='echo performance | sudo tee /sys/firmware/acpi/platform_profile; \
+                echo 1100000 | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_min_freq; \
+                echo 4769852 | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_max_freq; \
+                echo 1 | sudo tee /sys/devices/system/cpu/cpufreq/boost; \
+                echo "⚡ Performance mode"'
+
+# 🔋 Balanced (min 0.8 GHz, max 3.5 GHz, boost on)
+alias tlp-bal='echo balanced | sudo tee /sys/firmware/acpi/platform_profile; \
+               echo 800000 | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_min_freq; \
+               echo 3500000 | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_max_freq; \
+               echo 1 | sudo tee /sys/devices/system/cpu/cpufreq/boost; \
+               echo "🔋 Balanced mode"'
+
+# 💤 Power Saver (min 0.6 GHz, max 2.7 GHz, boost off)
+alias tlp-save='echo low-power | sudo tee /sys/firmware/acpi/platform_profile; \
+                echo 600000 | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_min_freq; \
+                echo 2700000 | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_max_freq; \
+                echo 0 | sudo tee /sys/devices/system/cpu/cpufreq/boost; \
+                echo "💤 Power Saver mode"'
 # Git aliases
 alias ga='git add'
 alias gaa='git add --all'
