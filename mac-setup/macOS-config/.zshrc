@@ -26,9 +26,12 @@ alias gcm='git commit -m'
 alias gs='git status'
 alias gp='git push'
 alias gpl='git pull'
+alias gaa='git add .'
+alias gc='git commit --verbose'
 
 # eza (better 'ls')
 alias ls='eza --icons'
+alias lsa='eza -a -lg --icons'
 alias ll='eza -lg --icons'
 alias lz='eza -lag --icons'
 alias lt='eza -lTg --icons'
