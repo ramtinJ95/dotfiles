@@ -41,9 +41,14 @@ alias lta2='eza -lTag --level=2 --icons'
 alias lta3='eza -lTag --level=3 --icons'
 
 # Random c++ alias to make my life easier
-alias cr='cmake --build build && ./build/main'
+alias cr='cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && cmake --build build && ./build/main'
 
-alias cursor="/Applications/Cursor.app/Contents/MacOS/Cursor"
+# Quality of life aliases
+alias ..='cd ..'
+alias ...='cd ../..'
+alias py='python3'
+alias decompress='tar -xvf'
+alias compress='tar -cvf'
 
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
@@ -59,3 +64,6 @@ export PATH="$PATH:/Users/ramtinjavanmardi/.local/bin"
 export PATH=$PATH:/Users/ramtinjavanmardi/.spicetify
 
 source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# opencode
+export PATH=/Users/ramtinjavanmardi/.opencode/bin:$PATH
