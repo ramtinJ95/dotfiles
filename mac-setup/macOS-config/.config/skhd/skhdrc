@@ -111,6 +111,7 @@ alt - b : open -a 'Google Chrome' https://google.com
 alt - m : open -a 'Spotify'
 alt - g : open -a 'Google Chrome' https://github.com
 alt - c : open -a 'Google Chrome' https://chatgpt.com
+alt - t : /Applications/Alacritty.app/Contents/MacOS/alacritty -e btop 
 
 # -- Starting/Stopping/Restarting Yabai --
 
