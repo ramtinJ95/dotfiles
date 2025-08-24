@@ -3,8 +3,6 @@ export XDG_CONFIG_HOME=/Users/ramtinjavanmardi/.config
 
 export EDITOR="nvim"
 
-plugins=(git fzf)
-
 bindkey '^y' autosuggest-accept
 source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
@@ -67,6 +65,10 @@ export PATH="$PATH:/Users/ramtinjavanmardi/.local/bin"
 export PATH=$PATH:/Users/ramtinjavanmardi/.spicetify
 
 source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# fzf key bindings and completions
+source /opt/homebrew/opt/fzf/shell/key-bindings.zsh
+source /opt/homebrew/opt/fzf/shell/completion.zsh
 
 # opencode
 export PATH=/Users/ramtinjavanmardi/.opencode/bin:$PATH
