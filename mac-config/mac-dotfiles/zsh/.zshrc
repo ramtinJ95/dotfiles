@@ -50,6 +50,7 @@ alias ...='cd ../..'
 alias py='python3'
 alias decompress='tar -xvf'
 alias compress='tar -cvf'
+alias oc='opencode'
 
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
