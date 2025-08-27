@@ -72,6 +72,8 @@ alias lta3='eza -lTag --level=3 --icons'
 # Random c++ alias to make my life easier
 alias cr='cmake --build build && ./build/main'
 
+# Qualtiy of life aliases
+alias oc='opencode'
 # Function for yazi to put you in the directory you have navigated to
 # when exiting yazi
 function y() {
