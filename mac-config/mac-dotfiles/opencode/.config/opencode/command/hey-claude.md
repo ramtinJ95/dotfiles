@@ -1,7 +1,3 @@
----
-description: Prompt pattern for generating actual code based on task list with
-strict compliance to planning, implementation, and testing protocols.
----
 # MANDATORY COMPLIANCE PROTOCOL
 
 ## 🛑 CRITICAL: PRE-IMPLEMENTATION GATE
