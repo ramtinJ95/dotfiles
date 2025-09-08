@@ -1,6 +1,6 @@
 export EZA_CONFIG_DIR="/Users/ramtinjavanmardi/.config/eza"
 export XDG_CONFIG_HOME=/Users/ramtinjavanmardi/.config
-
+export BAT_THEME="Catppuccin Mocha"
 export EDITOR="nvim"
 
 bindkey '^y' autosuggest-accept
