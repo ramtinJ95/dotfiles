@@ -1,5 +1,6 @@
 tap "felixkratz/formulae"
 tap "hashicorp/tap"
+tap "jesseduffield/lazydocker"
 tap "koekeishiya/formulae"
 tap "osx-cross/arm"
 tap "osx-cross/avr"
@@ -10,6 +11,8 @@ tap "sst/tap"
 brew "autojump"
 # Microsoft Azure CLI 2.0
 brew "azure-cli"
+# Clone of cat(1) with syntax highlighting and Git integration
+brew "bat"
 # Resource monitor. C++ version and continuation of bashtop and bpytop
 brew "btop"
 # Console Bonsai is a bonsai tree generator, written in C using ncurses
@@ -32,6 +35,8 @@ brew "hugo"
 brew "ifstat"
 # Lightweight and flexible command-line JSON processor
 brew "jq"
+# Lazier way to manage everything docker
+brew "lazydocker"
 # Simple terminal UI for git commands
 brew "lazygit"
 # Powerful, lightweight programming language
@@ -66,6 +71,8 @@ brew "stow"
 brew "switchaudio-osx"
 # Terminal multiplexer
 brew "tmux"
+# Internet file retriever
+brew "wget"
 # Blazing fast terminal file manager written in Rust, based on async I/O
 brew "yazi"
 # Shell extension to navigate your filesystem faster
