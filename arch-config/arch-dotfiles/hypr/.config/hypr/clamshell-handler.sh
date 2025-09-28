@@ -7,8 +7,9 @@ if [ "$1" = "close" ]; then
     hyprctl keyword monitor "eDP-1,disable"
     
 elif [ "$1" = "open" ]; then
-    # When lid opens - enable internal monitor positioned to the right
-    hyprctl keyword monitor "eDP-1,1920x1200@60.00100,5760x0,1"
+    # When lid opens - enable internal monitor positioned to the right (accounting for 4K scaling)
+    # 3840/1.666667 = 2304, so position internal monitor at 2304 pixels to the right
+    hyprctl keyword monitor "eDP-1,1920x1200@60.00100,2304x0,1"
     
     # Keep focus on external monitor to prevent workspace disruption
     sleep 0.1
