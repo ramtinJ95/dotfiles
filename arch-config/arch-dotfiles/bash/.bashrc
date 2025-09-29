@@ -1,24 +1,11 @@
 # All the default Omarchy aliases and functions
 # (don't mess with these directly, just overwrite them here!)
-
-# This export line has to be here to ignore a bs warning from zoxide each time i use it
-# that warning is simply because i have added startship and then zoxide is not the last thing
-# that happens anymore which it does not like
-export _ZO_DOCTOR=0
 source ~/.local/share/omarchy/default/bash/rc
-source -- ~/share/blesh/ble.sh
+
 # Add your own exports, aliases, and functions here.
 #
 # Make an alias for invoking commands you use constantly
 # alias p='python'
-#
-# Use VSCode instead of neovim as your default editor
-# export EDITOR="code"
-#
-# Set a custom prompt with the directory revealed (alternatively use https://starship.rs)
-# PS1="\W \[\e]0;\w\a\]$PS1"
-
-# Battery information alias
 alias battime='upower -i $(upower -e | grep "BAT") | grep "time to empty" | awk "{print \$4\" \"\$5}"'
 alias batinfo='sudo tlp-stat -b && echo "Time remaining:" && upower -i $(upower -e | grep 'BAT') | grep "time to empty"'
 alias battery='upower -i $(upower -e | grep "BAT")'
@@ -46,10 +33,14 @@ alias tlp-save='echo low-power | sudo tee /sys/firmware/acpi/platform_profile; \
                 echo 2700000 | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_max_freq; \
                 echo 0 | sudo tee /sys/devices/system/cpu/cpufreq/boost; \
                 echo "💤 Power Saver mode"'
+
+alias oc='opencode'
+
 # Git aliases
 alias ga='git add'
 alias gaa='git add --all'
 alias gc='git commit'
+alias gp='git push'
 alias gdif='git diff --word-diff'
 
 # Neovim aliases
@@ -58,6 +49,7 @@ alias n='nvim'
 
 # eza (better 'ls')
 alias ls='eza --icons'
+alias lsa='eza -a -lg --icons'
 alias ll='eza -lg --icons'
 alias lz='eza -lag --icons'
 alias lt='eza -lTg --icons'
@@ -72,10 +64,6 @@ alias lta3='eza -lTag --level=3 --icons'
 # Random c++ alias to make my life easier
 alias cr='cmake --build build && ./build/main'
 
-# Qualtiy of life aliases
-alias oc='opencode'
-# Function for yazi to put you in the directory you have navigated to
-# when exiting yazi
 function y() {
   local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
   yazi "$@" --cwd-file="$tmp"
@@ -112,12 +100,9 @@ ssh_auth() {
   fi
 }
 
-eval "$(starship init bash)"
-
-export NVM_DIR="$HOME/.config/nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
-
-export PATH=$PATH:/home/ramtin/.spicetify
-
 . "$HOME/.local/share/../bin/env"
+export PATH="$HOME/.cargo/bin:$PATH"
+
+# opencode
+export PATH=/home/ramtinj/.opencode/bin:$PATH
+source -- ~/.local/share/blesh/ble.sh
