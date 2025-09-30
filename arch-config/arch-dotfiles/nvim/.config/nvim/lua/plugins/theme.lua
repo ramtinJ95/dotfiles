@@ -1,1 +1,1 @@
-/home/ramtin/.config/omarchy/current/theme/neovim.lua
+/home/ramtinj/.config/omarchy/current/theme/neovim.lua
