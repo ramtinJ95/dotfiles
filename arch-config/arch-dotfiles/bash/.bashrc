@@ -40,6 +40,7 @@ alias oc='opencode'
 alias ga='git add'
 alias gaa='git add --all'
 alias gc='git commit'
+alias gs='git status'
 alias gp='git push'
 alias gdif='git diff --word-diff'
 
