@@ -1,7 +1,7 @@
 # All the default Omarchy aliases and functions
 # (don't mess with these directly, just overwrite them here!)
 source ~/.local/share/omarchy/default/bash/rc
-
+PROMPT_COMMAND="history -a; history -n; ${PROMPT_COMMAND}"
 # Add your own exports, aliases, and functions here.
 #
 # Make an alias for invoking commands you use constantly
