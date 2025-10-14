@@ -1,4 +1,4 @@
-palette = "catppuccin_mocha"
+palette = "archwave"
 format = """
 $username\
 $hostname\
@@ -101,4 +101,24 @@ surface0 = "#363a4f"
 base = "#24273a"
 mantle = "#1e2030"
 crust = "#181926"
+
+[palettes.archwave]
+black = "#2d1b4e"
+red = "#ff6ec7"
+green = "#5ffbf1"
+yellow = "#f9f871"
+blue = "#8b9aff"
+purple = "#f4a5ff"
+cyan = "#5ffbf1"
+white = "#ffffff"
+bright-black = "#543a6e"
+bright-red = "#ff9adc"
+bright-green = "#8ffef4"
+bright-yellow = "#fbf9a5"
+bright-blue = "#b8c1ff"
+bright-purple = "#ffc8ff"
+bright-cyan = "#8ffef4"
+bright-white = "#fef6ff"
+foreground = "#d4a5ff"
+background = "#1a0d2e"
 
