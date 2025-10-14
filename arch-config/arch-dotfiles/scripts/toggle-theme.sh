@@ -6,7 +6,7 @@ CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 TMUX_CONF="$HOME/.tmux.conf"
 
 # Detect current theme from starship config
-current_theme=$(grep -q "catppuccin_mocha" "$CONFIG_DIR/starship.toml" 2>/dev/null && echo "catppuccin" || echo "archwave")
+current_theme=$(grep -q '^palette = "catppuccin_mocha"' "$CONFIG_DIR/starship.toml" 2>/dev/null && echo "catppuccin" || echo "archwave")
 
 if [ "$current_theme" = "catppuccin" ]; then
     new_theme="archwave"
