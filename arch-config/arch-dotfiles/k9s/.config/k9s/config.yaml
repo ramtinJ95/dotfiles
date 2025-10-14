@@ -18,7 +18,6 @@ k9s:
     noIcons: false
     defaultsToFullScreen: false
     useFullGVRTitle: false
-    # skin: catppuccin-mocha
     skin: archwave
   skipLatestRevCheck: false
   disablePodCounting: false
