@@ -25,3 +25,5 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
   group = md_line_length,
   pattern = "*.md",
 })
+
+vim.keymap.set("n", "<leader>ax", "<cmd>Copilot disable<cr>", { desc = "Disable Copilot" })
