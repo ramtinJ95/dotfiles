@@ -26,4 +26,17 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
   pattern = "*.md",
 })
 
-vim.keymap.set("n", "<leader>ax", "<cmd>Copilot toggle<cr>", { desc = "Toggle Copilot" })
+-- Global Copilot toggle state
+local copilot_enabled = true
+
+vim.keymap.set("n", "<leader>ax", function()
+  if copilot_enabled then
+    vim.cmd("Copilot disable")
+    copilot_enabled = false
+    print("Copilot disabled globally")
+  else
+    vim.cmd("Copilot enable")
+    copilot_enabled = true
+    print("Copilot enabled globally")
+  end
+end, { desc = "Toggle Copilot globally" })

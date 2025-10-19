@@ -34,8 +34,8 @@ alias tlp-save='echo low-power | sudo tee /sys/firmware/acpi/platform_profile; \
                 echo 0 | sudo tee /sys/devices/system/cpu/cpufreq/boost; \
                 echo "💤 Power Saver mode"'
 
+# Opencode aliases
 alias oc='opencode'
-
 # Git aliases
 alias ga='git add'
 alias gaa='git add --all'
