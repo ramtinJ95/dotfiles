@@ -26,6 +26,11 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
   pattern = "*.md",
 })
 
+-- Blink.cmp keybindings - change accept from Enter to Ctrl+y
+vim.keymap.set("i", "<C-y>", function()
+  require("blink.cmp").accept()
+end, { desc = "Accept completion" })
+
 -- Global Copilot toggle state
 local copilot_enabled = true
 
