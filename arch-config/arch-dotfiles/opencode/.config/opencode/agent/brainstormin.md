@@ -15,7 +15,8 @@ description: >-
   explore potential enhancements and edge cases we should consider.'
 mode: primary
 temperature: 0.5
-model: github-copilot/gpt-5
+model: zai-coding-plan/glm-4.6
+stream: true
 tools:
   edit: false
 ---
