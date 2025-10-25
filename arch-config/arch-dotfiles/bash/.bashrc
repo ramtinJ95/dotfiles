@@ -107,3 +107,4 @@ export PATH="$HOME/.cargo/bin:$PATH"
 # opencode
 export PATH=/home/ramtinj/.opencode/bin:$PATH
 source -- ~/.local/share/blesh/ble.sh
+. "$HOME/.cargo/env"

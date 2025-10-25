@@ -9,11 +9,9 @@ SUDO_FILE="/etc/pam.d/sudo"
 POLKIT_FILE="/etc/pam.d/polkit-1"
 BACKUP_SUFFIX=".backup"
 
-# Function to enable fingerprint
 enable_fingerprint() {
     echo "Enabling fingerprint authentication..."
     
-    # Enable in sudo
     if ! grep -q "pam_fprintd.so" "$SUDO_FILE"; then
         sudo cp "$SUDO_FILE" "${SUDO_FILE}${BACKUP_SUFFIX}"
         sudo tee "$SUDO_FILE" > /dev/null << 'EOF'
@@ -25,7 +23,6 @@ session		include		system-auth
 EOF
     fi
     
-    # Enable in polkit-1
     if ! grep -q "pam_fprintd.so" "$POLKIT_FILE"; then
         sudo cp "$POLKIT_FILE" "${POLKIT_FILE}${BACKUP_SUFFIX}"
         sudo tee "$POLKIT_FILE" > /dev/null << 'EOF'
@@ -40,11 +37,9 @@ EOF
     echo "✅ Fingerprint authentication enabled"
 }
 
-# Function to disable fingerprint
 disable_fingerprint() {
     echo "Disabling fingerprint authentication..."
     
-    # Disable in sudo
     if grep -q "pam_fprintd.so" "$SUDO_FILE"; then
         sudo cp "$SUDO_FILE" "${SUDO_FILE}${BACKUP_SUFFIX}"
         sudo tee "$SUDO_FILE" > /dev/null << 'EOF'
@@ -55,7 +50,6 @@ session		include		system-auth
 EOF
     fi
     
-    # Disable in polkit-1
     if grep -q "pam_fprintd.so" "$POLKIT_FILE"; then
         sudo cp "$POLKIT_FILE" "${POLKIT_FILE}${BACKUP_SUFFIX}"
         sudo tee "$POLKIT_FILE" > /dev/null << 'EOF'
@@ -69,7 +63,6 @@ EOF
     echo "❌ Fingerprint authentication disabled"
 }
 
-# Function to check current status
 check_status() {
     if grep -q "pam_fprintd.so" "$SUDO_FILE" && grep -q "pam_fprintd.so" "$POLKIT_FILE"; then
         echo "🔐 Fingerprint authentication: ENABLED"
@@ -80,7 +73,6 @@ check_status() {
     fi
 }
 
-# Main logic
 case "$ACTION" in
     "on")
         enable_fingerprint
