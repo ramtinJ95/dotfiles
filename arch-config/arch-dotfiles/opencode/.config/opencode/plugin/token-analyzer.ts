@@ -914,16 +914,12 @@ export const TokenAnalyzerPlugin: Plugin = async ({ client }) => {
 
           const output = formatter.format(analysis)
           
-          // Write output to file for debugging
-          try {
-            const outputPath = path.join(process.cwd(), 'token-usage-output.txt')
-            await fs.writeFile(outputPath, output, 'utf8')
-          } catch (error) {
-            // Silently fail if we can't write the file
-            console.error('Failed to write token usage output to file:', error)
-          }
+          // Write output to file
+          const outputPath = path.join(process.cwd(), 'token-usage-output.txt')
+          await fs.writeFile(outputPath, output, 'utf8')
 
-          return output
+          // Return short message telling user to read the file
+          return `Token analysis complete! Full report saved to: ${outputPath}\n\nUse: cat token-usage-output.txt (or read the file) to view the complete analysis.`
         },
       }),
     },

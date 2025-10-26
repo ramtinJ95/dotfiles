@@ -3,11 +3,9 @@ description: Analyze token usage across the current session with detailed breakd
 ---
 
 Call the token_usage tool directly without delegating to other agents.
+then once that is done use cat to share the content of the
+token-usage-output.txt file
 
-Provide a concise summary of the key insights from the token analysis, highlighting:
-- The category consuming the most tokens and its percentage
-- Notable tool usage patterns if tools category is significant
-- Any unexpected token consumption areas
-- Brief suggestions for optimization if relevant
-
-Keep the summary focused and actionable.
+when you ask me to call token_usage and then cat the file, I should just:
+• Call the two tools
+• Not add any additional text or formatting after that
