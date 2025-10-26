@@ -56,6 +56,7 @@ interface CategorySummary {
   label: string
   totalTokens: number
   entries: CategoryEntry[]
+  allEntries: CategoryEntry[]
 }
 
 interface TokenAnalysis {
@@ -69,6 +70,8 @@ interface TokenAnalysis {
     reasoning: CategorySummary
   }
   totalTokens: number
+  allToolsCalled: string[]
+  toolCallCounts: Map<string, number>
 }
 
 interface TokenModel {
@@ -409,6 +412,42 @@ class ContentCollector {
     }))
   }
 
+  collectAllToolsCalled(messages: SessionMessage[]): string[] {
+    const toolsSet = new Set<string>()
+
+    for (const message of messages) {
+      for (const part of message.parts) {
+        if (part.type !== "tool") continue
+
+        const toolPart = part as { type: "tool"; tool: string; state: ToolState }
+        const toolName = toolPart.tool || "tool"
+        if (toolName) {
+          toolsSet.add(toolName)
+        }
+      }
+    }
+
+    return Array.from(toolsSet).sort()
+  }
+
+  collectToolCallCounts(messages: SessionMessage[]): Map<string, number> {
+    const toolCounts = new Map<string, number>()
+
+    for (const message of messages) {
+      for (const part of message.parts) {
+        if (part.type !== "tool") continue
+
+        const toolPart = part as { type: "tool"; tool: string; state: ToolState }
+        const toolName = toolPart.tool || "tool"
+        if (toolName) {
+          toolCounts.set(toolName, (toolCounts.get(toolName) || 0) + 1)
+        }
+      }
+    }
+
+    return toolCounts
+  }
+
   collectReasoningTexts(messages: SessionMessage[]): CategoryEntrySource[] {
     const results: CategoryEntrySource[] = []
     let index = 0
@@ -507,6 +546,8 @@ class TokenAnalysisEngine {
     const assistantTexts = this.contentCollector.collectMessageTexts(messages, "assistant")
     const toolOutputs = this.contentCollector.collectToolOutputs(messages)
     const reasoningTraces = this.contentCollector.collectReasoningTexts(messages)
+    const allToolsCalled = this.contentCollector.collectAllToolsCalled(messages)
+    const toolCallCounts = this.contentCollector.collectToolCallCounts(messages)
 
     const [system, user, assistant, tools, reasoning] = await Promise.all([
       this.buildCategory("system", systemPrompts, tokenModel, entryLimit),
@@ -522,6 +563,8 @@ class TokenAnalysisEngine {
       categories: { system, user, assistant, tools, reasoning },
       totalTokens:
         system.totalTokens + user.totalTokens + assistant.totalTokens + tools.totalTokens + reasoning.totalTokens,
+      allToolsCalled,
+      toolCallCounts,
     }
 
     this.applyTelemetryAdjustments(analysis, messages)
@@ -548,7 +591,7 @@ class TokenAnalysisEngine {
     const limited = entries.slice(0, entryLimit)
     const totalTokens = entries.reduce((sum, entry) => sum + entry.tokens, 0)
 
-    return { label, totalTokens, entries: limited }
+    return { label, totalTokens, entries: limited, allEntries: entries }
   }
 
   private applyTelemetryAdjustments(analysis: TokenAnalysis, messages: SessionMessage[]) {
@@ -690,13 +733,32 @@ class OutputFormatter {
     ]
 
     const topEntries = this.collectTopEntries(analysis, 10)
+    
+    // Merge tool output tokens with call counts
+    const toolStats = new Map<string, { tokens: number; calls: number }>()
+    
+    // Add all tools that were called
+    for (const [toolName, calls] of analysis.toolCallCounts.entries()) {
+      toolStats.set(toolName, { tokens: 0, calls })
+    }
+    
+    // Add token counts from tool outputs
+    for (const entry of analysis.categories.tools.allEntries) {
+      const existing = toolStats.get(entry.label) || { tokens: 0, calls: 0 }
+      toolStats.set(entry.label, { ...existing, tokens: entry.tokens })
+    }
+    
+    const toolEntries = Array.from(toolStats.entries())
+      .map(([label, stats]) => ({ label, tokens: stats.tokens, calls: stats.calls }))
+      .sort((a, b) => b.tokens - a.tokens)
 
     return this.formatVisualOutput(
       analysis.sessionID,
       analysis.model.name,
       analysis.totalTokens,
       categories,
-      topEntries
+      topEntries,
+      toolEntries
     )
   }
 
@@ -705,7 +767,8 @@ class OutputFormatter {
     modelName: string,
     totalTokens: number,
     categories: Array<{ label: string; tokens: number }>,
-    topEntries: CategoryEntry[]
+    topEntries: CategoryEntry[],
+    toolEntries: Array<{ label: string; tokens: number; calls: number }>
   ): string {
     const lines: string[] = []
 
@@ -722,10 +785,20 @@ class OutputFormatter {
       const barWidth = Math.round((category.tokens / maxTokens) * 30)
       const bar = "█".repeat(barWidth) + "░".repeat(Math.max(0, 30 - barWidth))
       const label = category.label.padEnd(9)
-      const tokens = this.formatNumber(category.tokens).padStart(6)
-      const pct = percentage.padStart(5)
+      const formattedTokens = this.formatNumber(category.tokens)
+      
+      // Align percentage: add spaces before % based on percentage value
+      let pct = percentage
+      if (parseFloat(percentage) < 10) {
+        pct = " " + pct  // Add extra space for single-digit percentages
+      }
+      
+      // Align token count with variable-width spacing
+      const tokensPart = `(${formattedTokens})`
+      const spacesNeeded = Math.max(1, 11 - tokensPart.length) // Adjust spacing dynamically
+      const spacing = " ".repeat(spacesNeeded)
 
-      lines.push(`${label} ${bar} ${pct}% (${tokens})`)
+      lines.push(`${label} ${bar} ${spacing}${pct}% ${tokensPart}`)
     }
 
     lines.push(``)
@@ -737,9 +810,33 @@ class OutputFormatter {
 
       for (const entry of topEntries) {
         const percentage = ((entry.tokens / totalTokens) * 100).toFixed(1)
-        const label = `• ${entry.label}`.padEnd(24)
-        const tokens = `${this.formatNumber(entry.tokens)} tokens (${percentage}%)`
+        const label = `• ${entry.label}`.padEnd(30) // Increased for better spacing
+        const formattedTokens = this.formatNumber(entry.tokens)
+        const tokens = `${formattedTokens} tokens (${percentage}%)`
         lines.push(`${label} ${tokens}`)
+      }
+    }
+
+    if (toolEntries.length > 0) {
+      const toolsCategory = categories.find(c => c.label === "TOOLS")
+      const toolsTotalTokens = toolsCategory?.tokens || 0
+      
+      lines.push(``)
+      lines.push(`Tool Usage Breakdown:`)
+      
+      const maxToolTokens = Math.max(...toolEntries.map((t) => t.tokens), 1)
+
+      for (const tool of toolEntries) {
+        const percentage = toolsTotalTokens > 0 ? ((tool.tokens / toolsTotalTokens) * 100).toFixed(1) : "0.0"
+        const barWidth = Math.round((tool.tokens / maxToolTokens) * 30)
+        const bar = "█".repeat(barWidth) + "░".repeat(Math.max(0, 30 - barWidth))
+        const label = tool.label.padEnd(20)
+        const formattedTokens = this.formatNumber(tool.tokens)
+        const tokens = formattedTokens.padStart(8) // Increased to 8 to accommodate comma
+        const pct = percentage.padStart(5) // Increased to 5 for alignment
+        const calls = `${tool.calls}x`.padStart(5) // Increased to 5 for better spacing
+
+        lines.push(`${label} ${bar} ${pct}% (${tokens}) ${calls}`)
       }
     }
 
@@ -748,11 +845,11 @@ class OutputFormatter {
 
   private collectTopEntries(analysis: TokenAnalysis, limit: number): CategoryEntry[] {
     const pool = [
-      ...analysis.categories.system.entries,
-      ...analysis.categories.user.entries,
-      ...analysis.categories.assistant.entries,
-      ...analysis.categories.tools.entries,
-      ...analysis.categories.reasoning.entries,
+      ...analysis.categories.system.allEntries,
+      ...analysis.categories.user.allEntries,
+      ...analysis.categories.assistant.allEntries,
+      ...analysis.categories.tools.allEntries,
+      ...analysis.categories.reasoning.allEntries,
     ]
       .filter((entry) => entry.tokens > 0)
       .sort((a, b) => b.tokens - a.tokens)
@@ -778,7 +875,7 @@ export const TokenAnalyzerPlugin: Plugin = async ({ client }) => {
 
   return {
     tool: {
-      analyze_token_usage: tool({
+      token_usage: tool({
         description:
           "Analyze token usage across the current session with detailed breakdowns by category (system, user, assistant, tools, reasoning). " +
           "Provides visual charts and identifies top token consumers.",
