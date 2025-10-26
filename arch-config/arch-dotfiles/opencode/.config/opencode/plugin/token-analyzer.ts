@@ -784,20 +784,19 @@ class OutputFormatter {
     lines.push(`Model: ${modelName}`)
     lines.push(``)
 
-    const maxTokens = Math.max(...categories.map((c) => c.tokens), 1)
-
     for (const category of categories) {
       if (category.tokens === 0) continue
 
       const percentage = ((category.tokens / totalTokens) * 100).toFixed(1)
-      const barWidth = Math.round((category.tokens / maxTokens) * 30)
+      const percentageNum = parseFloat(percentage)
+      const barWidth = Math.round((percentageNum / 100) * 30)
       const bar = "█".repeat(barWidth) + "░".repeat(Math.max(0, 30 - barWidth))
       const label = category.label.padEnd(9)
       const formattedTokens = this.formatNumber(category.tokens)
       
       // Align percentage: add spaces before % based on percentage value
       let pct = percentage
-      if (parseFloat(percentage) < 10) {
+      if (percentageNum < 10) {
         pct = " " + pct  // Add extra space for single-digit percentages
       }
       
@@ -818,12 +817,11 @@ class OutputFormatter {
       
       lines.push(``)
       lines.push(`Tool Usage Breakdown:`)
-      
-      const maxToolTokens = Math.max(...toolEntries.map((t) => t.tokens), 1)
 
       for (const tool of toolEntries) {
         const percentage = toolsTotalTokens > 0 ? ((tool.tokens / toolsTotalTokens) * 100).toFixed(1) : "0.0"
-        const barWidth = Math.round((tool.tokens / maxToolTokens) * 30)
+        const percentageNum = parseFloat(percentage)
+        const barWidth = Math.round((percentageNum / 100) * 30)
         const bar = "█".repeat(barWidth) + "░".repeat(Math.max(0, 30 - barWidth))
         const label = tool.label.padEnd(20)
         const formattedTokens = this.formatNumber(tool.tokens)
