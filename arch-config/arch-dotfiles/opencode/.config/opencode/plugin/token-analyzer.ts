@@ -210,13 +210,21 @@ class TokenizerManager {
     }
 
     const mod = await this.loadTiktokenModule()
-    const { encoding_for_model, get_encoding } = mod
+    
+    // js-tiktoken uses camelCase, not snake_case
+    const encodingForModel = mod.encodingForModel ?? mod.default?.encodingForModel
+    const getEncoding = mod.getEncoding ?? mod.default?.getEncoding
+
+    if (typeof getEncoding !== "function") {
+      // Fall back to approximation if module not properly loaded
+      return { encode: (text: string) => ({ length: Math.ceil(text.length / 4) }) }
+    }
 
     let encoder
     try {
-      encoder = encoding_for_model(model)
+      encoder = encodingForModel(model)
     } catch {
-      encoder = get_encoding("cl100k_base")
+      encoder = getEncoding("cl100k_base")
     }
 
     this.tiktokenCache.set(model, encoder)
@@ -732,7 +740,7 @@ class OutputFormatter {
       { label: "REASONING", tokens: analysis.categories.reasoning.totalTokens },
     ]
 
-    const topEntries = this.collectTopEntries(analysis, 10)
+    const topEntries = this.collectTopEntries(analysis, 5)
     
     // Merge tool output tokens with call counts
     const toolStats = new Map<string, { tokens: number; calls: number }>()
@@ -804,19 +812,6 @@ class OutputFormatter {
     lines.push(``)
     lines.push(`Total: ${this.formatNumber(totalTokens)} tokens`)
 
-    if (topEntries.length > 0) {
-      lines.push(``)
-      lines.push(`Top Contributors:`)
-
-      for (const entry of topEntries) {
-        const percentage = ((entry.tokens / totalTokens) * 100).toFixed(1)
-        const label = `• ${entry.label}`.padEnd(30) // Increased for better spacing
-        const formattedTokens = this.formatNumber(entry.tokens)
-        const tokens = `${formattedTokens} tokens (${percentage}%)`
-        lines.push(`${label} ${tokens}`)
-      }
-    }
-
     if (toolEntries.length > 0) {
       const toolsCategory = categories.find(c => c.label === "TOOLS")
       const toolsTotalTokens = toolsCategory?.tokens || 0
@@ -832,11 +827,24 @@ class OutputFormatter {
         const bar = "█".repeat(barWidth) + "░".repeat(Math.max(0, 30 - barWidth))
         const label = tool.label.padEnd(20)
         const formattedTokens = this.formatNumber(tool.tokens)
-        const tokens = formattedTokens.padStart(8) // Increased to 8 to accommodate comma
-        const pct = percentage.padStart(5) // Increased to 5 for alignment
-        const calls = `${tool.calls}x`.padStart(5) // Increased to 5 for better spacing
+        const tokens = formattedTokens.padStart(8)
+        const pct = percentage.padStart(5)
+        const calls = `${tool.calls}x`.padStart(5)
 
         lines.push(`${label} ${bar} ${pct}% (${tokens}) ${calls}`)
+      }
+    }
+
+    if (topEntries.length > 0) {
+      lines.push(``)
+      lines.push(`Top Contributors:`)
+
+      for (const entry of topEntries) {
+        const percentage = ((entry.tokens / totalTokens) * 100).toFixed(1)
+        const label = `• ${entry.label}`.padEnd(30)
+        const formattedTokens = this.formatNumber(entry.tokens)
+        const tokens = `${formattedTokens} tokens (${percentage}%)`
+        lines.push(`${label} ${tokens}`)
       }
     }
 
@@ -904,7 +912,18 @@ export const TokenAnalyzerPlugin: Plugin = async ({ client }) => {
             args.limitMessages ?? DEFAULT_ENTRY_LIMIT
           )
 
-          return formatter.format(analysis)
+          const output = formatter.format(analysis)
+          
+          // Write output to file for debugging
+          try {
+            const outputPath = path.join(process.cwd(), 'token-usage-output.txt')
+            await fs.writeFile(outputPath, output, 'utf8')
+          } catch (error) {
+            // Silently fail if we can't write the file
+            console.error('Failed to write token usage output to file:', error)
+          }
+
+          return output
         },
       }),
     },
