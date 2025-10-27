@@ -16,8 +16,8 @@ resize-overlay = never
 cursor-style = "bar"
 cursor-style-blink = false
 shell-integration-features = no-cursor
-custom-shader = shaders/cursor-smear.glsl
-custom-shader-animation = true
-
+# custom-shader = shaders/cursor-smear.glsl
+# custom-shader-animation = true
+#
 # Keyboard bindings
 keybind = f11=toggle_fullscreen
