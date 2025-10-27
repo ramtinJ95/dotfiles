@@ -1,60 +1,115 @@
 #!/usr/bin/env bash
 
-# Toggle between archwave and catppuccin themes
+# Theme switcher with menu selection
 
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 TMUX_CONF="$HOME/.tmux.conf"
 
+# Available themes - add new themes here
+declare -A THEMES=(
+    ["archwave"]="Archwave"
+    ["batou"]="Batou"
+    ["catppuccin"]="Catppuccin Mocha"
+)
+
+# Theme configurations
+declare -A K9S_THEMES=(
+    ["archwave"]="archwave"
+    ["batou"]="batou"
+    ["catppuccin"]="catppuccin-mocha"
+)
+
+declare -A STARSHIP_THEMES=(
+    ["archwave"]="archwave"
+    ["batou"]="batou"
+    ["catppuccin"]="catppuccin_mocha"
+)
+
+declare -A YAZI_THEMES=(
+    ["archwave"]="archwave"
+    ["batou"]="batou"
+    ["catppuccin"]="catppuccin-mocha"
+)
+
 # Detect current theme from starship config
-current_theme=$(grep -q '^palette = "catppuccin_mocha"' "$CONFIG_DIR/starship.toml" 2>/dev/null && echo "catppuccin" || echo "archwave")
+current_theme=$(grep -E '^palette = "(archwave|batou|catppuccin_mocha)"' "$CONFIG_DIR/starship.toml" 2>/dev/null | sed 's/palette = "\(.*\)"/\1/' | sed 's/_mocha//' || echo "archwave")
 
-if [ "$current_theme" = "catppuccin" ]; then
-    new_theme="archwave"
-    echo "Switching from catppuccin to archwave..."
-else
-    new_theme="catppuccin"
-    echo "Switching from archwave to catppuccin..."
+# Function to display theme selection menu
+show_theme_menu() {
+    echo "Available themes:"
+    echo "================"
+    local i=1
+    for theme_key in "${!THEMES[@]}"; do
+        local marker=""
+        if [ "$theme_key" = "$current_theme" ]; then
+            marker=" (current)"
+        fi
+        echo "$i) ${THEMES[$theme_key]}$marker"
+        ((i++))
+    done
+    echo "================"
+}
+
+# Function to get theme key by number
+get_theme_by_number() {
+    local num=$1
+    local i=1
+    for theme_key in "${!THEMES[@]}"; do
+        if [ $i -eq $num ]; then
+            echo "$theme_key"
+            return
+        fi
+        ((i++))
+    done
+}
+
+# Show menu and get user selection
+show_theme_menu
+read -p "Select theme number: " selection
+
+# Validate selection
+if ! [[ "$selection" =~ ^[0-9]+$ ]] || [ "$selection" -lt 1 ] || [ "$selection" -gt ${#THEMES[@]} ]; then
+    echo "Invalid selection. Please enter a number between 1 and ${#THEMES[@]}"
+    exit 1
 fi
 
-# Toggle k9s config (catppuccin-mocha <-> archwave)
+new_theme=$(get_theme_by_number "$selection")
+
+if [ "$new_theme" = "$current_theme" ]; then
+    echo "Already using ${THEMES[$new_theme]}. No changes needed."
+    exit 0
+fi
+
+echo "Switching from ${THEMES[$current_theme]} to ${THEMES[$new_theme]}..."
+
+# Update k9s config
 if [ -f "$CONFIG_DIR/k9s/config.yaml" ]; then
-    if [ "$new_theme" = "catppuccin" ]; then
-        sed -i "s/skin: archwave/skin: catppuccin-mocha/" "$CONFIG_DIR/k9s/config.yaml"
-    else
-        sed -i "s/skin: catppuccin-mocha/skin: archwave/" "$CONFIG_DIR/k9s/config.yaml"
-    fi
+    # Replace any existing skin with the new one
+    sed -i "s/skin: .*/skin: ${K9S_THEMES[$new_theme]}/" "$CONFIG_DIR/k9s/config.yaml"
 fi
 
-# Toggle starship config (catppuccin_mocha <-> archwave)
+# Update starship config
 if [ -f "$CONFIG_DIR/starship.toml" ]; then
-    if [ "$new_theme" = "catppuccin" ]; then
-        sed -i '1s/palette = "archwave"/palette = "catppuccin_mocha"/' "$CONFIG_DIR/starship.toml"
-    else
-        sed -i '1s/palette = "catppuccin_mocha"/palette = "archwave"/' "$CONFIG_DIR/starship.toml"
-    fi
+    # Replace any existing palette with the new one
+    sed -i "s/palette = \".*\"/palette = \"${STARSHIP_THEMES[$new_theme]}\"/" "$CONFIG_DIR/starship.toml"
 fi
 
-# Toggle yazi config (catppuccin-mocha <-> archwave)
+# Update yazi config
 if [ -f "$CONFIG_DIR/yazi/theme.toml" ]; then
-    if [ "$new_theme" = "catppuccin" ]; then
-        sed -i 's/dark = "archwave"/dark = "catppuccin-mocha"/' "$CONFIG_DIR/yazi/theme.toml"
-    else
-        sed -i 's/dark = "catppuccin-mocha"/dark = "archwave"/' "$CONFIG_DIR/yazi/theme.toml"
-    fi
+    # Replace any existing dark theme with the new one
+    sed -i "s/dark = \".*\"/dark = \"${YAZI_THEMES[$new_theme]}\"/" "$CONFIG_DIR/yazi/theme.toml"
 fi
 
-# Toggle tmux config (comment/uncomment blocks)
+# Update tmux config (comment/uncomment blocks)
 if [ -f "$TMUX_CONF" ]; then
-    if [ "$new_theme" = "catppuccin" ]; then
-        # Comment archwave, uncomment catppuccin
-        sed -i '/# archwave theme start/,/# archwave theme end/ s/^set /# set /' "$TMUX_CONF"
-        sed -i '/# catppuccin theme start/,/# catppuccin theme end/ s/^# set /set /' "$TMUX_CONF"
-    else
-        # Comment catppuccin, uncomment archwave
-        sed -i '/# catppuccin theme start/,/# catppuccin theme end/ s/^set /# set /' "$TMUX_CONF"
-        sed -i '/# archwave theme start/,/# archwave theme end/ s/^# set /set /' "$TMUX_CONF"
-    fi
+    # Comment all theme blocks first
+    for theme_key in "${!THEMES[@]}"; do
+        sed -i "/# ${theme_key} theme start/,/# ${theme_key} theme end/ s/^set /# set /" "$TMUX_CONF"
+    done
+    
+    # Uncomment the selected theme block
+    sed -i "/# ${new_theme} theme start/,/# ${new_theme} theme end/ s/^# set /set /" "$TMUX_CONF"
 fi
 
-echo "Theme switched to $new_theme"
+echo "Theme switched to ${THEMES[$new_theme]}"
 echo "Reload your configs (tmux: prefix + r, starship: new shell)"
