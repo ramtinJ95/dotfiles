@@ -12,4 +12,11 @@
   "tools": {
     "context7": false
   },
+  "provider": {
+    "openrouter": {
+      "models": {
+        "minimax/minimax-m2:free": {}
+      }
+    }
+  }
 }

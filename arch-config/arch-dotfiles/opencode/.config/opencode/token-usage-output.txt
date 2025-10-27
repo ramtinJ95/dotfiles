@@ -1,23 +1,21 @@
-Token Analysis: Session ses_5dd8e6eb8ffeZC7r2caoo5rp3M
-Model: claude-sonnet-4-5
+Token Analysis: Session ses_5db7eb5ccffeNT9cigIJofDNpW
+Model: approx
 
-SYSTEM    ██████░░░░░░░░░░░░░░░░░░░░░░░░    19.7% (16,665)
-USER      ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░        0.6% (492)
-ASSISTANT ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░          0.0% (2)
-TOOLS     ████████████████████████░░░░░░    79.7% (67,350)
+SYSTEM    ██████░░░░░░░░░░░░░░░░░░░░░░░░     20.1% (5,116)
+USER      ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░        1.6% (412)
+ASSISTANT ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░        1.5% (381)
+TOOLS     ███████████████████████░░░░░░░    76.8% (19,564)
 
-Total: 84,509 tokens
+Total: 25,473 tokens
 
 Tool Usage Breakdown:
-read                 ████████████████░░░░░░░░░░░░░░  54.3% (  36,580)   14x
-bash                 █████████░░░░░░░░░░░░░░░░░░░░░  29.9% (  20,130)   37x
-token_usage          █████░░░░░░░░░░░░░░░░░░░░░░░░░  15.8% (  10,640)   18x
-webfetch             ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░   6.9% (   4,666)    1x
-edit                 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0.0% (       0)   12x
+read                 █████████████████████████████░  96.8% (  18,942)    2x
+bash                 █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   1.9% (     379)    1x
+token_usage          ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   1.2% (     243)    2x
 
 Top Contributors:
-• read                         36,580 tokens (43.3%)
-• bash                         20,130 tokens (23.8%)
-• System#MainPrompt            16,018 tokens (19.0%)
-• token_usage                  10,640 tokens (12.6%)
-• webfetch                     4,666 tokens (5.5%)
+• read                         18,942 tokens (74.4%)
+• System#MainPrompt            4,849 tokens (19.0%)
+• bash                         379 tokens (1.5%)
+• System#Formatting            267 tokens (1.0%)
+• Assistant#8                  250 tokens (1.0%)

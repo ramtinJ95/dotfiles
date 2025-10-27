@@ -3,9 +3,6 @@ description: Analyze token usage across the current session with detailed breakd
 ---
 
 Call the token_usage tool directly without delegating to other agents.
-then once that is done use cat to share the content of the
-token-usage-output.txt file
-
-when you ask me to call token_usage and then cat the file, I should just:
+Then cat the token-usage-output.txt. DONT DO ANYTHING ELSE WITH THE OUTPUT.
 • Call the two tools
 • Not add any additional text or formatting after that
