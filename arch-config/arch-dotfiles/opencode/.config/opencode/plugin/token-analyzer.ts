@@ -70,6 +70,10 @@ interface TokenAnalysis {
     reasoning: CategorySummary
   }
   totalTokens: number
+  inputTokens: number
+  outputTokens: number
+  cacheReadTokens: number
+  cacheWriteTokens: number
   allToolsCalled: string[]
   toolCallCounts: Map<string, number>
 }
@@ -89,9 +93,61 @@ interface CategoryEntrySource {
   content: string
 }
 
+interface CostEstimate {
+  inputCost: number
+  outputCost: number
+  cacheCost: number
+  totalCost: number
+  pricePerMillionInput: number
+  pricePerMillionOutput: number
+  pricePerMillionCacheRead: number
+  pricePerMillionCacheWrite: number
+}
+
 // ============================================================================
 // Model Configuration
 // ============================================================================
+
+// Pricing per 1M tokens (input / output / cache_read / cache_write)
+const MODEL_PRICING: Record<string, { input: number; output: number; cacheRead?: number; cacheWrite?: number }> = {
+  // Claude models
+  "claude-opus-4": { input: 15, output: 75, cacheRead: 1.5, cacheWrite: 18.75 },
+  "claude-sonnet-4": { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
+  "claude-sonnet-4-5": { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
+  "claude-3.7-sonnet": { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
+  "claude-3.5-sonnet": { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
+  "claude-3.5-haiku": { input: 0.8, output: 4, cacheRead: 0.08, cacheWrite: 1 },
+  "claude-3-opus": { input: 15, output: 75, cacheRead: 1.5, cacheWrite: 18.75 },
+  "claude-3-sonnet": { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
+  "claude-3-haiku": { input: 0.25, output: 1.25, cacheRead: 0.03, cacheWrite: 0.3 },
+  
+  // OpenAI models
+  "gpt-4o": { input: 2.5, output: 10 },
+  "gpt-4o-mini": { input: 0.15, output: 0.6 },
+  "gpt-4-turbo": { input: 10, output: 30 },
+  "gpt-4": { input: 30, output: 60 },
+  "gpt-3.5-turbo": { input: 0.5, output: 1.5 },
+  "o1": { input: 15, output: 60 },
+  "o1-mini": { input: 3, output: 12 },
+  "o1-pro": { input: 15, output: 60 },
+  
+  // DeepSeek models
+  "deepseek-r1": { input: 0.55, output: 2.19 },
+  "deepseek-v3": { input: 0.27, output: 1.1 },
+  "deepseek-v2": { input: 0.14, output: 0.28 },
+  
+  // Llama models (typical via providers)
+  "llama-3.3": { input: 0.06, output: 0.06 },
+  "llama-3.2": { input: 0.055, output: 0.055 },
+  "llama-3.1": { input: 0.06, output: 0.06 },
+  
+  // Mistral models
+  "mistral-large": { input: 2, output: 6 },
+  "mistral-small": { input: 0.2, output: 0.6 },
+  
+  // Default fallback
+  "default": { input: 1, output: 3 },
+}
 
 const OPENAI_MODEL_MAP: Record<string, string> = {
   "gpt-5": "gpt-4o",
@@ -571,6 +627,10 @@ class TokenAnalysisEngine {
       categories: { system, user, assistant, tools, reasoning },
       totalTokens:
         system.totalTokens + user.totalTokens + assistant.totalTokens + tools.totalTokens + reasoning.totalTokens,
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
       allToolsCalled,
       toolCallCounts,
     }
@@ -614,10 +674,10 @@ class TokenAnalysisEngine {
     if (!recentMessage) return
 
     const tokens = recentMessage.tokens
-    const promptTokens =
-      (Number(tokens.input) || 0) +
-      (Number(tokens.cache?.read) || 0) +
-      (Number(tokens.cache?.write) || 0)
+    const inputTokens = Number(tokens.input) || 0
+    const cacheReadTokens = Number(tokens.cache?.read) || 0
+    const cacheWriteTokens = Number(tokens.cache?.write) || 0
+    const promptTokens = inputTokens + cacheReadTokens + cacheWriteTokens
     const assistantTokens = Number(tokens.output) || 0
     const reasoningTokens = Number(tokens.reasoning) || 0
 
@@ -629,6 +689,12 @@ class TokenAnalysisEngine {
     this.scalePromptCategories(analysis, promptTokens, promptMeasured)
     this.scaleCategory(analysis.categories.assistant, assistantTokens, "Assistant output")
     this.scaleCategory(analysis.categories.reasoning, reasoningTokens, "Reasoning")
+
+    // Store the actual telemetry values
+    analysis.inputTokens = inputTokens
+    analysis.outputTokens = assistantTokens + reasoningTokens
+    analysis.cacheReadTokens = cacheReadTokens
+    analysis.cacheWriteTokens = cacheWriteTokens
 
     analysis.totalTokens =
       analysis.categories.system.totalTokens +
@@ -727,16 +793,67 @@ class TokenAnalysisEngine {
 }
 
 // ============================================================================
+// Cost Calculator
+// ============================================================================
+
+class CostCalculator {
+  calculateCost(analysis: TokenAnalysis): CostEstimate {
+    const pricing = this.getPricing(analysis.model.name)
+    
+    const inputCost = (analysis.inputTokens / 1_000_000) * pricing.input
+    const outputCost = (analysis.outputTokens / 1_000_000) * pricing.output
+    const cacheReadCost = (analysis.cacheReadTokens / 1_000_000) * (pricing.cacheRead ?? 0)
+    const cacheWriteCost = (analysis.cacheWriteTokens / 1_000_000) * (pricing.cacheWrite ?? 0)
+    const cacheCost = cacheReadCost + cacheWriteCost
+    
+    return {
+      inputCost,
+      outputCost,
+      cacheCost,
+      totalCost: inputCost + outputCost + cacheCost,
+      pricePerMillionInput: pricing.input,
+      pricePerMillionOutput: pricing.output,
+      pricePerMillionCacheRead: pricing.cacheRead ?? 0,
+      pricePerMillionCacheWrite: pricing.cacheWrite ?? 0,
+    }
+  }
+  
+  private getPricing(modelName: string): { input: number; output: number; cacheRead?: number; cacheWrite?: number } {
+    // Try exact match
+    if (MODEL_PRICING[modelName]) {
+      return MODEL_PRICING[modelName]
+    }
+    
+    // Try prefix matching for model families
+    const lowerModel = modelName.toLowerCase()
+    
+    for (const [key, pricing] of Object.entries(MODEL_PRICING)) {
+      if (lowerModel.startsWith(key.toLowerCase())) {
+        return pricing
+      }
+    }
+    
+    // Fallback to default
+    return MODEL_PRICING["default"]
+  }
+}
+
+// ============================================================================
 // Output Formatter
 // ============================================================================
 
 class OutputFormatter {
+  constructor(private costCalculator: CostCalculator) {}
+
   format(analysis: TokenAnalysis): string {
-    const categories = [
+    const inputCategories = [
       { label: "SYSTEM", tokens: analysis.categories.system.totalTokens },
       { label: "USER", tokens: analysis.categories.user.totalTokens },
-      { label: "ASSISTANT", tokens: analysis.categories.assistant.totalTokens },
       { label: "TOOLS", tokens: analysis.categories.tools.totalTokens },
+    ]
+
+    const outputCategories = [
+      { label: "ASSISTANT", tokens: analysis.categories.assistant.totalTokens },
       { label: "REASONING", tokens: analysis.categories.reasoning.totalTokens },
     ]
 
@@ -760,13 +877,21 @@ class OutputFormatter {
       .map(([label, stats]) => ({ label, tokens: stats.tokens, calls: stats.calls }))
       .sort((a, b) => b.tokens - a.tokens)
 
+    const costEstimate = this.costCalculator.calculateCost(analysis)
+
     return this.formatVisualOutput(
       analysis.sessionID,
       analysis.model.name,
       analysis.totalTokens,
-      categories,
+      analysis.inputTokens,
+      analysis.outputTokens,
+      analysis.cacheReadTokens,
+      analysis.cacheWriteTokens,
+      inputCategories,
+      outputCategories,
       topEntries,
-      toolEntries
+      toolEntries,
+      costEstimate
     )
   }
 
@@ -774,49 +899,131 @@ class OutputFormatter {
     sessionID: string,
     modelName: string,
     totalTokens: number,
-    categories: Array<{ label: string; tokens: number }>,
+    inputTokens: number,
+    outputTokens: number,
+    cacheReadTokens: number,
+    cacheWriteTokens: number,
+    inputCategories: Array<{ label: string; tokens: number }>,
+    outputCategories: Array<{ label: string; tokens: number }>,
     topEntries: CategoryEntry[],
-    toolEntries: Array<{ label: string; tokens: number; calls: number }>
+    toolEntries: Array<{ label: string; tokens: number; calls: number }>,
+    cost: CostEstimate
   ): string {
     const lines: string[] = []
 
+    lines.push(`═══════════════════════════════════════════════════════════════════════════`)
     lines.push(`Token Analysis: Session ${sessionID}`)
     lines.push(`Model: ${modelName}`)
+    lines.push(`═══════════════════════════════════════════════════════════════════════════`)
     lines.push(``)
 
-    for (const category of categories) {
+    // INPUT TOKENS Section
+    const inputTotal = inputCategories.reduce((sum, cat) => sum + cat.tokens, 0)
+    lines.push(`📥 INPUT TOKENS (Context sent to model)`)
+    lines.push(`─────────────────────────────────────────────────────────────────────────`)
+
+    for (const category of inputCategories) {
       if (category.tokens === 0) continue
 
-      const percentage = ((category.tokens / totalTokens) * 100).toFixed(1)
+      const percentage = inputTotal > 0 ? ((category.tokens / inputTotal) * 100).toFixed(1) : "0.0"
       const percentageNum = parseFloat(percentage)
       const barWidth = Math.round((percentageNum / 100) * 30)
       const bar = "█".repeat(barWidth) + "░".repeat(Math.max(0, 30 - barWidth))
       const label = category.label.padEnd(9)
       const formattedTokens = this.formatNumber(category.tokens)
       
-      // Align percentage: add spaces before % based on percentage value
       let pct = percentage
       if (percentageNum < 10) {
-        pct = " " + pct  // Add extra space for single-digit percentages
+        pct = " " + pct
       }
       
-      // Align token count with variable-width spacing
       const tokensPart = `(${formattedTokens})`
-      const spacesNeeded = Math.max(1, 11 - tokensPart.length) // Adjust spacing dynamically
+      const spacesNeeded = Math.max(1, 11 - tokensPart.length)
+      const spacing = " ".repeat(spacesNeeded)
+
+      lines.push(`${label} ${bar} ${spacing}${pct}% ${tokensPart}`)
+    }
+
+    if (cacheReadTokens > 0 || cacheWriteTokens > 0) {
+      lines.push(``)
+      if (cacheReadTokens > 0) {
+        lines.push(`  Cache Read:  ${this.formatNumber(cacheReadTokens)} tokens`)
+      }
+      if (cacheWriteTokens > 0) {
+        lines.push(`  Cache Write: ${this.formatNumber(cacheWriteTokens)} tokens`)
+      }
+    }
+
+    lines.push(``)
+    lines.push(`Subtotal: ${this.formatNumber(inputTotal)} input tokens`)
+    lines.push(``)
+
+    // OUTPUT TOKENS Section
+    const outputTotal = outputCategories.reduce((sum, cat) => sum + cat.tokens, 0)
+    lines.push(`📤 OUTPUT TOKENS (Generated by model)`)
+    lines.push(`─────────────────────────────────────────────────────────────────────────`)
+
+    for (const category of outputCategories) {
+      if (category.tokens === 0) continue
+
+      const percentage = outputTotal > 0 ? ((category.tokens / outputTotal) * 100).toFixed(1) : "0.0"
+      const percentageNum = parseFloat(percentage)
+      const barWidth = Math.round((percentageNum / 100) * 30)
+      const bar = "█".repeat(barWidth) + "░".repeat(Math.max(0, 30 - barWidth))
+      const label = category.label.padEnd(9)
+      const formattedTokens = this.formatNumber(category.tokens)
+      
+      let pct = percentage
+      if (percentageNum < 10) {
+        pct = " " + pct
+      }
+      
+      const tokensPart = `(${formattedTokens})`
+      const spacesNeeded = Math.max(1, 11 - tokensPart.length)
       const spacing = " ".repeat(spacesNeeded)
 
       lines.push(`${label} ${bar} ${spacing}${pct}% ${tokensPart}`)
     }
 
     lines.push(``)
-    lines.push(`Total: ${this.formatNumber(totalTokens)} tokens`)
+    lines.push(`Subtotal: ${this.formatNumber(outputTotal)} output tokens`)
+    lines.push(``)
 
+    // Total
+    lines.push(`═══════════════════════════════════════════════════════════════════════════`)
+    lines.push(`TOTAL: ${this.formatNumber(totalTokens)} tokens`)
+    lines.push(`═══════════════════════════════════════════════════════════════════════════`)
+
+    // Cost Estimation
+    lines.push(``)
+    lines.push(`💰 COST ESTIMATION`)
+    lines.push(`─────────────────────────────────────────────────────────────────────────`)
+    lines.push(`Input tokens:    ${this.formatNumber(inputTokens).padStart(10)} × $${cost.pricePerMillionInput.toFixed(2)}/M  = $${cost.inputCost.toFixed(4)}`)
+    lines.push(`Output tokens:   ${this.formatNumber(outputTokens).padStart(10)} × $${cost.pricePerMillionOutput.toFixed(2)}/M  = $${cost.outputCost.toFixed(4)}`)
+    
+    if (cost.cacheCost > 0) {
+      if (cacheReadTokens > 0) {
+        const cacheReadCost = (cacheReadTokens / 1_000_000) * cost.pricePerMillionCacheRead
+        lines.push(`Cache read:      ${this.formatNumber(cacheReadTokens).padStart(10)} × $${cost.pricePerMillionCacheRead.toFixed(2)}/M  = $${cacheReadCost.toFixed(4)}`)
+      }
+      if (cacheWriteTokens > 0) {
+        const cacheWriteCost = (cacheWriteTokens / 1_000_000) * cost.pricePerMillionCacheWrite
+        lines.push(`Cache write:     ${this.formatNumber(cacheWriteTokens).padStart(10)} × $${cost.pricePerMillionCacheWrite.toFixed(2)}/M  = $${cacheWriteCost.toFixed(4)}`)
+      }
+      lines.push(`─────────────────────────────────────────────────────────────────────────`)
+      lines.push(`TOTAL COST: $${cost.totalCost.toFixed(4)}`)
+    } else {
+      lines.push(`─────────────────────────────────────────────────────────────────────────`)
+      lines.push(`TOTAL COST: $${cost.totalCost.toFixed(4)}`)
+    }
+
+    // Tool Usage Breakdown
     if (toolEntries.length > 0) {
-      const toolsCategory = categories.find(c => c.label === "TOOLS")
-      const toolsTotalTokens = toolsCategory?.tokens || 0
+      const toolsTotalTokens = inputCategories.find(c => c.label === "TOOLS")?.tokens || 0
       
       lines.push(``)
-      lines.push(`Tool Usage Breakdown:`)
+      lines.push(`🔧 TOOL USAGE BREAKDOWN`)
+      lines.push(`─────────────────────────────────────────────────────────────────────────`)
 
       for (const tool of toolEntries) {
         const percentage = toolsTotalTokens > 0 ? ((tool.tokens / toolsTotalTokens) * 100).toFixed(1) : "0.0"
@@ -833,9 +1040,11 @@ class OutputFormatter {
       }
     }
 
+    // Top Contributors
     if (topEntries.length > 0) {
       lines.push(``)
-      lines.push(`Top Contributors:`)
+      lines.push(`⭐ TOP CONTRIBUTORS`)
+      lines.push(`─────────────────────────────────────────────────────────────────────────`)
 
       for (const entry of topEntries) {
         const percentage = ((entry.tokens / totalTokens) * 100).toFixed(1)
@@ -845,6 +1054,9 @@ class OutputFormatter {
         lines.push(`${label} ${tokens}`)
       }
     }
+
+    lines.push(``)
+    lines.push(`═══════════════════════════════════════════════════════════════════════════`)
 
     return lines.join("\n")
   }
@@ -877,7 +1089,8 @@ export const TokenAnalyzerPlugin: Plugin = async ({ client }) => {
   const modelResolver = new ModelResolver()
   const contentCollector = new ContentCollector()
   const analysisEngine = new TokenAnalysisEngine(tokenizerManager, contentCollector)
-  const formatter = new OutputFormatter()
+  const costCalculator = new CostCalculator()
+  const formatter = new OutputFormatter(costCalculator)
 
   return {
     tool: {
