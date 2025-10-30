@@ -42,6 +42,19 @@ type SessionMessagePart =
   | { type: "tool"; tool: string; state: ToolState }
   | { type: string; [key: string]: unknown }
 
+// Type guard functions
+function isToolPart(part: SessionMessagePart): part is { type: "tool"; tool: string; state: ToolState } {
+  return part.type === "tool"
+}
+
+function isReasoningPart(part: SessionMessagePart): part is { type: "reasoning"; text: string } {
+  return part.type === "reasoning"
+}
+
+function isTextPart(part: SessionMessagePart): part is { type: "text"; text: string; synthetic?: boolean } {
+  return part.type === "text"
+}
+
 interface ToolState {
   status: "pending" | "running" | "completed" | "error"
   output?: string
@@ -456,15 +469,14 @@ class ContentCollector {
 
     for (const message of messages) {
       for (const part of message.parts) {
-        if (part.type !== "tool") continue
+        if (!isToolPart(part)) continue
 
-        const toolPart = part as { type: "tool"; tool: string; state: ToolState }
-        if (toolPart.state.status !== "completed") continue
+        if (part.state.status !== "completed") continue
 
-        const output = (toolPart.state.output ?? "").toString().trim()
+        const output = (part.state.output ?? "").toString().trim()
         if (!output) continue
 
-        const toolName = toolPart.tool || "tool"
+        const toolName = part.tool || "tool"
         const existing = toolOutputs.get(toolName) || ""
         toolOutputs.set(toolName, existing + (existing ? "\n\n" : "") + output)
       }
@@ -476,33 +488,14 @@ class ContentCollector {
     }))
   }
 
-  collectAllToolsCalled(messages: SessionMessage[]): string[] {
-    const toolsSet = new Set<string>()
-
-    for (const message of messages) {
-      for (const part of message.parts) {
-        if (part.type !== "tool") continue
-
-        const toolPart = part as { type: "tool"; tool: string; state: ToolState }
-        const toolName = toolPart.tool || "tool"
-        if (toolName) {
-          toolsSet.add(toolName)
-        }
-      }
-    }
-
-    return Array.from(toolsSet).sort()
-  }
-
   collectToolCallCounts(messages: SessionMessage[]): Map<string, number> {
     const toolCounts = new Map<string, number>()
 
     for (const message of messages) {
       for (const part of message.parts) {
-        if (part.type !== "tool") continue
+        if (!isToolPart(part)) continue
 
-        const toolPart = part as { type: "tool"; tool: string; state: ToolState }
-        const toolName = toolPart.tool || "tool"
+        const toolName = part.tool || "tool"
         if (toolName) {
           toolCounts.set(toolName, (toolCounts.get(toolName) || 0) + 1)
         }
@@ -512,16 +505,19 @@ class ContentCollector {
     return toolCounts
   }
 
+  collectAllToolsCalled(messages: SessionMessage[]): string[] {
+    return Array.from(this.collectToolCallCounts(messages).keys()).sort()
+  }
+
   collectReasoningTexts(messages: SessionMessage[]): CategoryEntrySource[] {
     const results: CategoryEntrySource[] = []
     let index = 0
 
     for (const message of messages) {
       for (const part of message.parts) {
-        if (part.type !== "reasoning") continue
+        if (!isReasoningPart(part)) continue
 
-        const reasoningPart = part as { type: "reasoning"; text: string }
-        const text = (reasoningPart.text ?? "").toString().trim()
+        const text = (part.text ?? "").toString().trim()
         if (!text) continue
 
         index += 1
@@ -534,7 +530,7 @@ class ContentCollector {
 
   private extractText(parts: SessionMessagePart[]): string {
     return parts
-      .filter((part): part is { type: "text"; text: string; synthetic?: boolean } => part.type === "text")
+      .filter(isTextPart)
       .map((part) => part.text ?? "")
       .map((text) => text.trim())
       .filter(Boolean)
@@ -843,7 +839,48 @@ class CostCalculator {
 // ============================================================================
 
 class OutputFormatter {
+  private readonly BAR_WIDTH = 30
+  private readonly TOKEN_SPACING = 11
+  private readonly CATEGORY_LABEL_WIDTH = 9
+  private readonly TOOL_LABEL_WIDTH = 20
+  private readonly TOP_CONTRIBUTOR_LABEL_WIDTH = 30
+
   constructor(private costCalculator: CostCalculator) {}
+
+  /**
+   * Formats a category bar for visual token display
+   * @param label - Category label (e.g., "SYSTEM", "USER")
+   * @param tokens - Number of tokens for this category
+   * @param total - Total tokens for percentage calculation
+   * @param labelWidth - Width to pad the label to (default: CATEGORY_LABEL_WIDTH)
+   * @returns Formatted bar string or empty string if tokens is 0
+   */
+  private formatCategoryBar(
+    label: string,
+    tokens: number,
+    total: number,
+    labelWidth: number = this.CATEGORY_LABEL_WIDTH
+  ): string {
+    if (tokens === 0) return ""
+
+    const percentage = total > 0 ? ((tokens / total) * 100).toFixed(1) : "0.0"
+    const percentageNum = parseFloat(percentage)
+    const barWidth = Math.round((percentageNum / 100) * this.BAR_WIDTH)
+    const bar = "█".repeat(barWidth) + "░".repeat(Math.max(0, this.BAR_WIDTH - barWidth))
+    const labelPadded = label.padEnd(labelWidth)
+    const formattedTokens = this.formatNumber(tokens)
+
+    let pct = percentage
+    if (percentageNum < 10) {
+      pct = " " + pct
+    }
+
+    const tokensPart = `(${formattedTokens})`
+    const spacesNeeded = Math.max(1, this.TOKEN_SPACING - tokensPart.length)
+    const spacing = " ".repeat(spacesNeeded)
+
+    return `${labelPadded} ${bar} ${spacing}${pct}% ${tokensPart}`
+  }
 
   format(analysis: TokenAnalysis): string {
     const inputCategories = [
@@ -923,25 +960,10 @@ class OutputFormatter {
     lines.push(`─────────────────────────────────────────────────────────────────────────`)
 
     for (const category of inputCategories) {
-      if (category.tokens === 0) continue
-
-      const percentage = inputTotal > 0 ? ((category.tokens / inputTotal) * 100).toFixed(1) : "0.0"
-      const percentageNum = parseFloat(percentage)
-      const barWidth = Math.round((percentageNum / 100) * 30)
-      const bar = "█".repeat(barWidth) + "░".repeat(Math.max(0, 30 - barWidth))
-      const label = category.label.padEnd(9)
-      const formattedTokens = this.formatNumber(category.tokens)
-      
-      let pct = percentage
-      if (percentageNum < 10) {
-        pct = " " + pct
+      const barLine = this.formatCategoryBar(category.label, category.tokens, inputTotal)
+      if (barLine) {
+        lines.push(barLine)
       }
-      
-      const tokensPart = `(${formattedTokens})`
-      const spacesNeeded = Math.max(1, 11 - tokensPart.length)
-      const spacing = " ".repeat(spacesNeeded)
-
-      lines.push(`${label} ${bar} ${spacing}${pct}% ${tokensPart}`)
     }
 
     if (cacheReadTokens > 0 || cacheWriteTokens > 0) {
@@ -964,25 +986,10 @@ class OutputFormatter {
     lines.push(`─────────────────────────────────────────────────────────────────────────`)
 
     for (const category of outputCategories) {
-      if (category.tokens === 0) continue
-
-      const percentage = outputTotal > 0 ? ((category.tokens / outputTotal) * 100).toFixed(1) : "0.0"
-      const percentageNum = parseFloat(percentage)
-      const barWidth = Math.round((percentageNum / 100) * 30)
-      const bar = "█".repeat(barWidth) + "░".repeat(Math.max(0, 30 - barWidth))
-      const label = category.label.padEnd(9)
-      const formattedTokens = this.formatNumber(category.tokens)
-      
-      let pct = percentage
-      if (percentageNum < 10) {
-        pct = " " + pct
+      const barLine = this.formatCategoryBar(category.label, category.tokens, outputTotal)
+      if (barLine) {
+        lines.push(barLine)
       }
-      
-      const tokensPart = `(${formattedTokens})`
-      const spacesNeeded = Math.max(1, 11 - tokensPart.length)
-      const spacing = " ".repeat(spacesNeeded)
-
-      lines.push(`${label} ${bar} ${spacing}${pct}% ${tokensPart}`)
     }
 
     lines.push(``)
@@ -1026,17 +1033,11 @@ class OutputFormatter {
       lines.push(`─────────────────────────────────────────────────────────────────────────`)
 
       for (const tool of toolEntries) {
-        const percentage = toolsTotalTokens > 0 ? ((tool.tokens / toolsTotalTokens) * 100).toFixed(1) : "0.0"
-        const percentageNum = parseFloat(percentage)
-        const barWidth = Math.round((percentageNum / 100) * 30)
-        const bar = "█".repeat(barWidth) + "░".repeat(Math.max(0, 30 - barWidth))
-        const label = tool.label.padEnd(20)
-        const formattedTokens = this.formatNumber(tool.tokens)
-        const tokens = formattedTokens.padStart(8)
-        const pct = percentage.padStart(5)
-        const calls = `${tool.calls}x`.padStart(5)
-
-        lines.push(`${label} ${bar} ${pct}% (${tokens}) ${calls}`)
+        const barLine = this.formatCategoryBar(tool.label, tool.tokens, toolsTotalTokens, this.TOOL_LABEL_WIDTH)
+        if (barLine) {
+          const calls = `${tool.calls}x`.padStart(5)
+          lines.push(`${barLine} ${calls}`)
+        }
       }
     }
 
@@ -1048,7 +1049,7 @@ class OutputFormatter {
 
       for (const entry of topEntries) {
         const percentage = ((entry.tokens / totalTokens) * 100).toFixed(1)
-        const label = `• ${entry.label}`.padEnd(30)
+        const label = `• ${entry.label}`.padEnd(this.TOP_CONTRIBUTOR_LABEL_WIDTH)
         const formattedTokens = this.formatNumber(entry.tokens)
         const tokens = `${formattedTokens} tokens (${percentage}%)`
         lines.push(`${label} ${tokens}`)
@@ -1124,7 +1125,6 @@ export const TokenAnalyzerPlugin: Plugin = async ({ client }) => {
           )
 
           const output = formatter.format(analysis)
-          
           // Write output to file
           const outputPath = path.join(process.cwd(), 'token-usage-output.txt')
           await fs.writeFile(outputPath, output, 'utf8')
