@@ -31,17 +31,14 @@ vim.keymap.set("i", "<C-y>", function()
   require("blink.cmp").accept()
 end, { desc = "Accept completion" })
 
--- Global Copilot toggle state
-local copilot_enabled = true
-
+-- Global Sidekick NES toggle
 vim.keymap.set("n", "<leader>ax", function()
-  if copilot_enabled then
-    vim.cmd("Copilot disable")
-    copilot_enabled = false
-    print("Copilot disabled globally")
+  local Nes = require("sidekick.nes")
+  if Nes.enabled then
+    Nes.enable(false)
+    print("Sidekick disabled globally")
   else
-    vim.cmd("Copilot enable")
-    copilot_enabled = true
-    print("Copilot enabled globally")
+    Nes.enable(true)
+    print("Sidekick enabled globally")
   end
-end, { desc = "Toggle Copilot globally" })
+end, { desc = "Toggle Sidekick globally" })
