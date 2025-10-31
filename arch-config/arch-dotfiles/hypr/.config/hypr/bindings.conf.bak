@@ -1,0 +1,77 @@
+# Application bindings
+$terminal = uwsm app -- $TERMINAL
+$browser = omarchy-launch-browser
+
+bindd = SUPER, return, Terminal, exec, $terminal --working-directory="$(omarchy-cmd-terminal-cwd)"
+unbind = SUPER, F
+bindd = SUPER, F, Fullscreen, fullscreen, 0
+bindd = SUPER, B, Focus Browser, focuswindow, class:^(chromium)$
+#bindd = SUPER SHIFT, B, Browser (private), exec, $browser --private
+#bindd = SUPER, M, Music, exec, omarchy-launch-or-focus spotify
+#bindd = SUPER, N, Editor, exec, omarchy-launch-editor
+bindd = SUPER, T, Activity, exec, $terminal -e btop
+#bindd = SUPER, D, Docker, exec, $terminal -e lazydocker
+#bindd = SUPER, G, Signal, exec, omarchy-launch-or-focus signal "uwsm app -- signal-desktop"
+#bindd = SUPER, O, Obsidian, exec, omarchy-launch-or-focus obsidian "uwsm app -- obsidian -disable-gpu --enable-wayland-ime"
+#bindd = SUPER, slash, Passwords, exec, uwsm app -- 1password
+
+# If your web app url contains #, type it as ## to prevent hyperland treat it as comments
+bindd = SUPER, C, ChatGPT, exec, omarchy-launch-webapp "https://chatgpt.com"
+#bindd = SUPER SHIFT, A, Grok, exec, omarchy-launch-webapp "https://grok.com"
+#bindd = SUPER, C, Calendar, exec, omarchy-launch-webapp "https://app.hey.com/calendar/weeks/"
+#bindd = SUPER, E, Email, exec, omarchy-launch-webapp "https://app.hey.com"
+bindd = SUPER, Y, YouTube, exec, omarchy-launch-or-focus-webapp YouTube "https://youtube.com/"
+#bindd = SUPER SHIFT, G, WhatsApp, exec, omarchy-launch-or-focus-webapp WhatsApp "https://web.whatsapp.com/"
+#bindd = SUPER ALT, G, Google Messages, exec, omarchy-launch-or-focus-webapp "Google Messages" "https://messages.google.com/web/conversations"
+#bindd = SUPER, X, X, exec, omarchy-launch-webapp "https://x.com/"
+#bindd = SUPER SHIFT, X, X Post, exec, omarchy-launch-webapp "https://x.com/compose/post"
+
+# Overwrite existing bindings, like putting Omarchy Menu on Super + Space
+# unbind = SUPER, SPACE
+# bindd = SUPER, SPACE, Omarchy menu, exec, omarchy-menu
+unbind = SUPER, N
+unbind = SUPER, G
+unbind = SUPER, O
+unbind = SUPER, slash
+unbind = SUPER SHIFT, B
+unbind = SUPER, M
+unbind = SUPER, D
+unbind = SUPER SHIFT, A
+unbind = SUPER, E
+unbind = SUPER SHIFT, G
+unbind = SUPER ALT, G
+unbind = SUPER SHIFT, X
+unbind = SUPER, X
+unbind = SUPER, A
+
+bindd = SUPER, M, Music, exec, omarchy-launch-or-focus-webapp Spotify "https://open.spotify.com"
+bindd = SUPER, D, Discord, exec, omarchy-launch-or-focus-webapp Discord "https://discord.com/channels/@me"
+bindd = SUPER, G, Github, exec, omarchy-launch-or-focus-webapp Github "https://github.com/"
+bindd = SUPER, S, Slack, exec, omarchy-launch-or-focus-webapp Slack "https://app.slack.com/client/T04CAJ1RK/C04CAJ1RT"
+bindd = SUPER, A, Focus Terminal, focuswindow, class:^(kitty)$
+#bindd = SUPER, A, Focus Terminal, focuswindow, class:^(com.mitchellh.ghostty)$
+bindd = SUPER SHIFT, B, Browser, exec, $browser
+
+# Window focus navigation with Alt+HJKL
+bind = ALT, H, movefocus, l
+bind = ALT, J, movefocus, d
+bind = ALT, K, movefocus, u
+bind = ALT, L, movefocus, r
+
+# Window movement with Alt+Ctrl+HJKL
+bind = ALT CTRL, H, movewindow, l
+bind = ALT CTRL, J, movewindow, d
+bind = ALT CTRL, K, movewindow, u
+bind = ALT CTRL, L, movewindow, r
+
+# macOS-style screenshot bindings
+bindd = ALT SHIFT, 4, Screenshot region (macOS style), exec, omarchy-cmd-screenshot
+
+# Lock and suspend keybinds
+bindd = SUPER, L, Lock screen, exec, omarchy-lock-screen
+bindd = SUPER SHIFT, L, Suspend, exec, systemctl suspend
+
+#Clamshell mode - disable internal screen when lid closes
+bindl = , switch:on:Lid Switch, exec, /home/ramtinj/.config/hypr/clamshell-handler.sh close
+bindl = , switch:off:Lid Switch, exec, /home/ramtinj/.config/hypr/clamshell-handler.sh open
+

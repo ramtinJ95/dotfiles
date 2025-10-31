@@ -2,7 +2,7 @@
 config-file = ?"~/.config/omarchy/current/theme/ghostty.conf"
 
 # Font
-font-family = "CaskaydiaMono Nerd Font"
+font-family = "JetBrainsMono Nerd Font"
 font-style = Regular
 font-size = 12
 
@@ -21,3 +21,5 @@ shell-integration-features = no-cursor
 #
 # Keyboard bindings
 keybind = f11=toggle_fullscreen
+keybind = shift+insert=paste_from_clipboard
+keybind = control+insert=copy_to_clipboard
