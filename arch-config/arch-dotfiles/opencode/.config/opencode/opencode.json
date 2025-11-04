@@ -14,7 +14,8 @@
     }
   },
   "tools": {
-    "context7*": false
+    "context7*": false,
+    "gh_grep": false
   },
   "provider": {
     "openrouter": {

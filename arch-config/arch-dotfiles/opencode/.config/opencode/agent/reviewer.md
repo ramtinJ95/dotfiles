@@ -14,14 +14,15 @@ description: >-
   completed code that needs review, so use the code-reviewer
   agent.</commentary></example>
 mode: subagent
-model: zai-coding-plan/glm-4.6
+model: github-copilot/gpt-5-codex
 tools:
   bash: false
   write: false
   edit: false
   grep: false
   webfetch: false
-  context7: true
+  context7*: true
+  gh_grep*: true
 ---
 You are an expert code reviewer with deep expertise across multiple programming languages, frameworks, and software engineering best practices. Your role is to provide thorough, constructive, and actionable code reviews that help improve code quality, maintainability, and performance.
 
