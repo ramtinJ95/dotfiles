@@ -127,45 +127,35 @@ interface CostEstimate {
 // Model Configuration
 // ============================================================================
 
-// Pricing per 1M tokens (input / output / cache_read / cache_write)
-const MODEL_PRICING: Record<string, { input: number; output: number; cacheRead?: number; cacheWrite?: number }> = {
-  // Claude models
-  "claude-opus-4": { input: 15, output: 75, cacheRead: 1.5, cacheWrite: 18.75 },
-  "claude-sonnet-4": { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
-  "claude-sonnet-4-5": { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
-  "claude-3.7-sonnet": { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
-  "claude-3.5-sonnet": { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
-  "claude-3.5-haiku": { input: 0.8, output: 4, cacheRead: 0.08, cacheWrite: 1 },
-  "claude-3-opus": { input: 15, output: 75, cacheRead: 1.5, cacheWrite: 18.75 },
-  "claude-3-sonnet": { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
-  "claude-3-haiku": { input: 0.25, output: 1.25, cacheRead: 0.03, cacheWrite: 0.3 },
-  
-  // OpenAI models
-  "gpt-4o": { input: 2.5, output: 10 },
-  "gpt-4o-mini": { input: 0.15, output: 0.6 },
-  "gpt-4-turbo": { input: 10, output: 30 },
-  "gpt-4": { input: 30, output: 60 },
-  "gpt-3.5-turbo": { input: 0.5, output: 1.5 },
-  "o1": { input: 15, output: 60 },
-  "o1-mini": { input: 3, output: 12 },
-  "o1-pro": { input: 15, output: 60 },
-  
-  // DeepSeek models
-  "deepseek-r1": { input: 0.55, output: 2.19 },
-  "deepseek-v3": { input: 0.27, output: 1.1 },
-  "deepseek-v2": { input: 0.14, output: 0.28 },
-  
-  // Llama models (typical via providers)
-  "llama-3.3": { input: 0.06, output: 0.06 },
-  "llama-3.2": { input: 0.055, output: 0.055 },
-  "llama-3.1": { input: 0.06, output: 0.06 },
-  
-  // Mistral models
-  "mistral-large": { input: 2, output: 6 },
-  "mistral-small": { input: 0.2, output: 0.6 },
-  
-  // Default fallback
-  "default": { input: 1, output: 3 },
+interface ModelPricing {
+  input: number
+  output: number
+  cacheWrite: number
+  cacheRead: number
+}
+
+// Cache for loaded pricing data
+let PRICING_CACHE: Record<string, ModelPricing> | null = null
+
+// Load pricing data from models.json
+async function loadModelPricing(): Promise<Record<string, ModelPricing>> {
+  if (PRICING_CACHE) {
+    return PRICING_CACHE
+  }
+
+  try {
+    const modelsPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'models.json')
+    const data = await fs.readFile(modelsPath, 'utf8')
+    PRICING_CACHE = JSON.parse(data)
+    return PRICING_CACHE!
+  } catch (error) {
+    console.error('Failed to load models.json, using fallback pricing:', error)
+    // Fallback to minimal pricing if file can't be loaded
+    PRICING_CACHE = {
+      "default": { input: 1, output: 3, cacheWrite: 0, cacheRead: 0 }
+    }
+    return PRICING_CACHE
+  }
 }
 
 const OPENAI_MODEL_MAP: Record<string, string> = {
@@ -776,13 +766,15 @@ class TokenAnalysisEngine {
 // ============================================================================
 
 class CostCalculator {
+  constructor(private pricingData: Record<string, ModelPricing>) {}
+
   calculateCost(analysis: TokenAnalysis): CostEstimate {
     const pricing = this.getPricing(analysis.model.name)
     
     const inputCost = (analysis.inputTokens / 1_000_000) * pricing.input
     const outputCost = (analysis.outputTokens / 1_000_000) * pricing.output
-    const cacheReadCost = (analysis.cacheReadTokens / 1_000_000) * (pricing.cacheRead ?? 0)
-    const cacheWriteCost = (analysis.cacheWriteTokens / 1_000_000) * (pricing.cacheWrite ?? 0)
+    const cacheReadCost = (analysis.cacheReadTokens / 1_000_000) * pricing.cacheRead
+    const cacheWriteCost = (analysis.cacheWriteTokens / 1_000_000) * pricing.cacheWrite
     const cacheCost = cacheReadCost + cacheWriteCost
     
     return {
@@ -792,28 +784,39 @@ class CostCalculator {
       totalCost: inputCost + outputCost + cacheCost,
       pricePerMillionInput: pricing.input,
       pricePerMillionOutput: pricing.output,
-      pricePerMillionCacheRead: pricing.cacheRead ?? 0,
-      pricePerMillionCacheWrite: pricing.cacheWrite ?? 0,
+      pricePerMillionCacheRead: pricing.cacheRead,
+      pricePerMillionCacheWrite: pricing.cacheWrite,
     }
   }
   
-  private getPricing(modelName: string): { input: number; output: number; cacheRead?: number; cacheWrite?: number } {
+  private getPricing(modelName: string): ModelPricing {
+    // Normalize model name (handle provider/model format)
+    const normalizedName = this.normalizeModelName(modelName)
+    
     // Try exact match
-    if (MODEL_PRICING[modelName]) {
-      return MODEL_PRICING[modelName]
+    if (this.pricingData[normalizedName]) {
+      return this.pricingData[normalizedName]
     }
     
     // Try prefix matching for model families
-    const lowerModel = modelName.toLowerCase()
+    const lowerModel = normalizedName.toLowerCase()
     
-    for (const [key, pricing] of Object.entries(MODEL_PRICING)) {
+    for (const [key, pricing] of Object.entries(this.pricingData)) {
       if (lowerModel.startsWith(key.toLowerCase())) {
         return pricing
       }
     }
     
     // Fallback to default
-    return MODEL_PRICING["default"]
+    return this.pricingData["default"] || { input: 1, output: 3, cacheWrite: 0, cacheRead: 0 }
+  }
+
+  private normalizeModelName(modelName: string): string {
+    // Handle "provider/model" format
+    if (modelName.includes('/')) {
+      return modelName.split('/').pop() || modelName
+    }
+    return modelName
   }
 }
 
@@ -1139,11 +1142,14 @@ class OutputFormatter {
 // ============================================================================
 
 export const TokenAnalyzerPlugin: Plugin = async ({ client }) => {
+  // Load pricing data from models.json
+  const pricingData = await loadModelPricing()
+  
   const tokenizerManager = new TokenizerManager()
   const modelResolver = new ModelResolver()
   const contentCollector = new ContentCollector()
   const analysisEngine = new TokenAnalysisEngine(tokenizerManager, contentCollector)
-  const costCalculator = new CostCalculator()
+  const costCalculator = new CostCalculator(pricingData)
   const formatter = new OutputFormatter(costCalculator)
 
   return {

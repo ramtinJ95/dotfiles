@@ -16,6 +16,8 @@ A comprehensive OpenCode plugin that analyzes token usage across sessions, provi
 4. **Most Recent Message Selection**: Fixed to use `.reverse().find()` with non-zero check instead of blind last-message approach
 5. **Removed Scaling Logic**: Replaced proportional scaling with direct system token inference
 6. **Cleaned Up Code**: Removed unused scaling methods (~88 lines)
+7. **External Pricing Configuration**: Moved pricing data to `models.json` file (41+ models supported)
+8. **Model Name Normalization**: Added support for `provider/model` format (e.g., `qwen/qwen3-coder`)
 
 ### Key Architectural Decisions
 
@@ -359,7 +361,84 @@ try {
 2. Flag `'w'` means "write, truncate if exists"
 3. Error handling for both operations
 
-### 3. Parallel Token Counting
+### 3. External Pricing System (New in 2.1)
+
+**Architecture**:
+```typescript
+// Pricing data loaded from models.json at plugin initialization
+interface ModelPricing {
+  input: number
+  output: number
+  cacheWrite: number
+  cacheRead: number
+}
+
+// Cached after first load
+let PRICING_CACHE: Record<string, ModelPricing> | null = null
+
+async function loadModelPricing(): Promise<Record<string, ModelPricing>> {
+  if (PRICING_CACHE) return PRICING_CACHE
+  
+  const modelsPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'models.json')
+  const data = await fs.readFile(modelsPath, 'utf8')
+  PRICING_CACHE = JSON.parse(data)
+  return PRICING_CACHE
+}
+```
+
+**CostCalculator Integration**:
+```typescript
+class CostCalculator {
+  constructor(private pricingData: Record<string, ModelPricing>) {}
+  
+  private getPricing(modelName: string): ModelPricing {
+    // 1. Normalize model name (strip provider/)
+    const normalizedName = this.normalizeModelName(modelName)
+    
+    // 2. Try exact match
+    if (this.pricingData[normalizedName]) {
+      return this.pricingData[normalizedName]
+    }
+    
+    // 3. Try prefix matching
+    const lowerModel = normalizedName.toLowerCase()
+    for (const [key, pricing] of Object.entries(this.pricingData)) {
+      if (lowerModel.startsWith(key.toLowerCase())) {
+        return pricing
+      }
+    }
+    
+    // 4. Fallback to default
+    return this.pricingData["default"]
+  }
+  
+  private normalizeModelName(modelName: string): string {
+    // Handle "provider/model" → "model"
+    if (modelName.includes('/')) {
+      return modelName.split('/').pop() || modelName
+    }
+    return modelName
+  }
+}
+```
+
+**Benefits**:
+- ✅ Easy to add/update model pricing without code changes
+- ✅ Supports 41+ models out of the box
+- ✅ Handles `provider/model` format automatically
+- ✅ Graceful fallback to default pricing if file missing/invalid
+- ✅ Cached after first load for performance
+
+**Plugin Initialization**:
+```typescript
+export const TokenAnalyzerPlugin: Plugin = async ({ client }) => {
+  const pricingData = await loadModelPricing()  // Load before creating calculator
+  const costCalculator = new CostCalculator(pricingData)
+  // ... rest of initialization
+}
+```
+
+### 4. Parallel Token Counting
 
 Categories are counted in parallel for performance:
 
@@ -375,7 +454,7 @@ const [system, user, assistant, tools, reasoning] = await Promise.all([
 
 Note: System prompts collection returns empty array, but system tokens are inferred later from API telemetry.
 
-### 4. Tokenizer Loading
+### 5. Tokenizer Loading
 
 **Tiktoken (OpenAI)**:
 - Package: `js-tiktoken`
@@ -392,7 +471,7 @@ Note: System prompts collection returns empty array, but system tokens are infer
 npm install "js-tiktoken@latest" "@huggingface/transformers@^3.3.3" --prefix ./vendor
 ```
 
-### 5. Model Resolution Priority
+### 6. Model Resolution Priority
 
 ```
 1. Check if providerID is OpenAI/Azure → use tiktoken
@@ -402,23 +481,46 @@ npm install "js-tiktoken@latest" "@huggingface/transformers@^3.3.3" --prefix ./v
 5. Fallback to approximation (chars / 4)
 ```
 
-### 6. Cost Calculation
+### 7. Cost Calculation
 
 Pricing is per 1 million tokens:
 
 ```typescript
 const inputCost = (inputTokens / 1_000_000) * pricing.input
 const outputCost = (outputTokens / 1_000_000) * pricing.output
-const cacheReadCost = (cacheReadTokens / 1_000_000) * (pricing.cacheRead ?? 0)
-const cacheWriteCost = (cacheWriteTokens / 1_000_000) * (pricing.cacheWrite ?? 0)
+const cacheReadCost = (cacheReadTokens / 1_000_000) * pricing.cacheRead
+const cacheWriteCost = (cacheWriteTokens / 1_000_000) * pricing.cacheWrite
 ```
 
-**Pricing lookup**:
-1. Try exact match: `MODEL_PRICING[modelName]`
-2. Try prefix match: Check if model name starts with pricing key
-3. Fallback: `MODEL_PRICING["default"]` = { input: 1, output: 3 }
+**Pricing Data Source**: `models.json` file (loaded at plugin initialization)
+
+**Pricing lookup strategy**:
+1. **Normalize model name**: Strip `provider/` prefix if present (e.g., `qwen/qwen3-coder` → `qwen3-coder`)
+2. **Try exact match**: Look up normalized name in `models.json`
+3. **Try prefix match**: Check if model name starts with any key in `models.json`
+4. **Fallback**: Use `default` entry: `{ input: 1, output: 3, cacheWrite: 0, cacheRead: 0 }`
+
+**Supported Models**: 41+ models including:
+- Claude models (Opus, Sonnet, Haiku - all versions)
+- OpenAI models (GPT-4, GPT-3.5, o1, o3, GPT-5)
+- DeepSeek models (R1, V2, V3)
+- Llama models (3.1, 3.2, 3.3)
+- Mistral models
+- Other providers (Grok, Qwen, Kimi, GLM)
 
 **IMPORTANT**: Cost uses **session-wide aggregated totals**, not current context.
+
+**Adding New Models**: Simply edit `models.json` and restart OpenCode:
+```json
+{
+  "new-model-name": {
+    "input": 1.50,
+    "output": 5.00,
+    "cacheWrite": 0.50,
+    "cacheRead": 0.10
+  }
+}
+```
 
 ## Model Configurations
 
@@ -457,16 +559,48 @@ deepseek → "deepseek-ai/DeepSeek-V3"
 google → "google/gemma-2-9b-it"
 ```
 
-### Model Pricing (lines 125-163)
+### Model Pricing (models.json)
 
-Prices per 1M tokens (input/output/cacheRead/cacheWrite):
+**UPDATED**: Pricing is now loaded from `~/.config/opencode/plugin/models.json`
 
-```typescript
-"claude-3.5-sonnet": { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 }
-"gpt-4o": { input: 2.5, output: 10 }
-"deepseek-r1": { input: 0.55, output: 2.19 }
-"default": { input: 1, output: 3 }
+Sample pricing entries (prices per 1M tokens):
+
+```json
+{
+  "claude-sonnet-4": {
+    "input": 3.00,
+    "output": 15.00,
+    "cacheWrite": 3.75,
+    "cacheRead": 0.30
+  },
+  "gpt-4o": {
+    "input": 2.50,
+    "output": 10.00,
+    "cacheWrite": 0.00,
+    "cacheRead": 0.00
+  },
+  "deepseek-r1": {
+    "input": 0.55,
+    "output": 2.19,
+    "cacheWrite": 0.00,
+    "cacheRead": 0.00
+  },
+  "default": {
+    "input": 1.00,
+    "output": 3.00,
+    "cacheWrite": 0.00,
+    "cacheRead": 0.00
+  }
+}
 ```
+
+**Total Models Supported**: 41+ (as of 2025-11-10)
+
+**Key Features**:
+- Supports `provider/model` format (e.g., `qwen/qwen3-coder`)
+- Includes versioned models (e.g., `claude-sonnet-4-20250514`)
+- Cache pricing for supported models (Claude, GPT-5, GLM)
+- Free models marked with zero pricing (Grok, some Qwen variants)
 
 ## Output Format (Updated)
 
@@ -598,7 +732,8 @@ Example: 50% → 15 filled, 15 empty → `████████████�
 ```
 ~/.config/opencode/
 ├── plugin/
-│   ├── token-analyzer.ts        # Main plugin implementation (1,207 lines)
+│   ├── token-analyzer.ts        # Main plugin implementation
+│   ├── models.json              # Pricing data for 41+ models (NEW)
 │   ├── install.sh               # Dependency installer
 │   ├── README.md                # User documentation
 │   ├── plugin-under-the-hood.md # Developer guide
@@ -613,6 +748,8 @@ Example: 50% → 15 filled, 15 empty → `████████████�
 ```
 
 **Output file**: `token-usage-output.txt` (written to current working directory, overwritten each run)
+
+**New in this version**: `models.json` contains all pricing data, making it easy to add or update model pricing without modifying code.
 
 ## Common Patterns
 
@@ -681,17 +818,31 @@ for (const { tokens } of assistants) {
 
 ### Adding a New Model
 
-1. **Add pricing** (lines 125-163):
-   ```typescript
-   "new-model": { input: 1.5, output: 5 }
+**UPDATED**: Adding models is now much easier with external `models.json` file!
+
+1. **Add pricing to models.json**:
+   ```json
+   {
+     "new-model-name": {
+       "input": 1.50,
+       "output": 5.00,
+       "cacheWrite": 0.50,
+       "cacheRead": 0.10
+     }
+   }
    ```
 
-2. **Add tokenizer mapping** (lines 184-211):
+2. **Add tokenizer mapping** (if not already covered by prefix matching):
+   Edit `token-analyzer.ts` TRANSFORMERS_MODEL_MAP or OPENAI_MODEL_MAP:
    ```typescript
    "new-model": "huggingface/tokenizer-hub-id"
    ```
 
-3. **Test**: Run `/tokens` with the new model
+3. **Restart OpenCode**: Plugin loads `models.json` at initialization
+
+4. **Test**: Run `/tokens` with the new model
+
+**Note**: Model name normalization handles `provider/model` format automatically, so both `new-model` and `provider/new-model` will match the same pricing entry.
 
 ### Adding a New Category
 
@@ -840,10 +991,26 @@ Look for plugin initialization messages in OpenCode logs.
 **Cause**: Using current context instead of session total for costs  
 **Solution**: Always use session aggregates (`inputTokens`, `cacheReadTokens`, etc.) for cost
 
+### Issue: New model not showing correct pricing
+**Cause**: Model not in `models.json` or name mismatch  
+**Solution**: 
+1. Check if model name is in `models.json` (exact match or prefix)
+2. Add new entry to `models.json` with pricing
+3. Restart OpenCode to reload pricing data
+4. Check if model uses `provider/model` format - normalization strips provider prefix
+
+### Issue: Plugin fails to load after adding models.json
+**Cause**: Invalid JSON syntax in `models.json`  
+**Solution**: 
+1. Validate JSON syntax: `node -e "JSON.parse(require('fs').readFileSync('models.json', 'utf8'))"`
+2. Check for trailing commas, missing quotes, etc.
+3. Plugin falls back to default pricing if file can't be loaded
+
 ---
 
 **Last Updated**: 2025-11-10 (This Session)
-**Plugin Version**: 2.0 (Major refactor with dual tracking)
+**Plugin Version**: 2.1 (External pricing configuration)
 **OpenCode Version**: Compatible with latest
-**Total Lines**: 1,207 lines (cleaned up from ~1,295)
-**Key Contributors**: Initial implementation + this debugging session
+**Supported Models**: 41+ (via models.json)
+**Key Features**: Dual tracking, system inference, external pricing, model normalization
+**Key Contributors**: Initial implementation + debugging session + pricing refactor
