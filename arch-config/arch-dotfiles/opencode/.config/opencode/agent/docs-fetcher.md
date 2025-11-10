@@ -25,7 +25,6 @@ description: >-
     Assistant: "Let me use the context7-docs-fetcher agent to pull the latest Stripe API documentation and migration guides to help resolve this warning."
     <Commentary: Troubleshooting requires current API documentation to understand deprecated features and their replacements></Commentary>
 mode: subagent
-model: github-copilot/gpt-5-codex
 tools:
   bash: false
   write: false

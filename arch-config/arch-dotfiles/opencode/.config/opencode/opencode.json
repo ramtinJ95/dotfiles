@@ -5,7 +5,7 @@
       "type": "remote",
       "url": "https://mcp.context7.com/mcp",
       "headers": {
-        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
+        "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}"
       }
     },
     "gh_grep": {
@@ -15,7 +15,7 @@
   },
   "tools": {
     "context7*": false,
-    "gh_grep": false
+    "gh_grep*": false
   },
   "provider": {
     "openrouter": {
@@ -23,5 +23,12 @@
         "minimax/minimax-m2:free": {}
       }
     }
+  },
+  "keybinds": {
+    "leader": "ctrl+e",
+    "session_list": "none",
+    "messages_toggle_conceal": "none",
+    "session_child_cycle": "leader+h",
+    "session_child_cycle_reverse": "leader+l"
   }
 }
