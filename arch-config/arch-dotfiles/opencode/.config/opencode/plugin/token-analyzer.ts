@@ -87,6 +87,12 @@ interface TokenAnalysis {
   outputTokens: number
   cacheReadTokens: number
   cacheWriteTokens: number
+  assistantMessageCount: number
+  // Most recent call telemetry (for current context)
+  mostRecentInput: number
+  mostRecentOutput: number
+  mostRecentCacheRead: number
+  mostRecentCacheWrite: number
   allToolsCalled: string[]
   toolCallCounts: Map<string, number>
 }
@@ -433,14 +439,27 @@ class ContentCollector {
     const prompts = new Map<string, string>()
 
     for (const message of messages) {
-      if (message.info.role !== "assistant") continue
+      // Check for system role messages
+      if (message.info.role === "system") {
+        const content = this.extractText(message.parts)
+        if (content) {
+          prompts.set(content, content)
+        }
+      }
 
-      for (const prompt of message.info.system ?? []) {
-        const trimmed = (prompt ?? "").trim()
-        if (!trimmed) continue
-        prompts.set(trimmed, trimmed)
+      // Also check assistant messages for system array (if it exists)
+      if (message.info.role === "assistant") {
+        for (const prompt of message.info.system ?? []) {
+          const trimmed = (prompt ?? "").trim()
+          if (!trimmed) continue
+          prompts.set(trimmed, trimmed)
+        }
       }
     }
+
+    // Note: System prompts are often not available in session messages API
+    // They are cached by the API but not exposed to us
+    // We'll infer them from telemetry in the analysis engine
 
     return Array.from(prompts.values()).map((content, index) => ({
       label: this.identifySystemPrompt(content, index + 1),
@@ -627,6 +646,11 @@ class TokenAnalysisEngine {
       outputTokens: 0,
       cacheReadTokens: 0,
       cacheWriteTokens: 0,
+      assistantMessageCount: 0,
+      mostRecentInput: 0,
+      mostRecentOutput: 0,
+      mostRecentCacheRead: 0,
+      mostRecentCacheWrite: 0,
       allToolsCalled,
       toolCallCounts,
     }
@@ -659,39 +683,84 @@ class TokenAnalysisEngine {
   }
 
   private applyTelemetryAdjustments(analysis: TokenAnalysis, messages: SessionMessage[]) {
-    const assistantMessages = messages
-      .filter((m) => m.info.role === "assistant" && m.info.tokens)
-      .map((m) => ({ message: m, tokens: m.info.tokens! }))
+    // Filter to assistant messages with tokens
+    const assistants = messages
+      .filter((m) => m.info.role === "assistant" && m.info?.tokens)
+      .map((m) => ({ msg: m, tokens: m.info.tokens! }))
 
-    const recentMessage = assistantMessages
+    // Aggregate telemetry across ALL assistant messages (for billing)
+    let totalInput = 0
+    let totalOutput = 0
+    let totalReasoning = 0
+    let totalCacheRead = 0
+    let totalCacheWrite = 0
+
+    for (const { tokens } of assistants) {
+      totalInput += Number(tokens.input) || 0
+      totalOutput += Number(tokens.output) || 0
+      totalReasoning += Number(tokens.reasoning) || 0
+      totalCacheRead += Number(tokens.cache?.read) || 0
+      totalCacheWrite += Number(tokens.cache?.write) || 0
+    }
+
+    // Find MOST RECENT message with non-zero usage (for current context - TUI match)
+    const mostRecentWithUsage = [...assistants]
       .reverse()
-      .find((item) => this.hasNonZeroUsage(item.tokens)) ?? assistantMessages[assistantMessages.length - 1]
+      .find(({ tokens }) => 
+        (Number(tokens.input) || 0) +
+        (Number(tokens.output) || 0) +
+        (Number(tokens.reasoning) || 0) +
+        (Number(tokens.cache?.read) || 0) +
+        (Number(tokens.cache?.write) || 0) > 0
+      ) ?? assistants[assistants.length - 1]  // Fallback to last
 
-    if (!recentMessage) return
+    // Extract most recent telemetry
+    let mostRecentInput = 0
+    let mostRecentOutput = 0
+    let mostRecentReasoning = 0
+    let mostRecentCacheRead = 0
+    let mostRecentCacheWrite = 0
 
-    const tokens = recentMessage.tokens
-    const inputTokens = Number(tokens.input) || 0
-    const cacheReadTokens = Number(tokens.cache?.read) || 0
-    const cacheWriteTokens = Number(tokens.cache?.write) || 0
-    const promptTokens = inputTokens + cacheReadTokens + cacheWriteTokens
-    const assistantTokens = Number(tokens.output) || 0
-    const reasoningTokens = Number(tokens.reasoning) || 0
+    if (mostRecentWithUsage) {
+      const t = mostRecentWithUsage.tokens
+      mostRecentInput = Number(t.input) || 0
+      mostRecentOutput = Number(t.output) || 0
+      mostRecentReasoning = Number(t.reasoning) || 0
+      mostRecentCacheRead = Number(t.cache?.read) || 0
+      mostRecentCacheWrite = Number(t.cache?.write) || 0
+    }
 
-    const promptMeasured =
-      analysis.categories.system.totalTokens +
-      analysis.categories.user.totalTokens +
-      analysis.categories.tools.totalTokens
+    // Store the aggregated API telemetry values (for billing)
+    analysis.inputTokens = totalInput
+    analysis.outputTokens = totalOutput + totalReasoning
+    analysis.cacheReadTokens = totalCacheRead
+    analysis.cacheWriteTokens = totalCacheWrite
+    analysis.assistantMessageCount = assistants.length
+    
+    // Store most recent call telemetry (for TUI matching)
+    analysis.mostRecentInput = mostRecentInput
+    analysis.mostRecentOutput = mostRecentOutput + mostRecentReasoning
+    analysis.mostRecentCacheRead = mostRecentCacheRead
+    analysis.mostRecentCacheWrite = mostRecentCacheWrite
 
-    this.scalePromptCategories(analysis, promptTokens, promptMeasured)
-    this.scaleCategory(analysis.categories.assistant, assistantTokens, "Assistant output")
-    this.scaleCategory(analysis.categories.reasoning, reasoningTokens, "Reasoning")
+    // Infer system tokens from the MOST RECENT API call (for current context)
+    // This matches what the OpenCode TUI shows
+    const recentApiInputTotal = mostRecentInput + mostRecentCacheRead
+    const localUserAndTools = analysis.categories.user.totalTokens + analysis.categories.tools.totalTokens
+    const inferredSystemTokens = Math.max(0, recentApiInputTotal - localUserAndTools)
+    
+    if (inferredSystemTokens > 0 && analysis.categories.system.totalTokens === 0) {
+      // We have system tokens in the API but didn't collect any locally
+      // Add an inferred entry
+      analysis.categories.system.totalTokens = inferredSystemTokens
+      analysis.categories.system.entries = [{
+        label: "System (inferred from API)",
+        tokens: inferredSystemTokens
+      }]
+      analysis.categories.system.allEntries = analysis.categories.system.entries
+    }
 
-    // Store the actual telemetry values
-    analysis.inputTokens = inputTokens
-    analysis.outputTokens = assistantTokens + reasoningTokens
-    analysis.cacheReadTokens = cacheReadTokens
-    analysis.cacheWriteTokens = cacheWriteTokens
-
+    // Recalculate total tokens with inferred system (this represents CURRENT context)
     analysis.totalTokens =
       analysis.categories.system.totalTokens +
       analysis.categories.user.totalTokens +
@@ -700,92 +769,6 @@ class TokenAnalysisEngine {
       analysis.categories.reasoning.totalTokens
   }
 
-  private hasNonZeroUsage(tokens: TokenUsage): boolean {
-    return (
-      (Number(tokens.input) || 0) +
-      (Number(tokens.output) || 0) +
-      (Number(tokens.reasoning) || 0) +
-      (Number(tokens.cache?.read) || 0) +
-      (Number(tokens.cache?.write) || 0) > 0
-    )
-  }
-
-  private scalePromptCategories(analysis: TokenAnalysis, actual: number, measured: number) {
-    const categories = [analysis.categories.system, analysis.categories.user, analysis.categories.tools]
-
-    if (actual <= 0) {
-      for (const category of categories) {
-        category.totalTokens = 0
-        for (const entry of category.entries) entry.tokens = 0
-      }
-      return
-    }
-
-    if (measured <= 0) {
-      const share = actual / categories.length
-      for (const category of categories) {
-        if (category.entries.length === 0) {
-          category.entries.push({ label: category.label, tokens: share })
-        } else {
-          category.entries = [{ label: category.entries[0].label, tokens: share }]
-        }
-        category.totalTokens = share
-      }
-      return
-    }
-
-    const factor = actual / measured
-    let accumulated = 0
-
-    for (const category of categories) {
-      const scaled = this.scaleEntries(category.entries, factor)
-      category.totalTokens = scaled
-      accumulated += scaled
-    }
-
-    const diff = actual - accumulated
-    if (Math.abs(diff) > 1e-6 && categories.length) {
-      categories[0].totalTokens += Math.round(diff)
-      if (categories[0].entries.length) {
-        categories[0].entries[0].tokens += Math.round(diff)
-      }
-    }
-  }
-
-  private scaleCategory(category: CategorySummary, actual: number, fallbackLabel: string) {
-    if (actual <= 0) {
-      category.totalTokens = 0
-      category.entries = []
-      return
-    }
-
-    const measured = category.totalTokens
-
-    if (measured <= 0) {
-      category.entries = [{ label: fallbackLabel, tokens: actual }]
-      category.totalTokens = actual
-      return
-    }
-
-    const factor = actual / measured
-    const scaled = this.scaleEntries(category.entries, factor)
-    category.totalTokens = scaled
-
-    const diff = actual - scaled
-    if (Math.abs(diff) > 1e-6 && category.entries.length) {
-      category.entries[0].tokens += Math.round(diff)
-      category.totalTokens += Math.round(diff)
-    }
-  }
-
-  private scaleEntries(entries: CategoryEntry[], factor: number): number {
-    let total = 0
-    for (const entry of entries) {
-      entry.tokens = Math.round(entry.tokens * factor)
-      total += entry.tokens
-    }
-    return total
-  }
 }
 
 // ============================================================================
@@ -924,6 +907,11 @@ class OutputFormatter {
       analysis.outputTokens,
       analysis.cacheReadTokens,
       analysis.cacheWriteTokens,
+      analysis.assistantMessageCount,
+      analysis.mostRecentInput,
+      analysis.mostRecentOutput,
+      analysis.mostRecentCacheRead,
+      analysis.mostRecentCacheWrite,
       inputCategories,
       outputCategories,
       topEntries,
@@ -940,6 +928,11 @@ class OutputFormatter {
     outputTokens: number,
     cacheReadTokens: number,
     cacheWriteTokens: number,
+    assistantMessageCount: number,
+    mostRecentInput: number,
+    mostRecentOutput: number,
+    mostRecentCacheRead: number,
+    mostRecentCacheWrite: number,
     inputCategories: Array<{ label: string; tokens: number }>,
     outputCategories: Array<{ label: string; tokens: number }>,
     topEntries: CategoryEntry[],
@@ -954,59 +947,119 @@ class OutputFormatter {
     lines.push(`═══════════════════════════════════════════════════════════════════════════`)
     lines.push(``)
 
+    // LOCAL TOKEN BREAKDOWN Section
+    lines.push(`📊 LOCAL TOKEN BREAKDOWN (Estimated from content analysis)`)
+    lines.push(`─────────────────────────────────────────────────────────────────────────`)
+    lines.push(``)
+
     // INPUT TOKENS Section
     const inputTotal = inputCategories.reduce((sum, cat) => sum + cat.tokens, 0)
-    lines.push(`📥 INPUT TOKENS (Context sent to model)`)
-    lines.push(`─────────────────────────────────────────────────────────────────────────`)
+    lines.push(`Input Categories:`)
 
     for (const category of inputCategories) {
       const barLine = this.formatCategoryBar(category.label, category.tokens, inputTotal)
       if (barLine) {
-        lines.push(barLine)
-      }
-    }
-
-    if (cacheReadTokens > 0 || cacheWriteTokens > 0) {
-      lines.push(``)
-      if (cacheReadTokens > 0) {
-        lines.push(`  Cache Read:  ${this.formatNumber(cacheReadTokens)} tokens`)
-      }
-      if (cacheWriteTokens > 0) {
-        lines.push(`  Cache Write: ${this.formatNumber(cacheWriteTokens)} tokens`)
+        lines.push(`  ${barLine}`)
       }
     }
 
     lines.push(``)
-    lines.push(`Subtotal: ${this.formatNumber(inputTotal)} input tokens`)
+    lines.push(`  Subtotal: ${this.formatNumber(inputTotal)} estimated input tokens`)
     lines.push(``)
 
     // OUTPUT TOKENS Section
     const outputTotal = outputCategories.reduce((sum, cat) => sum + cat.tokens, 0)
-    lines.push(`📤 OUTPUT TOKENS (Generated by model)`)
-    lines.push(`─────────────────────────────────────────────────────────────────────────`)
+    lines.push(`Output Categories:`)
 
     for (const category of outputCategories) {
       const barLine = this.formatCategoryBar(category.label, category.tokens, outputTotal)
       if (barLine) {
-        lines.push(barLine)
+        lines.push(`  ${barLine}`)
       }
     }
 
     lines.push(``)
-    lines.push(`Subtotal: ${this.formatNumber(outputTotal)} output tokens`)
+    lines.push(`  Subtotal: ${this.formatNumber(outputTotal)} estimated output tokens`)
+    lines.push(``)
+    lines.push(`Local Total: ${this.formatNumber(totalTokens)} tokens (estimated)`)
     lines.push(``)
 
-    // Total
+    // Context Window Calculation
+    const systemTokens = inputCategories.find(c => c.label === 'SYSTEM')?.tokens || 0
+    const userTokens = inputCategories.find(c => c.label === 'USER')?.tokens || 0
+    const toolsTokens = inputCategories.find(c => c.label === 'TOOLS')?.tokens || 0
+    const assistantTokens = outputCategories.find(c => c.label === 'ASSISTANT')?.tokens || 0
+    const reasoningTokens = outputCategories.find(c => c.label === 'REASONING')?.tokens || 0
+    
     lines.push(`═══════════════════════════════════════════════════════════════════════════`)
-    lines.push(`TOTAL: ${this.formatNumber(totalTokens)} tokens`)
+    lines.push(`📐 CURRENT CONTEXT WINDOW (Matches OpenCode TUI display)`)
+    lines.push(`─────────────────────────────────────────────────────────────────────────`)
+    lines.push(``)
+    lines.push(`Most recent API call telemetry:`)
+    lines.push(`  Input (fresh):     ${this.formatNumber(mostRecentInput).padStart(10)} tokens`)
+    lines.push(`  Cache read:        ${this.formatNumber(mostRecentCacheRead).padStart(10)} tokens`)
+    lines.push(`  Output:            ${this.formatNumber(mostRecentOutput).padStart(10)} tokens`)
+    lines.push(`  Total (API):       ${this.formatNumber(mostRecentInput + mostRecentCacheRead + mostRecentOutput).padStart(10)} tokens`)
+    lines.push(``)
+    lines.push(`Context breakdown (estimated):`)
+    lines.push(`  System prompts:    ${this.formatNumber(systemTokens).padStart(10)} tokens`)
+    lines.push(`  User messages:     ${this.formatNumber(userTokens).padStart(10)} tokens`)
+    lines.push(`  Tool outputs:      ${this.formatNumber(toolsTokens).padStart(10)} tokens`)
+    lines.push(`  Assistant msgs:    ${this.formatNumber(assistantTokens).padStart(10)} tokens`)
+    lines.push(`  Reasoning:         ${this.formatNumber(reasoningTokens).padStart(10)} tokens`)
+    lines.push(`  ───────────────────────────────────`)
+    lines.push(`  Current Context:   ${this.formatNumber(totalTokens).padStart(10)} tokens`)
+    lines.push(``)
+    lines.push(`Note: System = (Input + Cache) - (User + Tools) = ${this.formatNumber(mostRecentInput + mostRecentCacheRead)} - ${this.formatNumber(userTokens + toolsTokens)} = ${this.formatNumber(systemTokens)}`)
+    lines.push(``)
+    lines.push(`This should closely match the OpenCode TUI header. Small differences (~2K) are`)
+    lines.push(`expected because the TUI updates after this analysis runs, including tokens`)
+    lines.push(`from the /tokens command itself.`)
+    lines.push(``)
+
+    // API TELEMETRY Section
+    lines.push(`═══════════════════════════════════════════════════════════════════════════`)
+    lines.push(`📡 SESSION-WIDE BILLING (All ${assistantMessageCount} API calls aggregated)`)
+    lines.push(`─────────────────────────────────────────────────────────────────────────`)
+    lines.push(``)
+    lines.push(`Total tokens processed across the entire session (for cost calculation):`)
+    lines.push(``)
+    lines.push(`  Input tokens:      ${this.formatNumber(inputTokens).padStart(10)} (fresh tokens across all calls)`)
+    lines.push(`  Cache read:        ${this.formatNumber(cacheReadTokens).padStart(10)} (cached tokens across all calls)`)
+    lines.push(`  Cache write:       ${this.formatNumber(cacheWriteTokens).padStart(10)} (tokens written to cache)`)
+    lines.push(`  Output tokens:     ${this.formatNumber(outputTokens).padStart(10)} (all model responses)`)
+    lines.push(`  ───────────────────────────────────`)
+    lines.push(`  Session Total:     ${this.formatNumber(inputTokens + cacheReadTokens + cacheWriteTokens + outputTokens).padStart(10)} tokens (for billing)`)
+    lines.push(``)
+
+    // Calculate summary values
+    const localInputEstimate = systemTokens + userTokens + toolsTokens
+    const apiInputActual = inputTokens + cacheReadTokens
+    const localOutputEstimate = assistantTokens + reasoningTokens
+    const apiOutputActual = outputTokens
+    
+    lines.push(`═══════════════════════════════════════════════════════════════════════════`)
+    lines.push(`📊 SUMMARY`)
+    lines.push(`─────────────────────────────────────────────────────────────────────────`)
+    lines.push(``)
+    lines.push(`Current Context (TUI):       ${this.formatNumber(totalTokens).padStart(10)} tokens`)
+    lines.push(`Session Total (Billing):     ${this.formatNumber(apiInputActual + apiOutputActual).padStart(10)} tokens`)
+    lines.push(`API Calls Made:              ${assistantMessageCount}`)
+    lines.push(``)
+    lines.push(`Note: "Current Context" shows tokens in the most recent API call context`)
+    lines.push(`(matching what OpenCode TUI displays). "Session Total" shows all tokens`)
+    lines.push(`processed across all API calls (for accurate cost calculation).`)
+    lines.push(``)
+    lines.push(`System prompts are inferred from API telemetry as they're not exposed`)
+    lines.push(`in the session messages API.`)
     lines.push(`═══════════════════════════════════════════════════════════════════════════`)
 
     // Cost Estimation
     lines.push(``)
-    lines.push(`💰 COST ESTIMATION`)
+    lines.push(`💰 COST ESTIMATION (Based on API telemetry)`)
     lines.push(`─────────────────────────────────────────────────────────────────────────`)
     lines.push(`Input tokens:    ${this.formatNumber(inputTokens).padStart(10)} × $${cost.pricePerMillionInput.toFixed(2)}/M  = $${cost.inputCost.toFixed(4)}`)
-    lines.push(`Output tokens:   ${this.formatNumber(outputTokens).padStart(10)} × $${cost.pricePerMillionOutput.toFixed(2)}/M  = $${cost.outputCost.toFixed(4)}`)
+    lines.push(`Output tokens:   ${this.formatNumber(outputTokens).padStart(10)} × $${cost.pricePerMillionOutput.toFixed(2)}/M = $${cost.outputCost.toFixed(4)}`)
     
     if (cost.cacheCost > 0) {
       if (cacheReadTokens > 0) {
@@ -1125,12 +1178,28 @@ export const TokenAnalyzerPlugin: Plugin = async ({ client }) => {
           )
 
           const output = formatter.format(analysis)
-          // Write output to file
+          
+          // Write output to file (force overwrite)
           const outputPath = path.join(process.cwd(), 'token-usage-output.txt')
-          await fs.writeFile(outputPath, output, 'utf8')
+          try {
+            // Try to remove the file first to ensure a clean write
+            try {
+              await fs.unlink(outputPath)
+            } catch {
+              // File might not exist, which is fine
+            }
+            
+            // Write the new output
+            await fs.writeFile(outputPath, output, { encoding: 'utf8', flag: 'w' })
+          } catch (error) {
+            throw new Error(`Failed to write token analysis to ${outputPath}: ${error}`)
+          }
 
-          // Return short message telling user to read the file
-          return `Token analysis complete! Full report saved to: ${outputPath}\n\nUse: cat token-usage-output.txt (or read the file) to view the complete analysis.`
+          // Return message
+          const timestamp = new Date().toISOString()
+          const formattedTotal = new Intl.NumberFormat("en-US").format(analysis.totalTokens)
+          
+          return `Token analysis complete! Full report saved to: ${outputPath}\n\nTimestamp: ${timestamp}\nTotal tokens analyzed: ${formattedTotal}\n\nUse: cat token-usage-output.txt (or read the file) to view the complete analysis.`
         },
       }),
     },
