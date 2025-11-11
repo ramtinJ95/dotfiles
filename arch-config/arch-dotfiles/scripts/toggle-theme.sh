@@ -10,6 +10,7 @@ declare -A THEMES=(
     ["archwave"]="Archwave"
     ["batou"]="Batou"
     ["catppuccin"]="Catppuccin Mocha"
+    ["mechanoonna"]="Mechanoonna"
 )
 
 # Theme configurations
@@ -17,22 +18,25 @@ declare -A K9S_THEMES=(
     ["archwave"]="archwave"
     ["batou"]="batou"
     ["catppuccin"]="catppuccin-mocha"
+    ["mechanoonna"]="mechanoonna"
 )
 
 declare -A STARSHIP_THEMES=(
     ["archwave"]="archwave"
     ["batou"]="batou"
     ["catppuccin"]="catppuccin_mocha"
+    ["mechanoonna"]="mechanoonna"
 )
 
 declare -A YAZI_THEMES=(
     ["archwave"]="archwave"
     ["batou"]="batou"
     ["catppuccin"]="catppuccin-mocha"
+    ["mechanoonna"]="mechanoonna"
 )
 
 # Detect current theme from starship config
-current_theme=$(grep -E '^palette = "(archwave|batou|catppuccin_mocha)"' "$CONFIG_DIR/starship.toml" 2>/dev/null | sed 's/palette = "\(.*\)"/\1/' | sed 's/_mocha//' || echo "archwave")
+current_theme=$(grep -E '^palette = "(archwave|batou|catppuccin_mocha|mechanoonna)"' "$CONFIG_DIR/starship.toml" 2>/dev/null | sed 's/palette = "\(.*\)"/\1/' | sed 's/_mocha//' || echo "archwave")
 
 # Function to display theme selection menu
 show_theme_menu() {
