@@ -1154,7 +1154,7 @@ export const TokenAnalyzerPlugin: Plugin = async ({ client }) => {
 
   return {
     tool: {
-      token_usage: tool({
+      tokenscope: tool({
         description:
           "Analyze token usage across the current session with detailed breakdowns by category (system, user, assistant, tools, reasoning). " +
           "Provides visual charts and identifies top token consumers.",
