@@ -35,6 +35,13 @@ declare -A YAZI_THEMES=(
     ["mechanoonna"]="mechanoonna"
 )
 
+declare -A KITTY_THEMES=(
+    ["archwave"]="archwave"
+    ["batou"]="batou"
+    ["catppuccin"]="catppuccin-mocha"
+    ["mechanoonna"]="mechanoonna"
+)
+
 # Detect current theme from starship config
 current_theme=$(grep -E '^palette = "(archwave|batou|catppuccin_mocha|mechanoonna)"' "$CONFIG_DIR/starship.toml" 2>/dev/null | sed 's/palette = "\(.*\)"/\1/' | sed 's/_mocha//' || echo "archwave")
 
@@ -115,5 +122,27 @@ if [ -f "$TMUX_CONF" ]; then
     sed -i "/# ${new_theme} theme start/,/# ${new_theme} theme end/ s/^# set /set /" "$TMUX_CONF"
 fi
 
+# Update kitty tab colors based on theme
+KITTY_CONF="$CONFIG_DIR/kitty/kitty.conf"
+KITTY_THEME_FILE="$CONFIG_DIR/omarchy/themes/${KITTY_THEMES[$new_theme]}/kitty.conf"
+
+if [ -f "$KITTY_THEME_FILE" ] && [ -f "$KITTY_CONF" ]; then
+    # Extract background and foreground colors from theme
+    bg_color=$(grep '^background' "$KITTY_THEME_FILE" | awk '{print $2}')
+    fg_color=$(grep '^foreground' "$KITTY_THEME_FILE" | awk '{print $2}')
+    color4=$(grep '^color4' "$KITTY_THEME_FILE" | awk '{print $2}')
+    
+    if [ -n "$bg_color" ] && [ -n "$fg_color" ] && [ -n "$color4" ]; then
+        # Update tab colors in kitty.conf
+        sed -i "s/^active_tab_foreground.*/active_tab_foreground       $fg_color/" "$KITTY_CONF"
+        sed -i "s/^active_tab_background.*/active_tab_background       $bg_color/" "$KITTY_CONF"
+        sed -i "s/^inactive_tab_foreground.*/inactive_tab_foreground     $color4/" "$KITTY_CONF"
+        sed -i "s/^inactive_tab_background.*/inactive_tab_background     $bg_color/" "$KITTY_CONF"
+        
+        # Reload kitty config for all instances
+        killall -SIGUSR1 kitty 2>/dev/null
+    fi
+fi
+
 echo "Theme switched to ${THEMES[$new_theme]}"
-echo "Reload your configs (tmux: prefix + r, starship: new shell)"
+echo "Reload your configs (tmux: prefix + r, starship: new shell, kitty: auto-reloaded)"
