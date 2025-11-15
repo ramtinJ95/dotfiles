@@ -14,15 +14,15 @@ description: >-
 
   - User: "I need to implement OAuth2 authentication using the latest version of
   Passport.js"
-    Assistant: "Let me fetch the current Passport.js documentation using the context7-docs-fetcher agent to ensure we implement this correctly with the latest API."
-    <Commentary: The user needs current documentation for a specific library implementation, triggering the context7-docs-fetcher agent></Commentary>
+    Assistant: "Let me fetch the current Passport.js documentation using the context7- docs agent to ensure we implement this correctly with the latest API."
+    <Commentary: The user needs current documentation for a specific library implementation, triggering the context7-docs agent></Commentary>
 
   - User: "What's the best way to handle form validation in React these days?"
-    Assistant: "I'll use the context7-docs-fetcher agent to retrieve the latest documentation on React form handling and popular validation libraries to give you current best practices."
+    Assistant: "I'll use the context7-docs agent to retrieve the latest documentation on React form handling and popular validation libraries to give you current best practices."
     <Commentary: Question requires up-to-date information about framework patterns and library options></Commentary>
 
   - User: "I'm getting a deprecation warning from the Stripe API"
-    Assistant: "Let me use the context7-docs-fetcher agent to pull the latest Stripe API documentation and migration guides to help resolve this warning."
+    Assistant: "Let me use the context7-docs agent to pull the latest Stripe API documentation and migration guides to help resolve this warning."
     <Commentary: Troubleshooting requires current API documentation to understand deprecated features and their replacements></Commentary>
 mode: subagent
 tools:
