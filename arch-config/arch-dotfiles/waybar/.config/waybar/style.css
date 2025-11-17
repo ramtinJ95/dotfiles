@@ -39,11 +39,16 @@
 #cpu,
 #battery,
 #pulseaudio,
-#custom-omarchy,
 #custom-screenrecording-indicator,
 #custom-update {
   min-width: 12px;
   margin: 0 7.5px;
+}
+
+#custom-omarchy {
+  min-width: 12px;
+  margin: 0 7.5px;
+  font-size: 16px;
 }
 
 #tray {
