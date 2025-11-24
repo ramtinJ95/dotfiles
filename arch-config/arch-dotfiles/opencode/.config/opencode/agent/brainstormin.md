@@ -14,6 +14,8 @@ description: >-
   functionality, let me proactively engage the feature-brainstorm agent to
   explore potential enhancements and edge cases we should consider.'
 mode: primary
+model: anthropic/claude-opus-4-5-20251101
+thinking: enabled
 temperature: 0.6
 tools:
   edit: false

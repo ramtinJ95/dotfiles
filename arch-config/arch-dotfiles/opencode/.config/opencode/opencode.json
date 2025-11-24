@@ -18,11 +18,20 @@
     "gh_grep*": false
   },
   "provider": {
-    "openrouter": {
+    "anthropic": {
       "models": {
-        "minimax/minimax-m2:free": {}
-      }
-    }
+        "claude-opus-4-5-20251101": {
+          "id": "claude-opus-4-5-20251101",
+          "name": "Opus 4.5 Thinking",
+          "options": {
+            "thinking": {
+              "type": "enabled",
+              "budgetTokens": 16000,
+            },
+          },
+        },
+      },
+    },
   },
   "keybinds": {
     "leader": "ctrl+e",
