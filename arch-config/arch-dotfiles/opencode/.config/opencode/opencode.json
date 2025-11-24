@@ -40,4 +40,7 @@
     "session_child_cycle": "leader+h",
     "session_child_cycle_reverse": "leader+l"
   },
+  "experimental": {
+    "batch_tool": true
+  }
 }
