@@ -14,6 +14,7 @@ description: >-
   completed code that needs review, so use the code-reviewer
   agent.</commentary></example>
 mode: subagent
+model: github-copilot/gpt-5 
 tools:
   bash: false
   write: false
