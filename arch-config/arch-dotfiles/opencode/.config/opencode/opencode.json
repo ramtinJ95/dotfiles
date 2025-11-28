@@ -13,6 +13,11 @@
       "url": "https://mcp.grep.app"
     }
   },
+  "permission": {
+    "bash": {
+      "rm *": "ask"
+    }
+  },
   "tools": {
     "context7*": false,
     "gh_grep*": false
