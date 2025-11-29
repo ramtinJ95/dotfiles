@@ -4,11 +4,69 @@
 
 A comprehensive OpenCode plugin that analyzes token usage across sessions, providing detailed breakdowns by category, cost estimation, and visual reports.
 
-**Location**: `~/.config/opencode/plugin/token-analyzer.ts`
+**Location**: `~/.config/opencode/plugin/tokenscope.ts`
 
-## Recent Updates (2025-11-10)
+## Recent Updates (2025-11-29)
 
 ### Major Changes in This Session
+
+1. **Hybrid Cost Approach**: Uses API cost when available, falls back to estimation for subscription users
+2. **Subscription Detection**: Detects when user is on subscription (API cost = 0 with activity)
+3. **Reasoning Tokens Tracked Separately**: No longer combined with output tokens for accuracy
+4. **Dual Cost Display**: Shows both API cost and estimated cost when relevant
+5. **Added sessionCost and mostRecentCost**: Direct from OpenCode API for accurate billing
+6. **Removed TUI Matching Claims**: No longer claim to match OpenCode TUI context display (unreliable due to pruning/timing)
+7. **Simplified Output**: Focus on raw API telemetry and category breakdown (our unique value)
+
+### Hybrid Cost Strategy
+
+**The Problem**: 
+- API key users: OpenCode provides accurate cost via `message.info.cost`
+- Subscription users: `message.info.cost` is always 0, but users want to know what it would cost
+
+**The Solution**: Hybrid approach that detects user type and shows appropriate cost:
+
+```typescript
+// Detect subscription mode
+const hasActivity = assistantMessageCount > 0 && (inputTokens > 0 || outputTokens > 0)
+const isSubscription = hasActivity && analysis.sessionCost === 0
+
+if (isSubscription) {
+  // Show estimated cost from models.json pricing
+  // "Here's what this session would cost with direct API access"
+} else {
+  // Show actual API cost (accurate)
+  // Optionally show estimate comparison if >5% difference
+}
+```
+
+**For Subscription Users**:
+- Shows "ESTIMATED SESSION COST (API Key Pricing)"
+- Uses `models.json` pricing data to calculate costs
+- Helpful for budgeting/comparison purposes
+
+**For API Key Users**:
+- Shows "ACTUAL COST (from API)" - 100% accurate
+- Shows estimate comparison if >5% difference
+- API cost includes provider adjustments, 200K+ tiers, etc.
+
+### Key Code Changes
+
+```typescript
+// CostEstimate now has both API and estimated costs
+interface CostEstimate {
+  isSubscription: boolean       // Detected from API cost being 0
+  apiSessionCost: number        // From message.info.cost (0 for subscription)
+  estimatedSessionCost: number  // Calculated from models.json
+  // ... breakdown fields
+}
+```
+
+---
+
+## Previous Updates (2025-11-10)
+
+### Major Changes in Previous Session
 
 1. **File Overwriting Fixed**: Added explicit file deletion and write flags to ensure `token-usage-output.txt` is properly overwritten on each run
 2. **Dual Token Tracking**: Separated "Current Context" (TUI match) from "Session Total" (billing)
@@ -16,24 +74,26 @@ A comprehensive OpenCode plugin that analyzes token usage across sessions, provi
 4. **Most Recent Message Selection**: Fixed to use `.reverse().find()` with non-zero check instead of blind last-message approach
 5. **Removed Scaling Logic**: Replaced proportional scaling with direct system token inference
 6. **Cleaned Up Code**: Removed unused scaling methods (~88 lines)
-7. **External Pricing Configuration**: Moved pricing data to `models.json` file (41+ models supported)
+7. **External Pricing Configuration**: Moved pricing data to `models.json` file (41+ models supported) - **NOW DEPRECATED**
 8. **Model Name Normalization**: Added support for `provider/model` format (e.g., `qwen/qwen3-coder`)
 
 ### Key Architectural Decisions
 
 #### Why Two Token Totals?
 
-**Current Context (TUI Match)**:
+**Most Recent API Call**:
 - Uses **most recent API call** telemetry
-- Matches what OpenCode TUI displays (~34K in testing)
-- Shows what's in the current context window
-- Expected to be ~2K less than TUI when `/tokens` is called (plugin analyzes before its own response)
+- Shows raw token counts from the last API response
+- Useful for understanding current context size
 
-**Session Total (Billing)**:
+**Session Total**:
 - Aggregates **all API calls** in the session
 - Used for accurate cost calculation
 - Shows cumulative token usage across all turns
-- Much higher than current context (e.g., 492K session vs 34K current)
+
+**Note**: We intentionally do NOT try to match the OpenCode TUI token display.
+The TUI uses post-pruning data and updates in real-time, making exact matching
+unreliable. Instead, we focus on accurate session totals and category breakdowns.
 
 #### System Prompt Inference Problem
 
@@ -429,14 +489,20 @@ class CostCalculator {
 - ✅ Graceful fallback to default pricing if file missing/invalid
 - ✅ Cached after first load for performance
 
-**Plugin Initialization**:
+**Plugin Initialization** (v3.0 - simplified):
 ```typescript
 export const TokenAnalyzerPlugin: Plugin = async ({ client }) => {
-  const pricingData = await loadModelPricing()  // Load before creating calculator
-  const costCalculator = new CostCalculator(pricingData)
-  // ... rest of initialization
+  const tokenizerManager = new TokenizerManager()
+  const modelResolver = new ModelResolver()
+  const contentCollector = new ContentCollector()
+  const analysisEngine = new TokenAnalysisEngine(tokenizerManager, contentCollector)
+  const costCalculator = new CostCalculator()  // No pricing data needed!
+  const formatter = new OutputFormatter(costCalculator)
+  // ...
 }
 ```
+
+**Note**: `loadModelPricing()` and `models.json` are no longer used.
 
 ### 4. Parallel Token Counting
 
@@ -481,30 +547,37 @@ npm install "js-tiktoken@latest" "@huggingface/transformers@^3.3.3" --prefix ./v
 5. Fallback to approximation (chars / 4)
 ```
 
-### 7. Cost Calculation
+### 7. Cost Calculation (v3.0 - Hybrid Approach)
 
-Pricing is per 1 million tokens:
+**NEW in v3.0**: Hybrid cost calculation with subscription detection.
 
 ```typescript
-const inputCost = (inputTokens / 1_000_000) * pricing.input
-const outputCost = (outputTokens / 1_000_000) * pricing.output
-const cacheReadCost = (cacheReadTokens / 1_000_000) * pricing.cacheRead
-const cacheWriteCost = (cacheWriteTokens / 1_000_000) * pricing.cacheWrite
+// 1. Detect subscription mode (API cost is 0 but there's activity)
+const hasActivity = assistantMessageCount > 0 && (inputTokens > 0 || outputTokens > 0)
+const isSubscription = hasActivity && analysis.sessionCost === 0
+
+// 2. Always calculate estimated cost from models.json
+const estimatedInputCost = (inputTokens / 1_000_000) * pricing.input
+const estimatedOutputCost = ((outputTokens + reasoningTokens) / 1_000_000) * pricing.output
+// ... cache costs
+
+// 3. Return both costs
+return {
+  isSubscription,
+  apiSessionCost: analysis.sessionCost,      // From API (0 for subscription)
+  estimatedSessionCost: estimatedInputCost + estimatedOutputCost + ...
+}
 ```
 
-**Pricing Data Source**: `models.json` file (loaded at plugin initialization)
+**Display Logic**:
+- **Subscription users**: Show "ESTIMATED SESSION COST (API Key Pricing)" with breakdown
+- **API key users**: Show "ACTUAL COST (from API)" with optional estimate comparison
 
-**Pricing lookup strategy**:
-1. **Normalize model name**: Strip `provider/` prefix if present (e.g., `qwen/qwen3-coder` → `qwen3-coder`)
-2. **Try exact match**: Look up normalized name in `models.json`
-3. **Try prefix match**: Check if model name starts with any key in `models.json`
-4. **Fallback**: Use `default` entry: `{ input: 1, output: 3, cacheWrite: 0, cacheRead: 0 }`
-
-**Supported Models**: 41+ models including:
-- Claude models (Opus, Sonnet, Haiku - all versions)
-- OpenAI models (GPT-4, GPT-3.5, o1, o3, GPT-5)
-- DeepSeek models (R1, V2, V3)
-- Llama models (3.1, 3.2, 3.3)
+**Why hybrid approach**:
+- ✅ API key users get accurate cost from OpenCode
+- ✅ Subscription users get useful cost estimates
+- ✅ `models.json` still required for estimation
+- ✅ Shows comparison when estimate differs >5% from actual
 - Mistral models
 - Other providers (Grok, Qwen, Kimi, GLM)
 
@@ -992,25 +1065,26 @@ Look for plugin initialization messages in OpenCode logs.
 **Solution**: Always use session aggregates (`inputTokens`, `cacheReadTokens`, etc.) for cost
 
 ### Issue: New model not showing correct pricing
-**Cause**: Model not in `models.json` or name mismatch  
+**Cause**: Model not in `models.json` for cost estimation  
 **Solution**: 
-1. Check if model name is in `models.json` (exact match or prefix)
-2. Add new entry to `models.json` with pricing
+1. Add new entry to `models.json` with pricing (for subscription users)
+2. API key users will still get accurate cost from OpenCode API
 3. Restart OpenCode to reload pricing data
-4. Check if model uses `provider/model` format - normalization strips provider prefix
 
-### Issue: Plugin fails to load after adding models.json
-**Cause**: Invalid JSON syntax in `models.json`  
-**Solution**: 
-1. Validate JSON syntax: `node -e "JSON.parse(require('fs').readFileSync('models.json', 'utf8'))"`
-2. Check for trailing commas, missing quotes, etc.
-3. Plugin falls back to default pricing if file can't be loaded
+### Issue: Subscription detected incorrectly
+**Cause**: API returns cost=0 even for API key users in some cases  
+**Solution**: Check if there's actually activity (tokens > 0, messages > 0)
 
 ---
 
-**Last Updated**: 2025-11-10 (This Session)
-**Plugin Version**: 2.1 (External pricing configuration)
+**Last Updated**: 2025-11-29 (Hybrid Cost Approach)
+**Plugin Version**: 3.1 (Simplified output, removed TUI matching)
 **OpenCode Version**: Compatible with latest
-**Supported Models**: 41+ (via models.json)
-**Key Features**: Dual tracking, system inference, external pricing, model normalization
-**Key Contributors**: Initial implementation + debugging session + pricing refactor
+**Key Features**: 
+- Raw API telemetry display (no TUI matching claims)
+- Session totals across all API calls
+- Hybrid cost: API cost for API users, estimates for subscription users
+- Reasoning tokens tracked separately
+- Tokenizer-based category breakdown (our unique value)
+- Subscription detection
+**Key Contributors**: Initial implementation + debugging session + pricing refactor + hybrid cost + simplification
