@@ -17,6 +17,18 @@
     "cacheWrite": 3.75,
     "cacheRead": 0.30
   },
+  "claude-opus-4-5-20251101": {
+    "input": 5.00,
+    "output": 25.00,
+    "cacheWrite": 6.25,
+    "cacheRead": 0.50
+  },
+  "claude-opus-4-5": {
+    "input": 5.00,
+    "output": 25.00,
+    "cacheWrite": 6.25,
+    "cacheRead": 0.50
+  },
   "claude-sonnet-4-5-20250929": {
     "input": 3.00,
     "output": 15.00,
