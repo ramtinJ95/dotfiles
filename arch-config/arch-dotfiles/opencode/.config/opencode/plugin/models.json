@@ -281,12 +281,6 @@
     "cacheWrite": 0.11,
     "cacheRead": 0.00
   },
-  "thudm/glm-z1-32b:free": {
-    "input": 0.00,
-    "output": 0.00,
-    "cacheWrite": 0.00,
-    "cacheRead": 0.00
-  },
   "default": {
     "input": 1.00,
     "output": 3.00,
