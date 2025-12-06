@@ -4,13 +4,10 @@ import path from "path"
 import fs from "fs/promises"
 import { fileURLToPath, pathToFileURL } from "url"
 
-// Configuration
 const DEFAULT_ENTRY_LIMIT = 3
 const VENDOR_ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "vendor", "node_modules")
 
-// ============================================================================
-// Type Definitions
-// ============================================================================
+// Types
 
 interface SessionMessage {
   info: SessionMessageInfo
@@ -24,7 +21,7 @@ interface SessionMessageInfo {
   providerID?: string
   system?: string[]
   tokens?: TokenUsage
-  cost?: number  // API-calculated cost in dollars (only on assistant messages)
+  cost?: number
 }
 
 interface TokenUsage {
@@ -43,7 +40,6 @@ type SessionMessagePart =
   | { type: "tool"; tool: string; state: ToolState }
   | { type: string; [key: string]: unknown }
 
-// Type guard functions
 function isToolPart(part: SessionMessagePart): part is { type: "tool"; tool: string; state: ToolState } {
   return part.type === "tool"
 }
@@ -86,21 +82,20 @@ interface TokenAnalysis {
   totalTokens: number
   inputTokens: number
   outputTokens: number
-  reasoningTokens: number  // Track reasoning separately for accuracy
+  reasoningTokens: number
   cacheReadTokens: number
   cacheWriteTokens: number
   assistantMessageCount: number
-  // Most recent call telemetry (for current context)
   mostRecentInput: number
   mostRecentOutput: number
-  mostRecentReasoning: number  // Track reasoning separately
+  mostRecentReasoning: number
   mostRecentCacheRead: number
   mostRecentCacheWrite: number
-  // API-provided costs (accurate, from OpenCode)
-  sessionCost: number      // Total cost across all API calls (sum of message.info.cost)
-  mostRecentCost: number   // Cost of most recent API call
+  sessionCost: number
+  mostRecentCost: number
   allToolsCalled: string[]
   toolCallCounts: Map<string, number>
+  subagentAnalysis?: SubagentAnalysis
 }
 
 interface TokenModel {
@@ -119,27 +114,18 @@ interface CategoryEntrySource {
 }
 
 interface CostEstimate {
-  // Cost source detection
-  isSubscription: boolean   // True if API cost is 0 (subscription user)
-  
-  // API-provided costs (when available - API key users)
-  apiSessionCost: number    // Total cost from OpenCode API
-  apiMostRecentCost: number // Most recent call cost from API
-  
-  // Estimated costs (calculated from models.json pricing)
-  estimatedSessionCost: number    // Calculated cost for session
-  estimatedInputCost: number      // Breakdown: input tokens
-  estimatedOutputCost: number     // Breakdown: output + reasoning tokens
-  estimatedCacheReadCost: number  // Breakdown: cache read
-  estimatedCacheWriteCost: number // Breakdown: cache write
-  
-  // Pricing info (for display)
+  isSubscription: boolean
+  apiSessionCost: number
+  apiMostRecentCost: number
+  estimatedSessionCost: number
+  estimatedInputCost: number
+  estimatedOutputCost: number
+  estimatedCacheReadCost: number
+  estimatedCacheWriteCost: number
   pricePerMillionInput: number
   pricePerMillionOutput: number
   pricePerMillionCacheRead: number
   pricePerMillionCacheWrite: number
-  
-  // Token counts for display
   inputTokens: number
   outputTokens: number
   reasoningTokens: number
@@ -147,11 +133,34 @@ interface CostEstimate {
   cacheWriteTokens: number
 }
 
-// ============================================================================
-// Model Configuration
-// ============================================================================
+interface SubagentSummary {
+  sessionID: string
+  title: string
+  agentType: string
+  inputTokens: number
+  outputTokens: number
+  reasoningTokens: number
+  cacheReadTokens: number
+  cacheWriteTokens: number
+  totalTokens: number
+  apiCost: number
+  estimatedCost: number
+  assistantMessageCount: number
+}
 
-// Pricing data for cost estimation (used when API cost is 0, e.g., subscription users)
+interface SubagentAnalysis {
+  subagents: SubagentSummary[]
+  totalInputTokens: number
+  totalOutputTokens: number
+  totalReasoningTokens: number
+  totalCacheReadTokens: number
+  totalCacheWriteTokens: number
+  totalTokens: number
+  totalApiCost: number
+  totalEstimatedCost: number
+  totalApiCalls: number
+}
+
 interface ModelPricing {
   input: number
   output: number
@@ -159,25 +168,26 @@ interface ModelPricing {
   cacheRead: number
 }
 
-// Cache for loaded pricing data
+interface ChildSession {
+  id: string
+  title: string
+  parentID?: string
+}
+
+// Model Configuration
+
 let PRICING_CACHE: Record<string, ModelPricing> | null = null
 
-// Load pricing data from models.json for fallback cost estimation
 async function loadModelPricing(): Promise<Record<string, ModelPricing>> {
-  if (PRICING_CACHE) {
-    return PRICING_CACHE
-  }
+  if (PRICING_CACHE) return PRICING_CACHE
 
   try {
     const modelsPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'models.json')
     const data = await fs.readFile(modelsPath, 'utf8')
     PRICING_CACHE = JSON.parse(data)
     return PRICING_CACHE!
-  } catch (error) {
-    // Fallback to minimal pricing if file can't be loaded
-    PRICING_CACHE = {
-      "default": { input: 1, output: 3, cacheWrite: 0, cacheRead: 0 }
-    }
+  } catch {
+    PRICING_CACHE = { "default": { input: 1, output: 3, cacheWrite: 0, cacheRead: 0 } }
     return PRICING_CACHE
   }
 }
@@ -238,9 +248,7 @@ const PROVIDER_DEFAULTS: Record<string, TokenizerSpec> = {
   google: { kind: "transformers", hub: "google/gemma-2-9b-it" },
 }
 
-// ============================================================================
 // Tokenizer Management
-// ============================================================================
 
 class TokenizerManager {
   private tiktokenCache = new Map<string, any>()
@@ -299,13 +307,10 @@ class TokenizerManager {
     }
 
     const mod = await this.loadTiktokenModule()
-    
-    // js-tiktoken uses camelCase, not snake_case
     const encodingForModel = mod.encodingForModel ?? mod.default?.encodingForModel
     const getEncoding = mod.getEncoding ?? mod.default?.getEncoding
 
     if (typeof getEncoding !== "function") {
-      // Fall back to approximation if module not properly loaded
       return { encode: (text: string) => ({ length: Math.ceil(text.length / 4) }) }
     }
 
@@ -369,9 +374,7 @@ class TokenizerManager {
   }
 }
 
-// ============================================================================
 // Model Resolution
-// ============================================================================
 
 class ModelResolver {
   resolveTokenModel(messages: SessionMessage[]): TokenModel {
@@ -444,36 +447,25 @@ class ModelResolver {
   }
 }
 
-// ============================================================================
 // Content Collectors
-// ============================================================================
 
 class ContentCollector {
   collectSystemPrompts(messages: SessionMessage[]): CategoryEntrySource[] {
     const prompts = new Map<string, string>()
 
     for (const message of messages) {
-      // Check for system role messages
       if (message.info.role === "system") {
         const content = this.extractText(message.parts)
-        if (content) {
-          prompts.set(content, content)
-        }
+        if (content) prompts.set(content, content)
       }
 
-      // Also check assistant messages for system array (if it exists)
       if (message.info.role === "assistant") {
         for (const prompt of message.info.system ?? []) {
           const trimmed = (prompt ?? "").trim()
-          if (!trimmed) continue
-          prompts.set(trimmed, trimmed)
+          if (trimmed) prompts.set(trimmed, trimmed)
         }
       }
     }
-
-    // Note: System prompts are often not available in session messages API
-    // They are cached by the API but not exposed to us
-    // We'll infer them from telemetry in the analysis engine
 
     return Array.from(prompts.values()).map((content, index) => ({
       label: this.identifySystemPrompt(content, index + 1),
@@ -573,42 +565,18 @@ class ContentCollector {
   private identifySystemPrompt(content: string, index: number): string {
     const lower = content.toLowerCase()
 
-    // Specific identification patterns
-    if (lower.includes("opencode") && lower.includes("cli") && content.length > 500) {
-      return "System#MainPrompt"
-    }
-    if (lower.includes("opencode") && lower.includes("cli") && content.length <= 500) {
-      return "System#ShortPrompt"
-    }
-    if (lower.includes("agent") && lower.includes("mode")) {
-      return "System#AgentMode"
-    }
-    if (lower.includes("permission") || lower.includes("allowed") || lower.includes("deny")) {
-      return "System#Permissions"
-    }
-    if (lower.includes("tool") && (lower.includes("rule") || lower.includes("guideline"))) {
-      return "System#ToolRules"
-    }
-    if (lower.includes("format") || lower.includes("style") || lower.includes("concise")) {
-      return "System#Formatting"
-    }
-    if (lower.includes("project") || lower.includes("repository") || lower.includes("codebase")) {
-      return "System#ProjectContext"
-    }
-    if (lower.includes("session") || lower.includes("context") || lower.includes("memory")) {
-      return "System#SessionMgmt"
-    }
-    if (content.includes("@") && (content.includes(".md") || content.includes(".txt"))) {
-      return "System#FileRefs"
-    }
-    if (content.includes("name:") && content.includes("description:")) {
-      return "System#AgentDef"
-    }
-    if (lower.includes("code") && (lower.includes("convention") || lower.includes("standard"))) {
-      return "System#CodeGuidelines"
-    }
+    if (lower.includes("opencode") && lower.includes("cli") && content.length > 500) return "System#MainPrompt"
+    if (lower.includes("opencode") && lower.includes("cli") && content.length <= 500) return "System#ShortPrompt"
+    if (lower.includes("agent") && lower.includes("mode")) return "System#AgentMode"
+    if (lower.includes("permission") || lower.includes("allowed") || lower.includes("deny")) return "System#Permissions"
+    if (lower.includes("tool") && (lower.includes("rule") || lower.includes("guideline"))) return "System#ToolRules"
+    if (lower.includes("format") || lower.includes("style") || lower.includes("concise")) return "System#Formatting"
+    if (lower.includes("project") || lower.includes("repository") || lower.includes("codebase")) return "System#ProjectContext"
+    if (lower.includes("session") || lower.includes("context") || lower.includes("memory")) return "System#SessionMgmt"
+    if (content.includes("@") && (content.includes(".md") || content.includes(".txt"))) return "System#FileRefs"
+    if (content.includes("name:") && content.includes("description:")) return "System#AgentDef"
+    if (lower.includes("code") && (lower.includes("convention") || lower.includes("standard"))) return "System#CodeGuidelines"
 
-    // Fallback numbering
     return `System#${index}`
   }
 
@@ -618,9 +586,7 @@ class ContentCollector {
   }
 }
 
-// ============================================================================
 // Token Analysis Engine
-// ============================================================================
 
 class TokenAnalysisEngine {
   constructor(
@@ -701,18 +667,12 @@ class TokenAnalysisEngine {
   }
 
   private applyTelemetryAdjustments(analysis: TokenAnalysis, messages: SessionMessage[]) {
-    // Filter to assistant messages with tokens or cost
     const assistants = messages
       .filter((m) => m.info.role === "assistant" && (m.info?.tokens || m.info?.cost !== undefined))
       .map((m) => ({ msg: m, tokens: m.info.tokens, cost: m.info.cost ?? 0 }))
 
-    // Aggregate telemetry across ALL assistant messages (for billing)
-    let totalInput = 0
-    let totalOutput = 0
-    let totalReasoning = 0
-    let totalCacheRead = 0
-    let totalCacheWrite = 0
-    let totalCost = 0  // Sum of API-provided costs
+    let totalInput = 0, totalOutput = 0, totalReasoning = 0
+    let totalCacheRead = 0, totalCacheWrite = 0, totalCost = 0
 
     for (const { tokens, cost } of assistants) {
       if (tokens) {
@@ -722,10 +682,9 @@ class TokenAnalysisEngine {
         totalCacheRead += Number(tokens.cache?.read) || 0
         totalCacheWrite += Number(tokens.cache?.write) || 0
       }
-      totalCost += Number(cost) || 0  // Accumulate API cost
+      totalCost += Number(cost) || 0
     }
 
-    // Find MOST RECENT message with non-zero usage (for current context - TUI match)
     const mostRecentWithUsage = [...assistants]
       .reverse()
       .find(({ tokens }) => 
@@ -736,15 +695,10 @@ class TokenAnalysisEngine {
           (Number(tokens.cache?.read) || 0) +
           (Number(tokens.cache?.write) || 0) > 0
         )
-      ) ?? assistants[assistants.length - 1]  // Fallback to last
+      ) ?? assistants[assistants.length - 1]
 
-    // Extract most recent telemetry
-    let mostRecentInput = 0
-    let mostRecentOutput = 0
-    let mostRecentReasoning = 0
-    let mostRecentCacheRead = 0
-    let mostRecentCacheWrite = 0
-    let mostRecentCost = 0
+    let mostRecentInput = 0, mostRecentOutput = 0, mostRecentReasoning = 0
+    let mostRecentCacheRead = 0, mostRecentCacheWrite = 0, mostRecentCost = 0
 
     if (mostRecentWithUsage) {
       const t = mostRecentWithUsage.tokens
@@ -758,45 +712,30 @@ class TokenAnalysisEngine {
       mostRecentCost = Number(mostRecentWithUsage.cost) || 0
     }
 
-    // Store the aggregated API telemetry values (for billing)
-    // Keep reasoning separate for accuracy (OpenCode charges reasoning at output rate)
     analysis.inputTokens = totalInput
     analysis.outputTokens = totalOutput
     analysis.reasoningTokens = totalReasoning
     analysis.cacheReadTokens = totalCacheRead
     analysis.cacheWriteTokens = totalCacheWrite
     analysis.assistantMessageCount = assistants.length
-    
-    // Store API-provided costs (accurate, from OpenCode)
     analysis.sessionCost = totalCost
     analysis.mostRecentCost = mostRecentCost
-    
-    // Store most recent call telemetry (for TUI matching)
-    // Keep reasoning separate here too
     analysis.mostRecentInput = mostRecentInput
     analysis.mostRecentOutput = mostRecentOutput
     analysis.mostRecentReasoning = mostRecentReasoning
     analysis.mostRecentCacheRead = mostRecentCacheRead
     analysis.mostRecentCacheWrite = mostRecentCacheWrite
 
-    // Infer system tokens from the MOST RECENT API call (for current context)
-    // This matches what the OpenCode TUI shows
     const recentApiInputTotal = mostRecentInput + mostRecentCacheRead
     const localUserAndTools = analysis.categories.user.totalTokens + analysis.categories.tools.totalTokens
     const inferredSystemTokens = Math.max(0, recentApiInputTotal - localUserAndTools)
     
     if (inferredSystemTokens > 0 && analysis.categories.system.totalTokens === 0) {
-      // We have system tokens in the API but didn't collect any locally
-      // Add an inferred entry
       analysis.categories.system.totalTokens = inferredSystemTokens
-      analysis.categories.system.entries = [{
-        label: "System (inferred from API)",
-        tokens: inferredSystemTokens
-      }]
+      analysis.categories.system.entries = [{ label: "System (inferred from API)", tokens: inferredSystemTokens }]
       analysis.categories.system.allEntries = analysis.categories.system.entries
     }
 
-    // Recalculate total tokens with inferred system (this represents CURRENT context)
     analysis.totalTokens =
       analysis.categories.system.totalTokens +
       analysis.categories.user.totalTokens +
@@ -804,33 +743,19 @@ class TokenAnalysisEngine {
       analysis.categories.tools.totalTokens +
       analysis.categories.reasoning.totalTokens
   }
-
 }
 
-// ============================================================================
 // Cost Calculator
-// ============================================================================
 
 class CostCalculator {
   constructor(private pricingData: Record<string, ModelPricing>) {}
 
-  /**
-   * Hybrid cost calculation:
-   * - If API cost > 0: Use API cost (accurate, from OpenCode billing)
-   * - If API cost = 0: User is on subscription, calculate estimated cost from models.json
-   * 
-   * Always provides estimated cost for comparison/budgeting purposes.
-   */
   calculateCost(analysis: TokenAnalysis): CostEstimate {
     const pricing = this.getPricing(analysis.model.name)
-    
-    // Detect subscription mode: API cost is 0 but there are API calls with tokens
     const hasActivity = analysis.assistantMessageCount > 0 && 
       (analysis.inputTokens > 0 || analysis.outputTokens > 0)
     const isSubscription = hasActivity && analysis.sessionCost === 0
     
-    // Calculate estimated costs from models.json pricing
-    // Note: Reasoning tokens are typically charged at output rate
     const estimatedInputCost = (analysis.inputTokens / 1_000_000) * pricing.input
     const estimatedOutputCost = ((analysis.outputTokens + analysis.reasoningTokens) / 1_000_000) * pricing.output
     const estimatedCacheReadCost = (analysis.cacheReadTokens / 1_000_000) * pricing.cacheRead
@@ -839,25 +764,17 @@ class CostCalculator {
     
     return {
       isSubscription,
-      
-      // API costs (0 for subscription users)
       apiSessionCost: analysis.sessionCost,
       apiMostRecentCost: analysis.mostRecentCost,
-      
-      // Estimated costs (always calculated)
       estimatedSessionCost,
       estimatedInputCost,
       estimatedOutputCost,
       estimatedCacheReadCost,
       estimatedCacheWriteCost,
-      
-      // Pricing info for display
       pricePerMillionInput: pricing.input,
       pricePerMillionOutput: pricing.output,
       pricePerMillionCacheRead: pricing.cacheRead,
       pricePerMillionCacheWrite: pricing.cacheWrite,
-      
-      // Token counts
       inputTokens: analysis.inputTokens,
       outputTokens: analysis.outputTokens,
       reasoningTokens: analysis.reasoningTokens,
@@ -867,38 +784,156 @@ class CostCalculator {
   }
   
   private getPricing(modelName: string): ModelPricing {
-    // Normalize model name (handle provider/model format)
     const normalizedName = this.normalizeModelName(modelName)
     
-    // Try exact match
-    if (this.pricingData[normalizedName]) {
-      return this.pricingData[normalizedName]
-    }
+    if (this.pricingData[normalizedName]) return this.pricingData[normalizedName]
     
-    // Try prefix matching for model families
     const lowerModel = normalizedName.toLowerCase()
     for (const [key, pricing] of Object.entries(this.pricingData)) {
-      if (lowerModel.startsWith(key.toLowerCase())) {
-        return pricing
-      }
+      if (lowerModel.startsWith(key.toLowerCase())) return pricing
     }
     
-    // Fallback to default
     return this.pricingData["default"] || { input: 1, output: 3, cacheWrite: 0, cacheRead: 0 }
   }
 
   private normalizeModelName(modelName: string): string {
-    // Handle "provider/model" format
-    if (modelName.includes('/')) {
-      return modelName.split('/').pop() || modelName
-    }
-    return modelName
+    return modelName.includes('/') ? modelName.split('/').pop() || modelName : modelName
   }
 }
 
-// ============================================================================
+// Subagent Analyzer
+
+class SubagentAnalyzer {
+  constructor(
+    private client: any,
+    private costCalculator: CostCalculator,
+    private pricingData: Record<string, ModelPricing>
+  ) {}
+
+  async analyzeChildSessions(parentSessionID: string): Promise<SubagentAnalysis> {
+    const result: SubagentAnalysis = {
+      subagents: [],
+      totalInputTokens: 0,
+      totalOutputTokens: 0,
+      totalReasoningTokens: 0,
+      totalCacheReadTokens: 0,
+      totalCacheWriteTokens: 0,
+      totalTokens: 0,
+      totalApiCost: 0,
+      totalEstimatedCost: 0,
+      totalApiCalls: 0,
+    }
+
+    try {
+      const childrenResponse = await this.client.session.children({ path: { id: parentSessionID } })
+      const children: ChildSession[] = ((childrenResponse as any)?.data ?? childrenResponse ?? []) as ChildSession[]
+
+      if (!Array.isArray(children) || children.length === 0) return result
+
+      for (const child of children) {
+        const summary = await this.analyzeChildSession(child)
+        if (summary) {
+          result.subagents.push(summary)
+          result.totalInputTokens += summary.inputTokens
+          result.totalOutputTokens += summary.outputTokens
+          result.totalReasoningTokens += summary.reasoningTokens
+          result.totalCacheReadTokens += summary.cacheReadTokens
+          result.totalCacheWriteTokens += summary.cacheWriteTokens
+          result.totalTokens += summary.totalTokens
+          result.totalApiCost += summary.apiCost
+          result.totalEstimatedCost += summary.estimatedCost
+          result.totalApiCalls += summary.assistantMessageCount
+        }
+
+        const nestedAnalysis = await this.analyzeChildSessions(child.id)
+        for (const nested of nestedAnalysis.subagents) {
+          result.subagents.push(nested)
+        }
+        result.totalInputTokens += nestedAnalysis.totalInputTokens
+        result.totalOutputTokens += nestedAnalysis.totalOutputTokens
+        result.totalReasoningTokens += nestedAnalysis.totalReasoningTokens
+        result.totalCacheReadTokens += nestedAnalysis.totalCacheReadTokens
+        result.totalCacheWriteTokens += nestedAnalysis.totalCacheWriteTokens
+        result.totalTokens += nestedAnalysis.totalTokens
+        result.totalApiCost += nestedAnalysis.totalApiCost
+        result.totalEstimatedCost += nestedAnalysis.totalEstimatedCost
+        result.totalApiCalls += nestedAnalysis.totalApiCalls
+      }
+    } catch (error) {
+      console.error(`Failed to fetch child sessions for ${parentSessionID}:`, error)
+    }
+
+    return result
+  }
+
+  private async analyzeChildSession(child: ChildSession): Promise<SubagentSummary | null> {
+    try {
+      const messagesResponse = await this.client.session.messages({ path: { id: child.id } })
+      const messages: SessionMessage[] = ((messagesResponse as any)?.data ?? messagesResponse ?? []) as SessionMessage[]
+
+      if (!Array.isArray(messages) || messages.length === 0) return null
+
+      const agentType = this.extractAgentType(child.title)
+      let inputTokens = 0, outputTokens = 0, reasoningTokens = 0
+      let cacheReadTokens = 0, cacheWriteTokens = 0
+      let apiCost = 0, assistantMessageCount = 0, modelName = "unknown"
+
+      for (const message of messages) {
+        if (message.info.role === "assistant") {
+          assistantMessageCount++
+          const tokens = message.info.tokens
+          if (tokens) {
+            inputTokens += Number(tokens.input) || 0
+            outputTokens += Number(tokens.output) || 0
+            reasoningTokens += Number(tokens.reasoning) || 0
+            cacheReadTokens += Number(tokens.cache?.read) || 0
+            cacheWriteTokens += Number(tokens.cache?.write) || 0
+          }
+          apiCost += Number(message.info.cost) || 0
+          if (message.info.modelID) modelName = message.info.modelID
+        }
+      }
+
+      const totalTokens = inputTokens + outputTokens + reasoningTokens + cacheReadTokens + cacheWriteTokens
+      const pricing = this.getPricing(modelName)
+      const estimatedCost = 
+        (inputTokens / 1_000_000) * pricing.input +
+        ((outputTokens + reasoningTokens) / 1_000_000) * pricing.output +
+        (cacheReadTokens / 1_000_000) * pricing.cacheRead +
+        (cacheWriteTokens / 1_000_000) * pricing.cacheWrite
+
+      return {
+        sessionID: child.id, title: child.title, agentType,
+        inputTokens, outputTokens, reasoningTokens, cacheReadTokens, cacheWriteTokens,
+        totalTokens, apiCost, estimatedCost, assistantMessageCount,
+      }
+    } catch (error) {
+      console.error(`Failed to analyze child session ${child.id}:`, error)
+      return null
+    }
+  }
+
+  private extractAgentType(title: string): string {
+    const match = title.match(/@(\w+)\s+subagent/i)
+    if (match) return match[1]
+    const words = title.split(/\s+/)
+    return words[0]?.toLowerCase() || "subagent"
+  }
+
+  private getPricing(modelName: string): ModelPricing {
+    const normalizedName = modelName.includes('/') ? modelName.split('/').pop() || modelName : modelName
+    if (this.pricingData[normalizedName]) return this.pricingData[normalizedName]
+    
+    const lowerModel = normalizedName.toLowerCase()
+    for (const [key, pricing] of Object.entries(this.pricingData)) {
+      if (lowerModel.startsWith(key.toLowerCase())) return pricing
+    }
+    
+    return this.pricingData["default"] || { input: 1, output: 3, cacheWrite: 0, cacheRead: 0 }
+  }
+}
+
 // Output Formatter
-// ============================================================================
 
 class OutputFormatter {
   private readonly BAR_WIDTH = 30
@@ -909,14 +944,6 @@ class OutputFormatter {
 
   constructor(private costCalculator: CostCalculator) {}
 
-  /**
-   * Formats a category bar for visual token display
-   * @param label - Category label (e.g., "SYSTEM", "USER")
-   * @param tokens - Number of tokens for this category
-   * @param total - Total tokens for percentage calculation
-   * @param labelWidth - Width to pad the label to (default: CATEGORY_LABEL_WIDTH)
-   * @returns Formatted bar string or empty string if tokens is 0
-   */
   private formatCategoryBar(
     label: string,
     tokens: number,
@@ -950,28 +977,20 @@ class OutputFormatter {
       { label: "USER", tokens: analysis.categories.user.totalTokens },
       { label: "TOOLS", tokens: analysis.categories.tools.totalTokens },
     ]
-
     const outputCategories = [
       { label: "ASSISTANT", tokens: analysis.categories.assistant.totalTokens },
       { label: "REASONING", tokens: analysis.categories.reasoning.totalTokens },
     ]
-
     const topEntries = this.collectTopEntries(analysis, 5)
     
-    // Merge tool output tokens with call counts
     const toolStats = new Map<string, { tokens: number; calls: number }>()
-    
-    // Add all tools that were called
     for (const [toolName, calls] of analysis.toolCallCounts.entries()) {
       toolStats.set(toolName, { tokens: 0, calls })
     }
-    
-    // Add token counts from tool outputs
     for (const entry of analysis.categories.tools.allEntries) {
       const existing = toolStats.get(entry.label) || { tokens: 0, calls: 0 }
       toolStats.set(entry.label, { ...existing, tokens: entry.tokens })
     }
-    
     const toolEntries = Array.from(toolStats.entries())
       .map(([label, stats]) => ({ label, tokens: stats.tokens, calls: stats.calls }))
       .sort((a, b) => b.tokens - a.tokens)
@@ -979,25 +998,13 @@ class OutputFormatter {
     const costEstimate = this.costCalculator.calculateCost(analysis)
 
     return this.formatVisualOutput(
-      analysis.sessionID,
-      analysis.model.name,
-      analysis.totalTokens,
-      analysis.inputTokens,
-      analysis.outputTokens,
-      analysis.reasoningTokens,
-      analysis.cacheReadTokens,
-      analysis.cacheWriteTokens,
-      analysis.assistantMessageCount,
-      analysis.mostRecentInput,
-      analysis.mostRecentOutput,
-      analysis.mostRecentReasoning,
-      analysis.mostRecentCacheRead,
-      analysis.mostRecentCacheWrite,
-      inputCategories,
-      outputCategories,
-      topEntries,
-      toolEntries,
-      costEstimate
+      analysis.sessionID, analysis.model.name, analysis.totalTokens,
+      analysis.inputTokens, analysis.outputTokens, analysis.reasoningTokens,
+      analysis.cacheReadTokens, analysis.cacheWriteTokens, analysis.assistantMessageCount,
+      analysis.mostRecentInput, analysis.mostRecentOutput, analysis.mostRecentReasoning,
+      analysis.mostRecentCacheRead, analysis.mostRecentCacheWrite,
+      inputCategories, outputCategories, topEntries, toolEntries, costEstimate,
+      analysis.subagentAnalysis
     )
   }
 
@@ -1020,56 +1027,79 @@ class OutputFormatter {
     outputCategories: Array<{ label: string; tokens: number }>,
     topEntries: CategoryEntry[],
     toolEntries: Array<{ label: string; tokens: number; calls: number }>,
-    cost: CostEstimate
+    cost: CostEstimate,
+    subagentAnalysis?: SubagentAnalysis
   ): string {
     const lines: string[] = []
+    const sessionTotal = inputTokens + cacheReadTokens + cacheWriteTokens + outputTokens + reasoningTokens
+    const mainCost = cost.isSubscription ? cost.estimatedSessionCost : cost.apiSessionCost
 
+    // Header
     lines.push(`═══════════════════════════════════════════════════════════════════════════`)
     lines.push(`Token Analysis: Session ${sessionID}`)
     lines.push(`Model: ${modelName}`)
     lines.push(`═══════════════════════════════════════════════════════════════════════════`)
     lines.push(``)
 
-    // LOCAL TOKEN BREAKDOWN Section - Our unique value: category-level insights
-    lines.push(`📊 TOKEN BREAKDOWN BY CATEGORY`)
+    // 1. TOKEN BREAKDOWN BY CATEGORY
+    lines.push(`TOKEN BREAKDOWN BY CATEGORY`)
     lines.push(`─────────────────────────────────────────────────────────────────────────`)
     lines.push(`Estimated using tokenizer analysis of message content:`)
     lines.push(``)
 
-    // INPUT TOKENS Section
     const inputTotal = inputCategories.reduce((sum, cat) => sum + cat.tokens, 0)
     lines.push(`Input Categories:`)
-
     for (const category of inputCategories) {
       const barLine = this.formatCategoryBar(category.label, category.tokens, inputTotal)
-      if (barLine) {
-        lines.push(`  ${barLine}`)
-      }
+      if (barLine) lines.push(`  ${barLine}`)
     }
-
     lines.push(``)
     lines.push(`  Subtotal: ${this.formatNumber(inputTotal)} estimated input tokens`)
     lines.push(``)
 
-    // OUTPUT TOKENS Section
     const outputTotal = outputCategories.reduce((sum, cat) => sum + cat.tokens, 0)
     lines.push(`Output Categories:`)
-
     for (const category of outputCategories) {
       const barLine = this.formatCategoryBar(category.label, category.tokens, outputTotal)
-      if (barLine) {
-        lines.push(`  ${barLine}`)
-      }
+      if (barLine) lines.push(`  ${barLine}`)
     }
-
     lines.push(``)
     lines.push(`  Subtotal: ${this.formatNumber(outputTotal)} estimated output tokens`)
     lines.push(``)
     lines.push(`Local Total: ${this.formatNumber(totalTokens)} tokens (estimated)`)
-    lines.push(``)
 
+    // 2. TOOL USAGE BREAKDOWN (right after token breakdown)
+    if (toolEntries.length > 0) {
+      const toolsTotalTokens = inputCategories.find(c => c.label === "TOOLS")?.tokens || 0
+      lines.push(``)
+      lines.push(`TOOL USAGE BREAKDOWN`)
+      lines.push(`─────────────────────────────────────────────────────────────────────────`)
+      for (const tool of toolEntries) {
+        const barLine = this.formatCategoryBar(tool.label, tool.tokens, toolsTotalTokens, this.TOOL_LABEL_WIDTH)
+        if (barLine) {
+          const calls = `${tool.calls}x`.padStart(5)
+          lines.push(`${barLine} ${calls}`)
+        }
+      }
+    }
+
+    // 3. TOP CONTRIBUTORS
+    if (topEntries.length > 0) {
+      lines.push(``)
+      lines.push(`TOP CONTRIBUTORS`)
+      lines.push(`─────────────────────────────────────────────────────────────────────────`)
+      for (const entry of topEntries) {
+        const percentage = ((entry.tokens / totalTokens) * 100).toFixed(1)
+        const label = `• ${entry.label}`.padEnd(this.TOP_CONTRIBUTOR_LABEL_WIDTH)
+        const formattedTokens = this.formatNumber(entry.tokens)
+        lines.push(`${label} ${formattedTokens} tokens (${percentage}%)`)
+      }
+    }
+
+    // 4. MOST RECENT API CALL
+    lines.push(``)
     lines.push(`═══════════════════════════════════════════════════════════════════════════`)
-    lines.push(`📐 MOST RECENT API CALL`)
+    lines.push(`MOST RECENT API CALL`)
     lines.push(`─────────────────────────────────────────────────────────────────────────`)
     lines.push(``)
     lines.push(`Raw telemetry from last API response:`)
@@ -1084,11 +1114,11 @@ class OutputFormatter {
     }
     lines.push(`  ───────────────────────────────────`)
     lines.push(`  Total:             ${this.formatNumber(mostRecentInput + mostRecentCacheRead + mostRecentCacheWrite + mostRecentOutput + mostRecentReasoning).padStart(10)} tokens`)
-    lines.push(``)
 
-    // API TELEMETRY Section
+    // 5. SESSION TOTALS
+    lines.push(``)
     lines.push(`═══════════════════════════════════════════════════════════════════════════`)
-    lines.push(`📡 SESSION TOTALS (All ${assistantMessageCount} API calls)`)
+    lines.push(`SESSION TOTALS (All ${assistantMessageCount} API calls)`)
     lines.push(`─────────────────────────────────────────────────────────────────────────`)
     lines.push(``)
     lines.push(`Total tokens processed across the entire session (for cost calculation):`)
@@ -1101,29 +1131,13 @@ class OutputFormatter {
       lines.push(`  Reasoning tokens:  ${this.formatNumber(reasoningTokens).padStart(10)} (thinking/reasoning)`)
     }
     lines.push(`  ───────────────────────────────────`)
-    lines.push(`  Session Total:     ${this.formatNumber(inputTokens + cacheReadTokens + cacheWriteTokens + outputTokens + reasoningTokens).padStart(10)} tokens (for billing)`)
-    lines.push(``)
+    lines.push(`  Session Total:     ${this.formatNumber(sessionTotal).padStart(10)} tokens (for billing)`)
 
-    // Calculate summary values
-    const apiInputActual = inputTokens + cacheReadTokens
-    const apiOutputActual = outputTokens + reasoningTokens
-    const sessionTotal = inputTokens + cacheReadTokens + cacheWriteTokens + outputTokens + reasoningTokens
-    const lastCallTotal = mostRecentInput + mostRecentCacheRead + mostRecentCacheWrite + mostRecentOutput + mostRecentReasoning
-    
-    lines.push(`═══════════════════════════════════════════════════════════════════════════`)
-    lines.push(`📊 SUMMARY`)
-    lines.push(`─────────────────────────────────────────────────────────────────────────`)
+    // 6. SESSION COST / ESTIMATED SESSION COST
     lines.push(``)
-    lines.push(`Last API Call:        ${this.formatNumber(lastCallTotal).padStart(10)} tokens`)
-    lines.push(`Session Total:        ${this.formatNumber(sessionTotal).padStart(10)} tokens`)
-    lines.push(`API Calls Made:       ${assistantMessageCount.toString().padStart(10)}`)
     lines.push(`═══════════════════════════════════════════════════════════════════════════`)
-
-    // Cost Display - Hybrid approach
-    lines.push(``)
     if (cost.isSubscription) {
-      // Subscription user: Show estimated cost (what they would pay with API keys)
-      lines.push(`💰 ESTIMATED SESSION COST (API Key Pricing)`)
+      lines.push(`ESTIMATED SESSION COST (API Key Pricing)`)
       lines.push(`─────────────────────────────────────────────────────────────────────────`)
       lines.push(``)
       lines.push(`You appear to be on a subscription plan (API cost is $0).`)
@@ -1143,8 +1157,7 @@ class OutputFormatter {
       lines.push(`Note: This estimate uses standard API pricing from models.json.`)
       lines.push(`Actual API costs may vary based on provider and context size.`)
     } else {
-      // API key user: Show actual API cost with optional estimate comparison
-      lines.push(`💰 SESSION COST`)
+      lines.push(`SESSION COST`)
       lines.push(`─────────────────────────────────────────────────────────────────────────`)
       lines.push(``)
       lines.push(`Token usage breakdown:`)
@@ -1162,8 +1175,6 @@ class OutputFormatter {
       lines.push(``)
       lines.push(`─────────────────────────────────────────────────────────────────────────`)
       lines.push(`ACTUAL COST (from API):  $${cost.apiSessionCost.toFixed(4)}`)
-      
-      // Show estimate comparison if there's a significant difference
       const diff = Math.abs(cost.apiSessionCost - cost.estimatedSessionCost)
       const diffPercent = cost.apiSessionCost > 0 ? (diff / cost.apiSessionCost) * 100 : 0
       if (diffPercent > 5) {
@@ -1174,36 +1185,52 @@ class OutputFormatter {
       lines.push(`and 200K+ context adjustments.`)
     }
 
-    // Tool Usage Breakdown
-    if (toolEntries.length > 0) {
-      const toolsTotalTokens = inputCategories.find(c => c.label === "TOOLS")?.tokens || 0
-      
-      lines.push(``)
-      lines.push(`🔧 TOOL USAGE BREAKDOWN`)
-      lines.push(`─────────────────────────────────────────────────────────────────────────`)
+    // 7. SUBAGENT COSTS (if any)
+    if (subagentAnalysis && subagentAnalysis.subagents.length > 0) {
+      const subagentLabelWidth = 25
+      const subagentTotalCost = cost.isSubscription 
+        ? subagentAnalysis.totalEstimatedCost 
+        : subagentAnalysis.totalApiCost
 
-      for (const tool of toolEntries) {
-        const barLine = this.formatCategoryBar(tool.label, tool.tokens, toolsTotalTokens, this.TOOL_LABEL_WIDTH)
-        if (barLine) {
-          const calls = `${tool.calls}x`.padStart(5)
-          lines.push(`${barLine} ${calls}`)
-        }
+      lines.push(``)
+      lines.push(`═══════════════════════════════════════════════════════════════════════════`)
+      lines.push(`SUBAGENT COSTS (${subagentAnalysis.subagents.length} child sessions, ${subagentAnalysis.totalApiCalls} API calls)`)
+      lines.push(`─────────────────────────────────────────────────────────────────────────`)
+      lines.push(``)
+      for (const subagent of subagentAnalysis.subagents) {
+        const label = `${subagent.agentType}`.padEnd(subagentLabelWidth)
+        const costStr = cost.isSubscription 
+          ? `$${subagent.estimatedCost.toFixed(4)}`
+          : `$${subagent.apiCost.toFixed(4)}`
+        const tokensStr = `(${this.formatNumber(subagent.totalTokens)} tokens, ${subagent.assistantMessageCount} calls)`
+        lines.push(`  ${label} ${costStr.padStart(10)}  ${tokensStr}`)
       }
+      lines.push(`─────────────────────────────────────────────────────────────────────────`)
+      lines.push(`Subagent Total:${' '.repeat(subagentLabelWidth - 14)} $${subagentTotalCost.toFixed(4)}  (${this.formatNumber(subagentAnalysis.totalTokens)} tokens, ${subagentAnalysis.totalApiCalls} calls)`)
     }
 
-    // Top Contributors
-    if (topEntries.length > 0) {
-      lines.push(``)
-      lines.push(`⭐ TOP CONTRIBUTORS`)
-      lines.push(`─────────────────────────────────────────────────────────────────────────`)
+    // 8. SUMMARY (always last)
+    lines.push(``)
+    lines.push(`═══════════════════════════════════════════════════════════════════════════`)
+    lines.push(`SUMMARY`)
+    lines.push(`─────────────────────────────────────────────────────────────────────────`)
+    lines.push(``)
+    lines.push(`                          Cost        Tokens          API Calls`)
 
-      for (const entry of topEntries) {
-        const percentage = ((entry.tokens / totalTokens) * 100).toFixed(1)
-        const label = `• ${entry.label}`.padEnd(this.TOP_CONTRIBUTOR_LABEL_WIDTH)
-        const formattedTokens = this.formatNumber(entry.tokens)
-        const tokens = `${formattedTokens} tokens (${percentage}%)`
-        lines.push(`${label} ${tokens}`)
-      }
+    if (subagentAnalysis && subagentAnalysis.subagents.length > 0) {
+      const subagentTotalCost = cost.isSubscription 
+        ? subagentAnalysis.totalEstimatedCost 
+        : subagentAnalysis.totalApiCost
+      const grandTotalCost = mainCost + subagentTotalCost
+      const grandTotalTokens = sessionTotal + subagentAnalysis.totalTokens
+      const grandTotalApiCalls = assistantMessageCount + subagentAnalysis.totalApiCalls
+
+      lines.push(`  Main session:      $${mainCost.toFixed(4).padStart(10)}    ${this.formatNumber(sessionTotal).padStart(10)}         ${assistantMessageCount.toString().padStart(5)}`)
+      lines.push(`  Subagents:         $${subagentTotalCost.toFixed(4).padStart(10)}    ${this.formatNumber(subagentAnalysis.totalTokens).padStart(10)}         ${subagentAnalysis.totalApiCalls.toString().padStart(5)}`)
+      lines.push(`─────────────────────────────────────────────────────────────────────────`)
+      lines.push(`  TOTAL:             $${grandTotalCost.toFixed(4).padStart(10)}    ${this.formatNumber(grandTotalTokens).padStart(10)}         ${grandTotalApiCalls.toString().padStart(5)}`)
+    } else {
+      lines.push(`  Session:           $${mainCost.toFixed(4).padStart(10)}    ${this.formatNumber(sessionTotal).padStart(10)}         ${assistantMessageCount.toString().padStart(5)}`)
     }
 
     lines.push(``)
@@ -1231,12 +1258,9 @@ class OutputFormatter {
   }
 }
 
-// ============================================================================
 // Plugin Export
-// ============================================================================
 
 export const TokenAnalyzerPlugin: Plugin = async ({ client }) => {
-  // Load pricing data for cost estimation (used for subscription users)
   const pricingData = await loadModelPricing()
   
   const tokenizerManager = new TokenizerManager()
@@ -1244,6 +1268,7 @@ export const TokenAnalyzerPlugin: Plugin = async ({ client }) => {
   const contentCollector = new ContentCollector()
   const analysisEngine = new TokenAnalysisEngine(tokenizerManager, contentCollector)
   const costCalculator = new CostCalculator(pricingData)
+  const subagentAnalyzer = new SubagentAnalyzer(client, costCalculator, pricingData)
   const formatter = new OutputFormatter(costCalculator)
 
   return {
@@ -1251,10 +1276,11 @@ export const TokenAnalyzerPlugin: Plugin = async ({ client }) => {
       tokenscope: tool({
         description:
           "Analyze token usage across the current session with detailed breakdowns by category (system, user, assistant, tools, reasoning). " +
-          "Provides visual charts and identifies top token consumers.",
+          "Provides visual charts, identifies top token consumers, and includes costs from subagent (Task tool) child sessions.",
         args: {
           sessionID: tool.schema.string().optional(),
           limitMessages: tool.schema.number().int().min(1).max(10).optional(),
+          includeSubagents: tool.schema.boolean().optional().describe("Include token costs from subagent child sessions (default: true)"),
         },
         async execute(args, context) {
           const sessionID = args.sessionID ?? context.sessionID
@@ -1277,32 +1303,37 @@ export const TokenAnalyzerPlugin: Plugin = async ({ client }) => {
             args.limitMessages ?? DEFAULT_ENTRY_LIMIT
           )
 
+          if (args.includeSubagents !== false) {
+            analysis.subagentAnalysis = await subagentAnalyzer.analyzeChildSessions(sessionID)
+          }
+
           const output = formatter.format(analysis)
-          
-          // Write output to file (force overwrite)
           const outputPath = path.join(process.cwd(), 'token-usage-output.txt')
+          
           try {
-            // Try to remove the file first to ensure a clean write
-            try {
-              await fs.unlink(outputPath)
-            } catch {
-              // File might not exist, which is fine
-            }
-            
-            // Write the new output
+            try { await fs.unlink(outputPath) } catch {}
             await fs.writeFile(outputPath, output, { encoding: 'utf8', flag: 'w' })
           } catch (error) {
             throw new Error(`Failed to write token analysis to ${outputPath}: ${error}`)
           }
 
-          // Return message
           const timestamp = new Date().toISOString()
           const formattedTotal = new Intl.NumberFormat("en-US").format(analysis.totalTokens)
           
-          return `Token analysis complete! Full report saved to: ${outputPath}\n\nTimestamp: ${timestamp}\nTotal tokens analyzed: ${formattedTotal}\n\nUse: cat token-usage-output.txt (or read the file) to view the complete analysis.`
+          let summaryMsg = `Token analysis complete! Full report saved to: ${outputPath}\n\nTimestamp: ${timestamp}\nMain session tokens: ${formattedTotal}`
+          
+          if (analysis.subagentAnalysis && analysis.subagentAnalysis.subagents.length > 0) {
+            const subagentTokens = new Intl.NumberFormat("en-US").format(analysis.subagentAnalysis.totalTokens)
+            const grandTotal = new Intl.NumberFormat("en-US").format(analysis.totalTokens + analysis.subagentAnalysis.totalTokens)
+            summaryMsg += `\nSubagent sessions: ${analysis.subagentAnalysis.subagents.length} (${subagentTokens} tokens)`
+            summaryMsg += `\nGrand total: ${grandTotal} tokens`
+          }
+          
+          summaryMsg += `\n\nUse: cat token-usage-output.txt (or read the file) to view the complete analysis.`
+          
+          return summaryMsg
         },
       }),
     },
   }
 }
-
