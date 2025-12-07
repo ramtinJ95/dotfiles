@@ -29,6 +29,7 @@ return {
       "tsx",
       "css",
       "html",
+      "odin",
     },
   },
 }

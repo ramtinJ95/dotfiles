@@ -1,0 +1,8 @@
+2025-12-04T07:30:44.705Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-04T07:30:44.705Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/personal-workspace/handMadeOasis
+2025-12-04T11:30:38.532Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-04T11:30:38.532Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/workspace/prefect-data-flows
+2025-12-04T19:54:02.330Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-04T19:54:02.330Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/workspace/prefect-data-flows
+2025-12-04T22:10:37.900Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-04T22:10:37.900Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/workspace/prefect-data-flows

@@ -18,3 +18,17 @@
 2025-12-02T07:55:48.085Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/workspace/prefect-data-flows
 2025-12-02T07:57:17.382Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
 2025-12-02T07:57:17.382Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/personal-workspace/handMadeOasis
+2025-12-02T19:50:12.369Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-02T19:50:12.369Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/personal-workspace
+2025-12-02T20:12:27.918Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-02T20:12:27.918Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/workspace/prefect-data-flows
+2025-12-02T20:37:09.149Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-02T20:37:09.149Z DEBUG config: No project config found | searchedFrom=/home/ramtinj
+2025-12-02T20:42:09.904Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-02T20:42:09.904Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/personal-workspace/learning-go/firstgogame
+2025-12-02T20:42:42.720Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-02T20:42:42.720Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/personal-workspace/learning-go/firstgogame
+2025-12-02T20:44:06.370Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-02T20:44:06.371Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/personal-workspace/learning-go/firstgogame
+2025-12-02T20:52:50.432Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-02T20:52:50.432Z DEBUG config: No project config found | searchedFrom=/home/ramtinj
