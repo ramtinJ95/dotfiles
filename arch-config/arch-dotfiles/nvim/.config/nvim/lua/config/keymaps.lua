@@ -19,6 +19,9 @@ vim.keymap.set("n", "<C-u>", "<C-u>zz", opts)
 vim.keymap.set("n", "n", "nzzzv", opts)
 vim.keymap.set("n", "N", "Nzzzv", opts)
 
+-- Move cursor right in insert mode (jump out of pairs)
+vim.keymap.set("i", "<C-l>", "<Right>", { desc = "Move cursor right" })
+
 local md_line_length = vim.api.nvim_create_augroup("md_line_length", { clear = true })
 vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
   command = "setlocal textwidth=80",
