@@ -1,0 +1,8 @@
+2025-12-07T18:19:52.557Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/personal-workspace/dbt-lsp
+2025-12-07T18:19:52.557Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-07T19:18:51.669Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-07T19:18:51.669Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/personal-workspace/dbt-lsp
+2025-12-07T20:51:30.537Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-07T20:51:30.537Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/personal-workspace/dbt-lsp
+2025-12-07T21:59:50.485Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-07T21:59:50.486Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/personal-workspace/dotfiles/arch-config/arch-dotfiles/nvim/.config/nvim

@@ -1,0 +1,10 @@
+2025-12-14T21:04:55.425Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-14T21:04:55.425Z DEBUG config: No project config found | searchedFrom=/home/ramtinj
+2025-12-14T21:08:53.116Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-14T21:08:53.116Z DEBUG config: No project config found | searchedFrom=/home/ramtinj
+2025-12-14T21:31:05.135Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-14T21:31:05.136Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/personal-workspace/dotfiles/arch-config/arch-dotfiles/nvim/.config/nvim
+2025-12-14T21:32:45.500Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-14T21:32:45.501Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/personal-workspace/dotfiles/arch-config/arch-dotfiles/nvim/.config/nvim
+2025-12-14T21:35:59.353Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
+2025-12-14T21:35:59.353Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/personal-workspace/dotfiles/arch-config/arch-dotfiles/nvim/.config/nvim
