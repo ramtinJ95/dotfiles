@@ -48,7 +48,4 @@
   "experimental": {
     "batch_tool": true
   },
-  "plugin": [
-    "@tarquinen/opencode-dcp@0.3.27"
-  ]
 }

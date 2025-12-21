@@ -1,4 +1,0 @@
-2025-11-29T22:57:05.300Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/personal-workspace/dotfiles/arch-config/arch-dotfiles/opencode/.config/opencode
-2025-11-29T22:57:05.300Z INFO  config: Created default global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
-2025-11-29T23:01:20.747Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
-2025-11-29T23:01:20.747Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/personal-workspace/learning-go/firstgogame

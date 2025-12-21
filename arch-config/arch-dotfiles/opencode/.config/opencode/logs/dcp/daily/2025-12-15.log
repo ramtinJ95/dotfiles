@@ -1,4 +1,0 @@
-2025-12-15T07:56:27.049Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
-2025-12-15T07:56:27.049Z DEBUG config: No project config found | searchedFrom=/home/ramtinj
-2025-12-15T10:08:56.668Z INFO  config: Loaded global config | path=/home/ramtinj/.config/opencode/dcp.jsonc
-2025-12-15T10:08:56.669Z DEBUG config: No project config found | searchedFrom=/home/ramtinj/workspace/prefect-data-flows
