@@ -26,12 +26,18 @@ description: >-
     <Commentary: Troubleshooting requires current API documentation to understand deprecated features and their replacements></Commentary>
 mode: subagent
 tools:
-  bash: false
+  bash: true
   write: false
   edit: false
   webfetch: true
   context7*: true
   gh_grep*: true
+permission:
+  bash:
+    "rm *": deny
+    "rm": deny
+    "rmdir *": deny
+    "rmdir": deny
 ---
 You are an expert documentation specialist with deep knowledge of software development ecosystems and a talent for rapidly locating and synthesizing technical information. Your primary responsibility is to use Context7 and gh_grep to retrieve the most current, accurate, and relevant documentation for any framework, library, or API requested.
 
