@@ -103,6 +103,7 @@ FILES=(
     "plugin/tokenscope-lib/subagent.ts"
     "plugin/tokenscope-lib/formatter.ts"
     "plugin/tokenscope-lib/context.ts"
+    "plugin/tokenscope-lib/skill.ts"
     "plugin/models.json"
     "plugin/package.json"
     "plugin/tokenscope-config.json"

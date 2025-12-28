@@ -32,6 +32,7 @@ export const DEFAULT_TOKENSCOPE_CONFIG: TokenscopeConfig = {
   enableToolSchemaEstimation: true,
   enableCacheEfficiency: true,
   enableSubagentAnalysis: true,
+  enableSkillAnalysis: true,
 }
 
 let TOKENSCOPE_CONFIG_CACHE: TokenscopeConfig | null = null
@@ -42,11 +43,12 @@ export async function loadTokenscopeConfig(): Promise<TokenscopeConfig> {
   try {
     const configPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "tokenscope-config.json")
     const data = await fs.readFile(configPath, "utf8")
-    TOKENSCOPE_CONFIG_CACHE = { ...DEFAULT_TOKENSCOPE_CONFIG, ...JSON.parse(data) }
-    return TOKENSCOPE_CONFIG_CACHE
+    const config = { ...DEFAULT_TOKENSCOPE_CONFIG, ...JSON.parse(data) }
+    TOKENSCOPE_CONFIG_CACHE = config
+    return config
   } catch {
     TOKENSCOPE_CONFIG_CACHE = DEFAULT_TOKENSCOPE_CONFIG
-    return TOKENSCOPE_CONFIG_CACHE
+    return DEFAULT_TOKENSCOPE_CONFIG
   }
 }
 
