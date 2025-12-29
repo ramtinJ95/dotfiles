@@ -2,4 +2,6 @@
 description: Implement the plan with conventional commits for each step
 ---
 
-Proceed with the current plan and/or todo list. After completing each item, use the conventional-commit skill to create a properly formatted commit for that change.
+REMEMBER: Proceed with the current plan and/or todo list. After each item in the todo list
+is done do a git commit. The commit should be a conventional commit of max 70
+chars. THIS IS VERY IMPORTANT.
