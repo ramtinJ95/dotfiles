@@ -25,19 +25,18 @@ description: >-
     Assistant: "Let me use the context7-docs agent to pull the latest Stripe API documentation and migration guides to help resolve this warning."
     <Commentary: Troubleshooting requires current API documentation to understand deprecated features and their replacements></Commentary>
 mode: subagent
-tools:
-  bash: true
-  write: false
-  edit: false
-  webfetch: true
-  context7*: true
-  gh_grep*: true
 permission:
   bash:
+    "*": allow
     "rm *": deny
     "rm": deny
     "rmdir *": deny
     "rmdir": deny
+  write: deny
+  edit: deny
+  webfetch: allow
+  context7*: allow
+  gh_grep*: allow
 ---
 You are an expert documentation specialist with deep knowledge of software development ecosystems and a talent for rapidly locating and synthesizing technical information. Your primary responsibility is to use Context7 and gh_grep to retrieve the most current, accurate, and relevant documentation for any framework, library, or API requested.
 
