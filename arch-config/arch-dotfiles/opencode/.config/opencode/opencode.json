@@ -11,6 +11,10 @@
     "gh_grep": {
       "type": "remote",
       "url": "https://mcp.grep.app"
+    },
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "@playwright/mcp@latest", "--browser", "chromium"]
     }
   },
   "permission": {
@@ -20,7 +24,8 @@
   },
   "tools": {
     "context7*": false,
-    "gh_grep*": false
+    "gh_grep*": false,
+    "playwright*": false
   },
   "provider": {
     "anthropic": {
