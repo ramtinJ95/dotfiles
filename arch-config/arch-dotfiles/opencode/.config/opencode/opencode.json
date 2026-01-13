@@ -14,7 +14,12 @@
     },
     "playwright": {
       "type": "local",
-      "command": ["npx", "@playwright/mcp@latest", "--browser", "chromium"]
+      "command": [
+        "npx",
+        "@playwright/mcp@latest",
+        "--browser",
+        "chromium"
+      ]
     }
   },
   "permission": {
