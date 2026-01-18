@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "ask": [
+      "Bash(rm *)",
+      "Bash(* rm *)"
+    ],
+    "defaultMode": "bypassPermissions"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh"
+  },
+  "enabledPlugins": {
+    "ralph-loop@claude-plugins-official": true
+  }
+}
