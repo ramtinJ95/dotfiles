@@ -4,5 +4,10 @@
 to the project currently being worked on. 
 * Always try to give suggestions and comparing different solutions and ask the
 user which one to go with before implementing.
-* Always ask questions when you are not sure or something is not clea. Dont just
+* Always ask questions when you are not sure or something is not clear. Dont just
   assume things.
+* NEVER add comments to the code that just re-explain the function/method name
+in a more verbose way.
+* NEVER add comments to obvious variable names etc. 
+* Always prefer more descriptive function/method and variable names over
+comments
