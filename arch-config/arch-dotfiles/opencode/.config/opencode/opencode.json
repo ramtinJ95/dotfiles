@@ -1,5 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "model": "github-copilot/gpt-5.2-codex",
   "mcp": {
     "context7": {
       "type": "remote",
@@ -20,6 +21,18 @@
         "--browser",
         "chromium"
       ]
+    },
+    "dbt": {
+      "type": "local",
+      "command": [
+        "uvx",
+        "dbt-mcp"
+      ],
+      "environment": {
+        "DBT_PROJECT_DIR": "/home/ramtinj/workspace/analytics-platform/dbt_project",
+        "DBT_PATH": "/home/ramtinj/workspace/analytics-platform/dbt_project/.venv/bin/dbt",
+        "DBT_PROFILES_DIR": "/home/ramtinj/workspace/analytics-platform/dbt_project/profiles"
+      }
     }
   },
   "permission": {
@@ -30,7 +43,8 @@
   "tools": {
     "context7*": false,
     "gh_grep*": false,
-    "playwright*": false
+    "playwright*": false,
+    "dbt*": false
   },
   "provider": {
     "anthropic": {
