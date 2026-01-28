@@ -1,5 +1,5 @@
 # General rules
-
+RULES THAT SHOULD ALWAYS BE FOLLOWED:
 * Always use the docs agent to fetch up to date documentation that is relevant
 to the project currently being worked on. 
 * Always try to give suggestions and comparing different solutions and ask the
@@ -11,3 +11,4 @@ in a more verbose way.
 * NEVER add comments to obvious variable names etc. 
 * Always prefer more descriptive function/method and variable names over
 comments
+* Using parallel tool calling is MANDATORY. Be proactive about it. DO NO WAIT for the user to request "parallel calls"
