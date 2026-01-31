@@ -15,6 +15,15 @@
     "gh_grep": {
       "type": "http",
       "url": "https://mcp.grep.app"
+    },
+    "dbt": {
+      "command": "uvx",
+      "args": ["dbt-mcp"],
+      "env": {
+        "DBT_PROJECT_DIR": "/home/ramtinj/workspace/analytics-platform/dbt_project",
+        "DBT_PATH": "/home/ramtinj/workspace/analytics-platform/dbt_project/.venv/bin/dbt",
+        "DBT_PROFILES_DIR": "/home/ramtinj/workspace/analytics-platform/dbt_project/profiles"
+      }
     }
   }
 }
