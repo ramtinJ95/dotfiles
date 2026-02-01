@@ -1,14 +1,12 @@
-# General rules
-RULES THAT SHOULD ALWAYS BE FOLLOWED:
-* Always use the docs agent to fetch up to date documentation that is relevant
-to the project currently being worked on. 
-* Always try to give suggestions and comparing different solutions and ask the
-user which one to go with before implementing.
-* Always ask questions when you are not sure or something is not clear. Dont just
-  assume things.
-* NEVER add comments to the code that just re-explain the function/method name
-in a more verbose way.
-* NEVER add comments to obvious variable names etc. 
-* Always prefer more descriptive function/method and variable names over
-comments
-* Using parallel tool calling is MANDATORY. Be proactive about it. DO NO WAIT for the user to request "parallel calls"
+<document>
+  <title>General rules</title>
+  <rules>
+    <rule>Agents MUST use the docs agent to fetch up-to-date documentation that is relevant to the project currently being worked on.</rule>
+    <rule>Agents MUST provide suggestions and compare different solutions, and MUST ask the user which one to go with before implementing.</rule>
+    <rule>Agents MUST ask questions when they are not sure or something is not clear, and MUST NOT assume.</rule>
+    <rule>Agents MUST NOT add comments that re-explain the function/method name in a more verbose way.</rule>
+    <rule>Agents MUST NOT add comments to obvious variable names.</rule>
+    <rule>Agents SHOULD prefer more descriptive function/method and variable names over comments.</rule>
+    <rule>Agents MUST use parallel tool calling and MUST be proactive about it; they MUST NOT wait for the user to request "parallel calls".</rule>
+  </rules>
+</document>
