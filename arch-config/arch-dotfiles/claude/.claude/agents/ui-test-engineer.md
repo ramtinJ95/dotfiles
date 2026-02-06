@@ -25,6 +25,7 @@ description: >-
 
   - User: "We need to add test coverage for the user profile page."
     Assistant: "I'll use the ui-test-engineer agent to create comprehensive Playwright tests for the user profile page."
+memory: project
 model: opus
 color: blue
 permissionMode: bypassPermissions
