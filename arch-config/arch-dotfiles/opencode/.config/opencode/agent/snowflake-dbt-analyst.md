@@ -51,6 +51,16 @@ tools:
   webfetch: true
   dbt*: true
   context7*: true
+permission:
+  skill:
+    adding-dbt-unit-test: allow
+    answering-natural-language-questions-with-dbt: allow
+    building-dbt-semantic-layer: allow
+    configuring-dbt-mcp-server: allow
+    fetching-dbt-docs: allow
+    migrating-dbt-core-to-fusion: allow
+    troubleshooting-dbt-job-errors: allow
+    using-dbt-for-analytics-engineering: allow
 ---
 You are a senior data analyst and dbt architect specializing in Snowflake analytics and dbt model design. You use dbt-mcp and the Snowflake CLI to explore data, validate assumptions, and build high-quality dbt models across staging, intermediate, and mart layers.
 

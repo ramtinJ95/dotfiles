@@ -39,6 +39,17 @@
   "permission": {
     "bash": {
       "rm *": "ask"
+    },
+    "skill": {
+      "egenskriven*": "deny",
+      "adding-dbt-unit-test": "deny",
+      "answering-natural-language-questions-with-dbt": "deny",
+      "building-dbt-semantic-layer": "deny",
+      "configuring-dbt-mcp-server": "deny",
+      "fetching-dbt-docs": "deny",
+      "migrating-dbt-core-to-fusion": "deny",
+      "troubleshooting-dbt-job-errors": "deny",
+      "using-dbt-for-analytics-engineering": "deny"
     }
   },
   "tools": {
