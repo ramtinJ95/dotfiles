@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--browser",
+        "chromium"
+      ]
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "gh_grep": {
+      "type": "http",
+      "url": "https://mcp.grep.app"
+    },
+    "dbt": {
+      "command": "uvx",
+      "args": ["dbt-mcp"],
+      "env": {
+        "DBT_PROJECT_DIR": "/Users/TODO_YOUR_USER/workspace/analytics-platform/dbt_project",
+        "DBT_PATH": "/Users/TODO_YOUR_USER/workspace/analytics-platform/dbt_project/.venv/bin/dbt",
+        "DBT_PROFILES_DIR": "/Users/TODO_YOUR_USER/workspace/analytics-platform/dbt_project/profiles"
+      }
+    }
+  }
+}
