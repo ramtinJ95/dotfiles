@@ -14,7 +14,6 @@ description: >-
   functionality, let me proactively engage the feature-brainstorm agent to
   explore potential enhancements and edge cases we should consider.'
 mode: primary
-model: anthropic/claude-opus-4-5-20251101
 tools:
   context7*: true
   gh_grep*: true
