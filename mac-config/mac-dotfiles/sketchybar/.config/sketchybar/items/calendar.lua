@@ -1,8 +1,11 @@
 local settings = require("settings")
 local colors = require("colors")
 
+local week_preview_seconds = 4
+local show_week_until = 0
+
 -- Padding item required because of bracket
-sbar.add("item", { position = "right", width = settings.group_paddings })
+sbar.add("item", { position = "center", width = settings.group_paddings })
 
 local cal = sbar.add("item", {
   icon = {
@@ -20,16 +23,15 @@ local cal = sbar.add("item", {
     align = "right",
     font = { family = settings.font.numbers },
   },
-  position = "right",
+  position = "center",
   update_freq = 30,
   padding_left = 1,
   padding_right = 1,
   background = {
-    color = colors.bg2,
-    border_color = colors.black,
+    color = colors.bg1,
+    border_color = colors.grey,
     border_width = 1
   },
-  click_script = "open -a 'Calendar'"
 })
 
 -- Double border for calendar using a single item bracket
@@ -42,8 +44,23 @@ sbar.add("bracket", { cal.name }, {
 })
 
 -- Padding item required because of bracket
-sbar.add("item", { position = "right", width = settings.group_paddings })
+sbar.add("item", { position = "center", width = settings.group_paddings })
 
 cal:subscribe({ "forced", "routine", "system_woke" }, function(env)
+  if os.time() < show_week_until then
+    cal:set({ icon = "Week", label = os.date("%V") })
+    return
+  end
+
   cal:set({ icon = os.date("%a. %d %b."), label = os.date("%H:%M") })
+end)
+
+cal:subscribe("mouse.clicked", function()
+  show_week_until = os.time() + week_preview_seconds
+  cal:set({ icon = "Week", label = os.date("%V") })
+  sbar.delay(week_preview_seconds, function()
+    if os.time() >= show_week_until then
+      cal:set({ icon = os.date("%a. %d %b."), label = os.date("%H:%M") })
+    end
+  end)
 end)

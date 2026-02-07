@@ -31,6 +31,35 @@ local cpu = sbar.add("graph", "widgets.cpu" , 42, {
   padding_right = settings.paddings + 6
 })
 
+local memory = sbar.add("item", "widgets.memory", {
+  position = "right",
+  update_freq = 5,
+  icon = {
+    string = "mem",
+    padding_left = 4,
+    font = {
+      style = settings.font.style_map["Heavy"],
+      size = 9.0,
+    },
+    padding_right = 2,
+    y_offset = 5,
+  },
+  label = {
+    string = "??%",
+    font = {
+      family = settings.font.numbers,
+      style = settings.font.style_map["Bold"],
+      size = 9.0,
+    },
+    align = "right",
+    padding_right = 0,
+    width = 0,
+    y_offset = -5,
+  },
+  padding_left = 0,
+  padding_right = 2,
+})
+
 cpu:subscribe("cpu_update", function(env)
   -- Also available: env.user_load, env.sys_load
   local load = tonumber(env.total_load)
@@ -57,8 +86,39 @@ cpu:subscribe("mouse.clicked", function(env)
   sbar.exec("open -a 'Activity Monitor'")
 end)
 
--- Background around the cpu item
-sbar.add("bracket", "widgets.cpu.bracket", { cpu.name }, {
+memory:subscribe({ "routine", "forced", "system_woke" }, function()
+  sbar.exec("memory_pressure", function(memory_info)
+    local free = memory_info:match("System%-wide memory free percentage:%s*(%d+)%%")
+    if not free then return end
+
+    local used = 100 - tonumber(free)
+    local color = colors.blue
+    if used > 50 then
+      if used < 70 then
+        color = colors.yellow
+      elseif used < 85 then
+        color = colors.orange
+      else
+        color = colors.red
+      end
+    end
+
+    memory:set({
+      icon = { color = color },
+      label = {
+        string = string.format("%02d%%", used),
+        color = color,
+      },
+    })
+  end)
+end)
+
+memory:subscribe("mouse.clicked", function()
+  sbar.exec("open -a 'Activity Monitor'")
+end)
+
+-- Background around the cpu and memory items
+sbar.add("bracket", "widgets.cpu.bracket", { cpu.name, memory.name }, {
   background = { color = colors.bg1 }
 })
 
