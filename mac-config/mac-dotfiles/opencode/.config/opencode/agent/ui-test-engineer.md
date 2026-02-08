@@ -28,6 +28,8 @@ mode: all
 tools:
   playwright*: true
 permission:
+  skill:
+    "*": deny
   bash: allow
   write: allow
   edit: allow

@@ -53,6 +53,7 @@ tools:
   context7*: true
 permission:
   skill:
+    "*": deny
     adding-dbt-unit-test: allow
     answering-natural-language-questions-with-dbt: allow
     building-dbt-semantic-layer: allow
