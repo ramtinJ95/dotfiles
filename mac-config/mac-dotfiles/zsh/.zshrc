@@ -73,3 +73,6 @@ source /opt/homebrew/opt/fzf/shell/completion.zsh
 
 # opencode
 export PATH=/Users/ramtinjavanmardi/.opencode/bin:$PATH
+
+# added by Snowflake SnowflakeCLI installer v1.0
+export PATH=/Applications/SnowflakeCLI.app/Contents/MacOS/:$PATH
