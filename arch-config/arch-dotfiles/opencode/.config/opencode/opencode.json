@@ -63,6 +63,7 @@
     "leader": "ctrl+e",
     "session_list": "none",
     "messages_toggle_conceal": "none",
+    "messages_first": "ctrl+shift+g,home",
     "session_child_cycle": "leader+h",
     "session_child_cycle_reverse": "leader+l"
   },
