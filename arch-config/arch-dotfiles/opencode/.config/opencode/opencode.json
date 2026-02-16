@@ -3,6 +3,14 @@
   "plugin": [
     "@howaboua/opencode-workflows-tool@latest"
   ],
+  "provider": {
+    "github-copilot": {
+      "models": {
+        "gpt-5.3-codex": {}
+      }
+    }
+  },
+  "model": "github-copilot/gpt-5.2-codex",
   "mcp": {
     "context7": {
       "type": "remote",
