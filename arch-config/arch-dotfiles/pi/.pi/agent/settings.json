@@ -1,7 +1,7 @@
 {
   "lastChangelogVersion": "0.53.0",
   "defaultProvider": "github-copilot",
-  "defaultModel": "gemini-3-flash-preview",
+  "defaultModel": "gpt-5.3-codex",
   "hideThinkingBlock": false,
   "defaultThinkingLevel": "high"
 }

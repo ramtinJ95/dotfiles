@@ -339,7 +339,7 @@ class TodoSelectorComponent extends Container implements Focusable {
 		this.hintText.setText(
 			this.theme.fg(
 				"dim",
-				"Type to search • ↑↓/Ctrl+jk select • Enter actions • Ctrl+Shift+W work • Ctrl+Shift+R refine • Esc close",
+				`${keyHint("selectUp", "up")}/${keyHint("selectDown", "down")} select • ${keyHint("selectPageUp", "page up")}/${keyHint("selectPageDown", "page down")} page • ${keyHint("selectConfirm", "actions")} • Ctrl+Shift+W work • Ctrl+Shift+R refine • ${keyHint("selectCancel", "close")}`,
 			),
 		);
 	}
@@ -398,15 +398,29 @@ class TodoSelectorComponent extends Container implements Focusable {
 
 	handleInput(keyData: string): void {
 		const kb = getEditorKeybindings();
-		if (kb.matches(keyData, "selectUp") || matchesKey(keyData, Key.ctrl("k"))) {
+		if (kb.matches(keyData, "selectUp")) {
 			if (this.filteredTodos.length === 0) return;
 			this.selectedIndex = this.selectedIndex === 0 ? this.filteredTodos.length - 1 : this.selectedIndex - 1;
 			this.updateList();
 			return;
 		}
-		if (kb.matches(keyData, "selectDown") || matchesKey(keyData, Key.ctrl("j"))) {
+		if (kb.matches(keyData, "selectDown")) {
 			if (this.filteredTodos.length === 0) return;
 			this.selectedIndex = this.selectedIndex === this.filteredTodos.length - 1 ? 0 : this.selectedIndex + 1;
+			this.updateList();
+			return;
+		}
+		if (kb.matches(keyData, "selectPageUp")) {
+			if (this.filteredTodos.length === 0) return;
+			const page = 10;
+			this.selectedIndex = Math.max(0, this.selectedIndex - page);
+			this.updateList();
+			return;
+		}
+		if (kb.matches(keyData, "selectPageDown")) {
+			if (this.filteredTodos.length === 0) return;
+			const page = 10;
+			this.selectedIndex = Math.min(this.filteredTodos.length - 1, this.selectedIndex + page);
 			this.updateList();
 			return;
 		}
@@ -582,11 +596,11 @@ class TodoDetailOverlayComponent {
 			this.onAction("work");
 			return;
 		}
-		if (kb.matches(keyData, "selectUp") || matchesKey(keyData, Key.ctrl("k"))) {
+		if (kb.matches(keyData, "selectUp")) {
 			this.scrollBy(-1);
 			return;
 		}
-		if (kb.matches(keyData, "selectDown") || matchesKey(keyData, Key.ctrl("j"))) {
+		if (kb.matches(keyData, "selectDown")) {
 			this.scrollBy(1);
 			return;
 		}
