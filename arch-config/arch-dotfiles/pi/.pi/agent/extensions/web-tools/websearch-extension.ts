@@ -60,10 +60,35 @@ interface McpSearchResponse {
   };
 }
 
-export default function registerWebSearchTool(pi: ExtensionAPI) {
+function truncateMiddle(value: string, maxLength = 100): string {
+  if (value.length <= maxLength) return value;
+  const keep = Math.max(8, Math.floor((maxLength - 1) / 2));
+  return `${value.slice(0, keep)}…${value.slice(-keep)}`;
+}
+
+function extractUrls(text: string): string[] {
+  const matches = text.match(/https?:\/\/[^\s)\]}>"']+/g) ?? [];
+  return Array.from(new Set(matches));
+}
+
+function extractTopDomains(urls: string[], max = 3): string[] {
+  const domains: string[] = [];
+  for (const url of urls) {
+    try {
+      const hostname = new URL(url).hostname.replace(/^www\./, "");
+      if (!domains.includes(hostname)) domains.push(hostname);
+      if (domains.length >= max) break;
+    } catch {
+      // Ignore malformed URLs
+    }
+  }
+  return domains;
+}
+
+export function createWebSearchToolDefinition() {
   const description = WEBSEARCH_DESCRIPTION_TEMPLATE.replace("{{year}}", String(new Date().getFullYear()));
 
-  pi.registerTool({
+  return {
     name: "websearch",
     label: "Web Search",
     description,
@@ -94,6 +119,9 @@ export default function registerWebSearchTool(pi: ExtensionAPI) {
       const details = (result.details ?? {}) as {
         query?: string;
         truncated?: boolean;
+        requestedResults?: number;
+        urlMentions?: number;
+        topDomains?: string[];
       };
 
       const textBlock = result.content.find((item) => item.type === "text");
@@ -101,9 +129,15 @@ export default function registerWebSearchTool(pi: ExtensionAPI) {
       const lineCount = text.length === 0 ? 0 : text.split("\n").length;
 
       if (!options.expanded) {
-        const title = theme.fg("toolTitle", theme.bold("websearch"));
+        const title = details.query
+          ? `${theme.fg("toolOutput", "SEARCH")} ${theme.fg("accent", truncateMiddle(details.query))}`
+          : `${theme.fg("toolOutput", "SEARCH")} ${theme.fg("muted", "(no query)")}`;
         const bits: string[] = [];
-        if (details.query) bits.push(`query: ${details.query}`);
+        if (typeof details.requestedResults === "number") bits.push(`requested ${details.requestedResults}`);
+        if (typeof details.urlMentions === "number") bits.push(`${details.urlMentions} links`);
+        if (Array.isArray(details.topDomains) && details.topDomains.length > 0) {
+          bits.push(`domains: ${details.topDomains.join(", ")}`);
+        }
         bits.push(`${lineCount} lines`);
         if (details.truncated) bits.push("truncated");
 
@@ -165,6 +199,9 @@ export default function registerWebSearchTool(pi: ExtensionAPI) {
             const text = data.result?.content?.[0]?.text;
             if (!text) continue;
 
+            const urls = extractUrls(text);
+            const topDomains = extractTopDomains(urls);
+
             const truncation = truncateHead(text, {
               maxLines: DEFAULT_MAX_LINES,
               maxBytes: DEFAULT_MAX_BYTES,
@@ -181,6 +218,9 @@ export default function registerWebSearchTool(pi: ExtensionAPI) {
               details: {
                 query: params.query,
                 truncated: truncation.truncated,
+                requestedResults: params.numResults || API_CONFIG.DEFAULT_NUM_RESULTS,
+                urlMentions: urls.length,
+                topDomains,
               },
             };
           } catch {
@@ -190,7 +230,13 @@ export default function registerWebSearchTool(pi: ExtensionAPI) {
 
         return {
           content: [{ type: "text", text: "No search results found. Please try a different query." }],
-          details: { query: params.query, truncated: false },
+          details: {
+            query: params.query,
+            truncated: false,
+            requestedResults: params.numResults || API_CONFIG.DEFAULT_NUM_RESULTS,
+            urlMentions: 0,
+            topDomains: [],
+          },
         };
       } catch (error: unknown) {
         if (isAbortError(error)) {
@@ -201,5 +247,9 @@ export default function registerWebSearchTool(pi: ExtensionAPI) {
         clearTimeout();
       }
     },
-  });
+  };
+}
+
+export default function registerWebSearchTool(pi: ExtensionAPI) {
+  pi.registerTool(createWebSearchToolDefinition());
 }

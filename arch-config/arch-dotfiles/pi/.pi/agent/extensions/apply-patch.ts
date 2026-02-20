@@ -5,6 +5,8 @@ import * as path from "node:path";
 
 const TOOL_NAME = "apply_patch";
 const END_OF_FILE_MARKER = "*** End of File";
+const STATUS_KEY = "apply-patch";
+const APPROVAL_ENTRY_TYPE = "apply_patch:approved_paths";
 
 type Hunk =
 	| { type: "add"; path: string; contents: string }
@@ -28,6 +30,15 @@ interface PlannedFileChange {
 	diff: string;
 	additions: number;
 	deletions: number;
+}
+
+type ApplyPatchParams = {
+	patchText?: string;
+	input?: string;
+};
+
+interface ApplyPatchApprovalEntry {
+	approvedPaths?: string[];
 }
 
 function isGptFamilyModel(model: ExtensionContext["model"]): boolean {
@@ -229,20 +240,36 @@ function parseAddFileContent(lines: string[], startIdx: number): { content: stri
 	return { content, nextIdx: i };
 }
 
-function stripKnownWrappers(input: string): string {
-	const directHeredoc = input.match(/^(?:cat\s+)?<<['"]?(\w+)['"]?\s*\n([\s\S]*?)\n\1\s*$/);
-	if (directHeredoc) return directHeredoc[2];
-
-	const shellApplyPatch = input.match(
-		/^(?:cd\s+.+?&&\s*)?apply_patch\s*<<['"]?(\w+)['"]?\s*\n([\s\S]*?)\n\1\s*$/,
-	);
-	if (shellApplyPatch) return shellApplyPatch[2];
-
-	return input;
+function stripWrappingQuotes(raw: string): string {
+	const value = raw.trim();
+	if (value.length >= 2) {
+		if ((value.startsWith("\"") && value.endsWith("\"")) || (value.startsWith("'") && value.endsWith("'"))) {
+			return value.slice(1, -1);
+		}
+	}
+	return value;
 }
 
-function parsePatch(patchText: string): { hunks: Hunk[]; normalizedPatch: string } {
-	const cleaned = stripKnownWrappers(patchText.trim());
+function stripKnownWrappers(input: string): { patch: string; workdir?: string } {
+	const directHeredoc = input.match(/^(?:cat\s+)?<<['"]?(\w+)['"]?\s*\n([\s\S]*?)\n\1\s*$/);
+	if (directHeredoc) return { patch: directHeredoc[2] };
+
+	const shellApplyPatch = input.match(
+		/^(?:cd\s+(.+?)\s*&&\s*)?(?:apply_patch|applypatch)\s*<<['"]?(\w+)['"]?\s*\n([\s\S]*?)\n\2\s*$/,
+	);
+	if (shellApplyPatch) {
+		return {
+			patch: shellApplyPatch[3],
+			workdir: shellApplyPatch[1] ? stripWrappingQuotes(shellApplyPatch[1]) : undefined,
+		};
+	}
+
+	return { patch: input };
+}
+
+function parsePatch(patchText: string): { hunks: Hunk[]; normalizedPatch: string; workdir?: string } {
+	const wrapped = stripKnownWrappers(patchText.trim());
+	const cleaned = wrapped.patch;
 	const lines = cleaned.split("\n");
 	const hunks: Hunk[] = [];
 
@@ -290,7 +317,21 @@ function parsePatch(patchText: string): { hunks: Hunk[]; normalizedPatch: string
 	return {
 		hunks,
 		normalizedPatch: cleaned,
+		workdir: wrapped.workdir,
 	};
+}
+
+function resolvePatchWorkdir(patchWorkdir: string | undefined, cwd: string): string {
+	if (!patchWorkdir) return cwd;
+	const normalized = stripWrappingQuotes(patchWorkdir);
+	if (!normalized) return cwd;
+
+	const resolved = path.isAbsolute(normalized) ? path.resolve(normalized) : path.resolve(cwd, normalized);
+	const relative = path.relative(cwd, resolved);
+	if (relative.startsWith("..") || path.isAbsolute(relative)) {
+		throw new Error(`Path escapes workspace and is not allowed: ${patchWorkdir}`);
+	}
+	return resolved;
 }
 
 function normalizeUnicode(str: string): string {
@@ -434,14 +475,76 @@ function ensureWorkspaceRelativePatchPath(inputPath: string, cwd: string): strin
 	return resolved;
 }
 
+export function looksLikeApplyPatchShellInvocation(command: string): boolean {
+	if (!command) return false;
+	const trimmed = command.trim();
+	if (/^(?:apply_patch|applypatch)\b/.test(trimmed)) return true;
+	if (/^(?:cd\s+.+?&&\s*)?(?:apply_patch|applypatch)\b/.test(trimmed)) return true;
+	return /(?:^|[;&]\s*|&&\s*)(?:apply_patch|applypatch)\b/.test(trimmed);
+}
+
+export function getApplyPatchTextFromParams(params: unknown): string {
+	if (!params || typeof params !== "object") {
+		throw new Error("apply_patch verification failed: patch input must be an object");
+	}
+
+	const candidate = params as ApplyPatchParams;
+	const patchText = (typeof candidate.patchText === "string" ? candidate.patchText : "").trim();
+	if (patchText.length > 0) return patchText;
+
+	const input = (typeof candidate.input === "string" ? candidate.input : "").trim();
+	if (input.length > 0) return input;
+
+	throw new Error("apply_patch verification failed: expected either 'patchText' or 'input'");
+}
+
+function getApprovedPathsFromSession(ctx: ExtensionContext): Set<string> {
+	const approved = new Set<string>();
+	for (const entry of ctx.sessionManager.getEntries()) {
+		if ((entry as { type?: string }).type !== "custom") continue;
+		const custom = entry as unknown as { customType?: string; data?: ApplyPatchApprovalEntry };
+		if (custom.customType !== APPROVAL_ENTRY_TYPE) continue;
+		if (!Array.isArray(custom.data?.approvedPaths)) continue;
+		for (const target of custom.data.approvedPaths) {
+			if (typeof target === "string" && target.length > 0) approved.add(target);
+		}
+	}
+	return approved;
+}
+
+export async function ensureApplyPatchPathsApproved(
+	pi: ExtensionAPI,
+	ctx: ExtensionContext,
+	targetPaths: string[],
+): Promise<void> {
+	const approved = getApprovedPathsFromSession(ctx);
+	const pending = targetPaths.filter((target) => !approved.has(target));
+	if (pending.length === 0) return;
+
+	pi.appendEntry<ApplyPatchApprovalEntry>(APPROVAL_ENTRY_TYPE, {
+		approvedPaths: pending,
+	});
+}
+
+export async function ensureApplyPatchApprovedAtCwd(
+	pi: ExtensionAPI,
+	ctx: ExtensionContext,
+	patchText: string,
+	cwd: string,
+): Promise<void> {
+	const targets = getApplyPatchTargetPathsAtCwd(patchText, cwd);
+	await ensureApplyPatchPathsApproved(pi, ctx, targets);
+}
+
 export function getApplyPatchTargetPathsAtCwd(patchText: string, cwd: string): string[] {
-	const { hunks } = parsePatch(patchText.trim());
+	const parsed = parsePatch(patchText.trim());
+	const effectiveCwd = resolvePatchWorkdir(parsed.workdir, cwd);
 	const touched = new Set<string>();
 
-	for (const hunk of hunks) {
-		touched.add(ensureWorkspaceRelativePatchPath(hunk.path, cwd));
+	for (const hunk of parsed.hunks) {
+		touched.add(ensureWorkspaceRelativePatchPath(hunk.path, effectiveCwd));
 		if (hunk.type === "update" && hunk.move_path) {
-			touched.add(ensureWorkspaceRelativePatchPath(hunk.move_path, cwd));
+			touched.add(ensureWorkspaceRelativePatchPath(hunk.move_path, effectiveCwd));
 		}
 	}
 
@@ -453,10 +556,12 @@ async function planChanges(patchText: string, cwd: string): Promise<PlannedFileC
 
 	let hunks: Hunk[];
 	let normalizedPatch = "";
+	let effectiveCwd = cwd;
 	try {
 		const parsed = parsePatch(patchText);
 		hunks = parsed.hunks;
 		normalizedPatch = parsed.normalizedPatch.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+		effectiveCwd = resolvePatchWorkdir(parsed.workdir, cwd);
 	} catch (error) {
 		throw new Error(`apply_patch verification failed: ${error}`);
 	}
@@ -471,7 +576,7 @@ async function planChanges(patchText: string, cwd: string): Promise<PlannedFileC
 	const fileChanges: PlannedFileChange[] = [];
 
 	for (const hunk of hunks) {
-		const filePath = ensureWorkspaceRelativePatchPath(hunk.path, cwd);
+		const filePath = ensureWorkspaceRelativePatchPath(hunk.path, effectiveCwd);
 		const relativePath = path.relative(cwd, filePath) || hunk.path;
 
 		switch (hunk.type) {
@@ -509,7 +614,9 @@ async function planChanges(patchText: string, cwd: string): Promise<PlannedFileC
 					throw new Error(`apply_patch verification failed: ${error}`);
 				}
 
-				const movePath = hunk.move_path ? ensureWorkspaceRelativePatchPath(hunk.move_path, cwd) : undefined;
+				const movePath = hunk.move_path
+					? ensureWorkspaceRelativePatchPath(hunk.move_path, effectiveCwd)
+					: undefined;
 				const outputPath = movePath ?? filePath;
 				const diff = trimDiff(createTwoFilesPatch(filePath, filePath, oldContent, newContent));
 				const { additions, deletions } = computeLineCounts(oldContent, newContent);
@@ -610,7 +717,7 @@ export async function executeApplyPatchAtCwd(patchText: string, cwd: string) {
 	};
 }
 
-export default function registerGptApplyPatch(pi: ExtensionAPI) {
+export default function registerApplyPatch(pi: ExtensionAPI) {
 	let lastNonGptTools: string[] | undefined;
 
 	function allToolNames() {
@@ -634,14 +741,14 @@ export default function registerGptApplyPatch(pi: ExtensionAPI) {
 			const next = current.filter((name) => name !== "edit" && name !== "write" && name !== TOOL_NAME);
 			next.push(TOOL_NAME);
 			safeSetActiveTools(next);
-			ctx.ui.setStatus("gpt-apply-patch", "apply_patch enabled (GPT model)");
+			ctx.ui.setStatus(STATUS_KEY, "apply_patch enabled (GPT model)");
 			return;
 		}
 
 		const restore = (lastNonGptTools ?? current).filter((name) => name !== TOOL_NAME);
 		safeSetActiveTools(restore);
 		lastNonGptTools = restore;
-		ctx.ui.setStatus("gpt-apply-patch", undefined);
+		ctx.ui.setStatus(STATUS_KEY, undefined);
 	}
 
 	pi.on("session_start", async (_event, ctx) => {
@@ -652,18 +759,54 @@ export default function registerGptApplyPatch(pi: ExtensionAPI) {
 		applyToolPolicy(ctx);
 	});
 
+	pi.on("tool_call", async (event, ctx) => {
+		if (event.toolName === "bash") {
+			const command = typeof (event.input as { command?: unknown })?.command === "string"
+				? ((event.input as { command?: string }).command ?? "")
+				: "";
+			if (looksLikeApplyPatchShellInvocation(command)) {
+				return {
+					block: true,
+					reason: "apply_patch was requested via bash. Use the apply_patch tool instead.",
+				};
+			}
+			return undefined;
+		}
+
+		if (event.toolName !== TOOL_NAME) return undefined;
+
+		try {
+			const patchText = getApplyPatchTextFromParams(event.input);
+			await ensureApplyPatchApprovedAtCwd(pi, ctx, patchText, ctx.cwd);
+			return undefined;
+		} catch (error) {
+			return {
+				block: true,
+				reason: error instanceof Error ? error.message : String(error),
+			};
+		}
+	});
+
 	pi.registerTool({
 		name: TOOL_NAME,
 		label: "apply_patch",
 		description:
 			"Apply a structured patch to files. Uses Codex/OpenCode-style patch format with *** Begin Patch/*** End Patch envelopes and Add/Update/Delete operations.",
 		parameters: Type.Object({
-			patchText: Type.String({
-				description: "Full patch text in apply_patch format",
-			}),
+			patchText: Type.Optional(
+				Type.String({
+					description: "Full patch text in apply_patch format",
+				}),
+			),
+			input: Type.Optional(
+				Type.String({
+					description: "Full patch text in apply_patch format (Codex JSON tool compatibility)",
+				}),
+			),
 		}),
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-			const patchText = (params as { patchText: string }).patchText;
+			const patchText = getApplyPatchTextFromParams(params);
+			await ensureApplyPatchApprovedAtCwd(pi, ctx, patchText, ctx.cwd);
 			return executeApplyPatchAtCwd(patchText, ctx.cwd);
 		},
 	});

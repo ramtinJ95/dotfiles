@@ -13,7 +13,13 @@ import { Text } from "@mariozechner/pi-tui";
 import { Type } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import path from "node:path";
-import { executeApplyPatchAtCwd, getApplyPatchTargetPathsAtCwd } from "./gpt-apply-patch";
+import {
+  ensureApplyPatchPathsApproved,
+  executeApplyPatchAtCwd,
+  getApplyPatchTargetPathsAtCwd,
+  getApplyPatchTextFromParams,
+  looksLikeApplyPatchShellInvocation,
+} from "./apply-patch";
 
 const DESCRIPTION = `Executes multiple independent tool calls concurrently to reduce latency.
 
@@ -46,11 +52,23 @@ const DISALLOWED = new Set(["batch"]);
 const SUPPORTED_TOOLS = ["read", "bash", "edit", "write", "grep", "find", "ls", "apply_patch"] as const;
 type SupportedToolName = (typeof SUPPORTED_TOOLS)[number];
 
-const applyPatchSchema = Type.Object({
-  patchText: Type.String({
-    description: "Full patch text in apply_patch format",
-  }),
-});
+const applyPatchSchema = Type.Object(
+  {
+    patchText: Type.Optional(
+      Type.String({
+        description: "Full patch text in apply_patch format",
+      }),
+    ),
+    input: Type.Optional(
+      Type.String({
+        description: "Full patch text in apply_patch format (Codex JSON tool compatibility)",
+      }),
+    ),
+  },
+  {
+    additionalProperties: false,
+  },
+);
 
 type BatchToolCall = {
   tool: string;
@@ -168,6 +186,7 @@ export default function registerBatchTool(pi: ExtensionAPI) {
       // Prevent parallel apply_patch races on the same target file.
       // We allow the first claim and reject subsequent conflicting apply_patch calls.
       const claimedApplyPatchPaths = new Map<string, number>();
+      const applyPatchTargetsForApproval = new Set<string>();
       for (let index = 0; index < toolCalls.length; index++) {
         const call = toolCalls[index];
         if (call.tool !== "apply_patch") continue;
@@ -179,7 +198,8 @@ export default function registerBatchTool(pi: ExtensionAPI) {
         }
 
         try {
-          const touchedPaths = getApplyPatchTargetPathsAtCwd((parameters as { patchText: string }).patchText, ctx.cwd);
+          const patchText = getApplyPatchTextFromParams(parameters);
+          const touchedPaths = getApplyPatchTargetPathsAtCwd(patchText, ctx.cwd);
           const conflicts = touchedPaths.filter((p) => claimedApplyPatchPaths.has(p));
 
           if (conflicts.length > 0) {
@@ -195,9 +215,24 @@ export default function registerBatchTool(pi: ExtensionAPI) {
 
           for (const touched of touchedPaths) {
             claimedApplyPatchPaths.set(touched, index);
+            applyPatchTargetsForApproval.add(touched);
           }
         } catch {
           // Invalid patch format/path will be reported by execution path.
+        }
+      }
+
+      if (applyPatchTargetsForApproval.size > 0) {
+        try {
+          await ensureApplyPatchPathsApproved(pi, ctx, Array.from(applyPatchTargetsForApproval));
+        } catch (error) {
+          const reason = error instanceof Error ? error.message : String(error);
+          for (let index = 0; index < toolCalls.length; index++) {
+            if (toolCalls[index].tool !== "apply_patch") continue;
+            if (!preflightErrors.has(index)) {
+              preflightErrors.set(index, reason);
+            }
+          }
         }
       }
 
@@ -242,7 +277,8 @@ export default function registerBatchTool(pi: ExtensionAPI) {
               throw new Error(formatBatchValidationError(call.tool, errors));
             }
 
-            const result = await executeApplyPatchAtCwd((parameters as { patchText: string }).patchText, ctx.cwd);
+            const patchText = getApplyPatchTextFromParams(parameters);
+            const result = await executeApplyPatchAtCwd(patchText, ctx.cwd);
             return { success: true, tool: call.tool, result };
           }
 
@@ -253,6 +289,13 @@ export default function registerBatchTool(pi: ExtensionAPI) {
               return `${path}: ${issue.message}`;
             });
             throw new Error(formatBatchValidationError(call.tool, errors));
+          }
+
+          if (toolName === "bash") {
+            const command = (parameters as { command: string }).command;
+            if (looksLikeApplyPatchShellInvocation(command)) {
+              throw new Error("apply_patch was requested via bash. Use the apply_patch tool instead.");
+            }
           }
 
           const result = await tool.execute(`${toolCallId}:${index + 1}`, parameters, signal, undefined);

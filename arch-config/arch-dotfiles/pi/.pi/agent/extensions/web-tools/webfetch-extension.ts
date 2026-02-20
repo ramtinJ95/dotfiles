@@ -36,8 +36,14 @@ Usage notes:
 
 type FetchFormat = "text" | "markdown" | "html";
 
-export default function registerWebFetchTool(pi: ExtensionAPI) {
-  pi.registerTool({
+function truncateMiddle(value: string, maxLength = 120): string {
+  if (value.length <= maxLength) return value;
+  const keep = Math.max(8, Math.floor((maxLength - 1) / 2));
+  return `${value.slice(0, keep)}…${value.slice(-keep)}`;
+}
+
+export function createWebFetchToolDefinition() {
+  return {
     name: "webfetch",
     label: "Web Fetch",
     description: WEBFETCH_DESCRIPTION,
@@ -59,6 +65,8 @@ export default function registerWebFetchTool(pi: ExtensionAPI) {
         format?: FetchFormat;
         image?: boolean;
         truncated?: boolean;
+        statusCode?: number;
+        responseBytes?: number;
       };
 
       const textBlock = result.content.find((item) => item.type === "text");
@@ -66,13 +74,17 @@ export default function registerWebFetchTool(pi: ExtensionAPI) {
       const lineCount = text.length === 0 ? 0 : text.split("\n").length;
 
       if (!options.expanded) {
-        const title = details.url
-          ? `${theme.fg("toolTitle", theme.bold("webfetch"))} ${theme.fg("accent", details.url)}`
-          : theme.fg("toolTitle", theme.bold("webfetch"));
+        const method = theme.fg("toolOutput", "GET");
+        const target = details.url
+          ? theme.fg("accent", truncateMiddle(details.url))
+          : theme.fg("muted", "(no URL)");
+        const title = `${method} ${target}`;
 
         const bits: string[] = [];
+        if (typeof details.statusCode === "number") bits.push(`status ${details.statusCode}`);
         if (details.contentType) bits.push(details.contentType);
-        if (details.format) bits.push(details.format);
+        if (details.format) bits.push(`as ${details.format}`);
+        if (typeof details.responseBytes === "number") bits.push(formatSize(details.responseBytes));
         if (details.image) bits.push("image attachment");
         bits.push(`${lineCount} lines`);
         if (details.truncated) bits.push("truncated");
@@ -169,6 +181,8 @@ export default function registerWebFetchTool(pi: ExtensionAPI) {
               format,
               image: true,
               truncated: false,
+              statusCode: response.status,
+              responseBytes: arrayBuffer.byteLength,
             },
           };
         }
@@ -212,6 +226,8 @@ export default function registerWebFetchTool(pi: ExtensionAPI) {
             format,
             image: false,
             truncated: truncation.truncated,
+            statusCode: response.status,
+            responseBytes: arrayBuffer.byteLength,
           },
         };
       } catch (error: unknown) {
@@ -223,7 +239,11 @@ export default function registerWebFetchTool(pi: ExtensionAPI) {
         clearTimeout();
       }
     },
-  });
+  };
+}
+
+export default function registerWebFetchTool(pi: ExtensionAPI) {
+  pi.registerTool(createWebFetchToolDefinition());
 }
 
 async function extractTextFromHTML(html: string): Promise<string> {
