@@ -3,5 +3,11 @@
   "defaultProvider": "github-copilot",
   "defaultModel": "gpt-5.3-codex",
   "hideThinkingBlock": false,
-  "defaultThinkingLevel": "high"
+  "defaultThinkingLevel": "high",
+  "packages": [
+    "../../personal-workspace/pi-extensions/pi-markdown-workflows"
+  ],
+  "skills": [
+    "!**/.agents/skills/**"
+  ]
 }
