@@ -1,5 +1,10 @@
 import { Type } from "@mariozechner/pi-ai";
-import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
+import {
+	keyHint,
+	type ExtensionAPI,
+	type ExtensionContext,
+} from "@mariozechner/pi-coding-agent";
+import { Text } from "@mariozechner/pi-tui";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 
@@ -39,6 +44,23 @@ type ApplyPatchParams = {
 
 interface ApplyPatchApprovalEntry {
 	approvedPaths?: string[];
+}
+
+interface ApplyPatchFileDetail {
+	filePath: string;
+	relativePath: string;
+	type: "add" | "update" | "delete" | "move";
+	diff: string;
+	before: string;
+	after: string;
+	additions: number;
+	deletions: number;
+	movePath?: string;
+}
+
+interface ApplyPatchToolDetails {
+	files?: ApplyPatchFileDetail[];
+	diff?: string;
 }
 
 function isGptFamilyModel(model: ExtensionContext["model"]): boolean {
@@ -691,6 +713,19 @@ function buildSummary(changes: PlannedFileChange[]): string {
 	return `Success. Updated the following files:\n${lines.join("\n")}`;
 }
 
+function replaceTabs(text: string): string {
+	return text.replace(/\t/g, "   ");
+}
+
+function getDiffLines(file: ApplyPatchFileDetail): string[] {
+	if (!file.diff) return [];
+
+	return file.diff
+		.split("\n")
+		.filter((line) => line.length > 0)
+		.filter((line) => !line.startsWith("--- ") && !line.startsWith("+++ "));
+}
+
 export async function executeApplyPatchAtCwd(patchText: string, cwd: string) {
 	const planned = await planChanges(patchText, cwd);
 	await applyChanges(planned);
@@ -804,6 +839,73 @@ export default function registerApplyPatch(pi: ExtensionAPI) {
 				}),
 			),
 		}),
+		renderCall(args, theme) {
+			const patchText =
+				typeof args?.patchText === "string" && args.patchText.trim().length > 0
+					? args.patchText
+					: typeof args?.input === "string"
+						? args.input
+						: "";
+			const lines = patchText ? patchText.split("\n").length : 0;
+			const suffix = lines > 0 ? theme.fg("muted", ` (${lines} lines)`) : "";
+			return new Text(theme.fg("toolTitle", theme.bold("apply_patch")) + suffix, 0, 0);
+		},
+		renderResult(result, { expanded }, theme) {
+			const details = (result.details ?? {}) as ApplyPatchToolDetails;
+			const files = Array.isArray(details.files) ? details.files : [];
+
+			if (files.length === 0) {
+				const fallback = result.content
+					.filter((item) => item.type === "text")
+					.map((item) => item.text)
+					.join("\n");
+				return new Text(fallback || theme.fg("muted", "No file details available"), 0, 0);
+			}
+
+			let text = theme.fg("success", `✓ Applied patch to ${files.length} file${files.length === 1 ? "" : "s"}`);
+			const listed = expanded ? files : files.slice(0, 8);
+
+			for (const file of listed) {
+				const op =
+					file.type === "add" ? "A" : file.type === "delete" ? "D" : file.type === "move" ? "R" : "M";
+				const counts = theme.fg("muted", ` (+${file.additions} -${file.deletions})`);
+				text += `\n\n${theme.bold(`${op} ${file.relativePath}`)}${counts}`;
+
+				const lines = getDiffLines(file);
+				if (lines.length === 0) {
+					text += `\n\n${theme.fg("toolOutput", "<no diff>")}`;
+					continue;
+				}
+
+				const maxLines = expanded ? lines.length : 14;
+				const shown = lines.slice(0, maxLines);
+				const remaining = lines.length - shown.length;
+
+				text +=
+					"\n\n" +
+					shown
+						.map((line) => {
+							const value = replaceTabs(line);
+							if (line.startsWith("+") && !line.startsWith("+++")) return theme.fg("toolDiffAdded", value);
+							if (line.startsWith("-") && !line.startsWith("---")) return theme.fg("toolDiffRemoved", value);
+							if (line.startsWith("@@")) return theme.fg("warning", value);
+							return theme.fg("toolDiffContext", value);
+						})
+						.join("\n");
+
+				if (remaining > 0) {
+					text +=
+						theme.fg("muted", `\n... (${remaining} more diff lines, ${lines.length} total,`) +
+						` ${keyHint("expandTools", "to expand")})`;
+				}
+			}
+
+			if (!expanded && files.length > listed.length) {
+				text += `\n${theme.fg("muted", `... (${files.length - listed.length} more files)`)}`;
+			}
+
+			return new Text(text, 0, 0);
+		},
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
 			const patchText = getApplyPatchTextFromParams(params);
 			await ensureApplyPatchApprovedAtCwd(pi, ctx, patchText, ctx.cwd);
