@@ -1,13 +1,14 @@
 {
-  "lastChangelogVersion": "0.54.0",
-  "defaultProvider": "github-copilot",
+  "lastChangelogVersion": "0.55.1",
+  "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.3-codex",
   "hideThinkingBlock": false,
-  "defaultThinkingLevel": "high",
+  "defaultThinkingLevel": "off",
   "packages": [
     "../../personal-workspace/pi-extensions/pi-markdown-workflows"
   ],
   "skills": [
     "!**/.agents/skills/**"
-  ]
+  ],
+  "transport": "websocket"
 }
