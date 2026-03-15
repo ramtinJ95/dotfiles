@@ -1,9 +1,0 @@
-{
-  "name": "pi-web-tools-extension",
-  "private": true,
-  "type": "module",
-  "dependencies": {
-    "linkedom": "^0.18.12",
-    "turndown": "^7.2.1"
-  }
-}

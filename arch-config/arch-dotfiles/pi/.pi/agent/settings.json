@@ -1,9 +1,9 @@
 {
-  "lastChangelogVersion": "0.55.1",
-  "defaultProvider": "openai-codex",
-  "defaultModel": "gpt-5.3-codex",
+  "lastChangelogVersion": "0.58.3",
+  "defaultProvider": "github-copilot",
+  "defaultModel": "gpt-5.4",
   "hideThinkingBlock": false,
-  "defaultThinkingLevel": "off",
+  "defaultThinkingLevel": "high",
   "packages": [
     "../../personal-workspace/pi-extensions/pi-markdown-workflows"
   ],
