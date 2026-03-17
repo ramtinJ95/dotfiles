@@ -1,12 +1,9 @@
 {
-  "lastChangelogVersion": "0.58.3",
+  "lastChangelogVersion": "0.58.4",
   "defaultProvider": "github-copilot",
   "defaultModel": "gpt-5.4",
   "hideThinkingBlock": false,
   "defaultThinkingLevel": "high",
-  "packages": [
-    "../../personal-workspace/pi-extensions/pi-markdown-workflows"
-  ],
   "skills": [
     "!**/.agents/skills/**"
   ],
