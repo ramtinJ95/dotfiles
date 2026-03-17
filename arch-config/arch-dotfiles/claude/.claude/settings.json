@@ -3,11 +3,20 @@
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
   "permissions": {
-    "ask": [
-      "Bash(rm *)",
-      "Bash(* rm *)"
-    ],
     "defaultMode": "bypassPermissions"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/guard-infra-commands.sh"
+          }
+        ]
+      }
+    ]
   },
   "statusLine": {
     "type": "command",
