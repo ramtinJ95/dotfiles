@@ -1,0 +1,16 @@
+version = 1
+
+[agents.docs-researcher]
+description = """Use this agent to fetch up-to-date documentation and GitHub implementation evidence.
+Best for framework/library API questions, version checks, and source-backed technical validation."""
+config_file = "agents/docs-researcher.toml"
+
+[agents.snowflake-dbt-analyst]
+description = """Use this agent for Snowflake exploration and dbt model design/implementation.
+This role focuses on staged analytics engineering workflows and constrained exploratory queries."""
+config_file = "agents/snowflake-dbt-analyst.toml"
+
+[agents.ui-test-engineer]
+description = """Use this agent for UI testing, Playwright automation, and frontend behavior verification.
+This role is optimized for reproducing UI bugs and producing actionable test reports."""
+config_file = "agents/ui-test-engineer.toml"

@@ -1,0 +1,1 @@
+../../../claude/.claude/commands/validate-lint-py.md
