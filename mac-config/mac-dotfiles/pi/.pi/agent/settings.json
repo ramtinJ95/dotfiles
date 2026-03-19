@@ -1,0 +1,12 @@
+{
+  "lastChangelogVersion": "0.60.0",
+  "defaultProvider": "github-copilot",
+  "defaultModel": "gpt-5.4",
+  "hideThinkingBlock": false,
+  "defaultThinkingLevel": "high",
+  "skills": [
+    "!**/.agents/skills/**"
+  ],
+  "transport": "websocket",
+  "theme": "dark"
+}
