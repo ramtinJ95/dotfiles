@@ -1,0 +1,66 @@
+model = "gpt-5.4"
+model_provider = "openai"
+model_reasoning_effort = "high"
+model_verbosity = "medium"
+
+sandbox_mode = "danger-full-access"
+approval_policy = "never"
+personality = "pragmatic"
+web_search = "live"               # replacement for deprecated [features].web_search_request
+project_doc_fallback_filenames = ["CLAUDE.md"]
+suppress_unstable_features_warning = true
+
+[features]
+view_image_tool = true            # enable the view image tool
+rmcp_client = true                # enable the rmcp client
+multi_agent = true
+child_agents_md = true
+memories = true
+
+[sandbox_workspace_write]
+network_access = true
+
+[mcp_servers.context7]
+url = "https://mcp.context7.com/mcp"
+env_http_headers = { "CONTEXT7_API_KEY" = "CONTEXT7_API_KEY" } # keep the API key out of git
+
+[mcp_servers.ghgrep]
+url = "https://mcp.grep.app"
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp@latest", "--browser", "chromium"]
+enabled = false
+
+[mcp_servers.dbt]
+command = "uvx"
+args = ["dbt-mcp"]
+enabled = false
+env = { "DBT_PROJECT_DIR" = "/home/ramtinj/workspace/analytics-platform/dbt_project", "DBT_PATH" = "/home/ramtinj/workspace/analytics-platform/dbt_project/.venv/bin/dbt", "DBT_PROFILES_DIR" = "/home/ramtinj/workspace/analytics-platform/dbt_project/profiles" }
+
+[notice]
+hide_gpt5_1_migration_prompt = true
+
+[notice.model_migrations]
+"gpt-5.1-codex" = "gpt-5.2-codex"
+
+[tui]
+status_line = ["current-dir", "model-with-reasoning", "five-hour-limit", "weekly-limit", "context-remaining", "used-tokens"]
+
+[projects."/home/ramtinj/personal-workspace/archivist"]
+trust_level = "trusted"
+
+[projects."/home/ramtinj"]
+trust_level = "trusted"
+
+[projects."/home/ramtinj/workspace/prefect-data-flows"]
+trust_level = "trusted"
+
+[projects."/home/ramtinj/personal-workspace/Colosseum"]
+trust_level = "trusted"
+
+[projects."/home/ramtinj/personal-workspace/opencode-tokenscope"]
+trust_level = "trusted"
+
+[projects."/home/ramtinj/workspace/shared-github-actions"]
+trust_level = "trusted"

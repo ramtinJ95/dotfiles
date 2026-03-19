@@ -1,0 +1,4 @@
+^/\.stow-local-ignore$
+^/\.codex/config\.toml$
+^/\.codex/skills(/.*)?$
+

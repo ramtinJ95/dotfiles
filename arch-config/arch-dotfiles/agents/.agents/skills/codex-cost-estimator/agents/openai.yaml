@@ -1,0 +1,6 @@
+interface:
+  display_name: "Codex Cost Estimator"
+  short_description: "Estimate Codex API-equivalent usage cost"
+  default_prompt: "Use $codex-cost-estimator to estimate my Codex API-equivalent cost for the last 14 days."
+policy:
+  allow_implicit_invocation: false

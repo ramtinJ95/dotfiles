@@ -1,0 +1,4 @@
+interface:
+  display_name: "Docs Researcher"
+  short_description: "Research official docs and codebases"
+  default_prompt: "Use Context7, official docs, and targeted repository scans to answer framework and library questions with citations."

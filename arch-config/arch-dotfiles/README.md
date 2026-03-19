@@ -6,10 +6,14 @@ This repository contains my Arch Linux configuration files organized for use wit
 
 Each directory represents a separate "package" that can be managed independently:
 
+- `agents/` - Shared user-level `.agents/skills` tree for Codex and other agent harnesses
 - `bash/` - Bash configuration (.bashrc, .blerc)
 - `ble/` - ble.sh (Bash Line Editor)
+- `claude/` - Claude Code config, commands, hooks, and skills
+- `codex/` - Codex AGENTS, prompts, and custom agent role definitions
 - `hypr/` - Hyprland window manager configuration
 - `nvim/` - Neovim configuration
+- `opencode/` - OpenCode config, commands, and plugins
 - `spicetify/` - Spotify theming configuration
 - `starship/` - Starship prompt configuration
 - `tlp/` - TLP power management configuration (system-wide)
@@ -25,17 +29,18 @@ To install configurations using GNU Stow:
 stow */
 
 # Install specific configurations
-stow hypr nvim bash
+stow bash claude codex agents hypr nvim opencode
 
 # Remove configurations
-stow -D hypr nvim
+stow -D codex agents hypr nvim
 
 # Simulate installation (dry run)
-stow -n hypr
+stow -n codex agents
 ```
 
 ## Notes
 
 - The `tlp/` package contains system-wide configuration and requires sudo to stow to `/etc/`
 - All other packages will create symlinks in your `~/.config/` or home directory
+- The `codex/` package uses `.stow-local-ignore` so stow only links `~/.codex/AGENTS.md`, `~/.codex/agents/`, `~/.codex/agents_config.toml`, and `~/.codex/prompts/`; keep `~/.codex/config.toml`, `~/.codex/skills`, and runtime/state files local for now
 - Make sure to backup your existing configurations before using stow
