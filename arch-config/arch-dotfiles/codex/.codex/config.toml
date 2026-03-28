@@ -27,11 +27,6 @@ env_http_headers = { "CONTEXT7_API_KEY" = "CONTEXT7_API_KEY" } # keep the API ke
 [mcp_servers.ghgrep]
 url = "https://mcp.grep.app"
 
-[mcp_servers.playwright]
-command = "npx"
-args = ["@playwright/mcp@latest", "--browser", "chromium"]
-enabled = false
-
 [mcp_servers.dbt]
 command = "uvx"
 args = ["dbt-mcp"]

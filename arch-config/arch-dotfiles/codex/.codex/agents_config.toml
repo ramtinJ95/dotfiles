@@ -11,6 +11,6 @@ This role focuses on staged analytics engineering workflows and constrained expl
 config_file = "agents/snowflake-dbt-analyst.toml"
 
 [agents.ui-test-engineer]
-description = """Use this agent for UI testing, Playwright automation, and frontend behavior verification.
+description = """Use this agent for UI testing, playwright-cli automation, and frontend behavior verification.
 This role is optimized for reproducing UI bugs and producing actionable test reports."""
 config_file = "agents/ui-test-engineer.toml"
