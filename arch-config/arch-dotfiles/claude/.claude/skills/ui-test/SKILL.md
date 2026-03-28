@@ -1,234 +1,181 @@
 ---
 name: ui-test
-description: Run UI tests using the ui-test-engineer agent with Playwright. Use when testing web UIs, verifying UI functionality, debugging UI issues, or when the user mentions UI testing, browser testing, or end-to-end testing.
+description: Run UI tests using playwright-cli Bash commands. Use when testing web UIs, verifying UI functionality, debugging UI issues, or when the user mentions UI testing, browser testing, or end-to-end testing.
 ---
 
-# UI Test Skill
+# UI Test Skill — Playwright CLI
 
-Use this skill to run UI tests on web applications using the `ui-test-engineer` subagent with Playwright.
+Use `playwright-cli` Bash commands to test web applications. Snapshots are saved to disk as YAML/PNG files and read on demand, which keeps the workflow lightweight.
 
 ## Prerequisites
 
-### Step 1: Ensure Dev Server is Running
+1. `playwright-cli` must be installed globally: `npm install -g @playwright/cli@latest`
+2. Workspace initialized: `playwright-cli install` (creates `.playwright/cli.config.json`)
 
-Before running tests, verify the development server is running:
+### Ensure Dev Server is Running
 
 ```bash
-# Check if a common dev port is responding
 curl -s -o /dev/null -w "%{http_code}" http://localhost:5173
 # Or check other common ports: 3000, 8080, 5174, 5175, 5176
 ```
 
-If the server is not running:
-1. Find and start the dev server (usually `npm run dev` or similar)
-2. Wait 2-3 seconds for startup
-3. Note the actual port being used (may differ from default)
+## Core Commands Reference
 
-**Important**: The server may use a different port if the default is busy. Check the server output for the actual URL.
+| Command | Example | Description |
+|---|---|---|
+| `open [url]` | `playwright-cli open http://localhost:5173` | Open browser and navigate |
+| `close` | `playwright-cli close` | Close the browser |
+| `snapshot` | `playwright-cli snapshot` | Capture page as YAML with element refs (e1, e2, ...) |
+| `screenshot` | `playwright-cli screenshot` | Save PNG screenshot to disk |
+| `click <ref>` | `playwright-cli click e3` | Click an element by ref |
+| `dblclick <ref>` | `playwright-cli dblclick e7` | Double-click |
+| `fill <ref> <text>` | `playwright-cli fill e5 "user@example.com"` | Fill input field |
+| `type <text>` | `playwright-cli type "search query"` | Type into focused element |
+| `select <ref> <val>` | `playwright-cli select e9 "option-value"` | Select dropdown option |
+| `hover <ref>` | `playwright-cli hover e4` | Hover over element |
+| `check/uncheck <ref>` | `playwright-cli check e12` | Toggle checkbox/radio |
+| `press <key>` | `playwright-cli press Tab` | Press a key |
+| `drag <from> <to>` | `playwright-cli drag e2 e8` | Drag and drop |
+| `eval <js> [ref]` | `playwright-cli eval "document.title"` | Run JavaScript |
+| `console` | `playwright-cli console` | Show console messages |
+| `network` | `playwright-cli network` | List network requests |
+| `goto <url>` | `playwright-cli goto http://localhost:5173/about` | Navigate to URL |
+| `go-back` | `playwright-cli go-back` | Navigate back |
+| `reload` | `playwright-cli reload` | Reload page |
+| `resize <w> <h>` | `playwright-cli resize 375 812` | Resize viewport |
+| `tab-new [url]` | `playwright-cli tab-new http://localhost:5173` | Open new tab |
+| `tab-list` | `playwright-cli tab-list` | List tabs |
+
+## Testing Workflow
+
+The standard workflow is:
+
+```bash
+# 1. Open the app
+playwright-cli open http://localhost:5173
+
+# 2. Take a snapshot to see element refs
+playwright-cli snapshot
+# Output: e1 [link "Home"], e2 [button "Login"], e3 [textbox "Email"], ...
+
+# 3. Interact using element refs
+playwright-cli click e2
+playwright-cli fill e3 "user@example.com"
+
+# 4. Snapshot again to verify state change
+playwright-cli snapshot
+
+# 5. Check for console errors
+playwright-cli console
+
+# 6. Screenshot for evidence
+playwright-cli screenshot
+
+# 7. Close when done
+playwright-cli close
+```
+
+Snapshots are saved to `.playwright-cli/` as `.yml` files. Screenshots are saved as `.png` files. Read them with the Read tool only when needed — this is what saves tokens.
 
 ## Running Tests
 
-Use the Task tool with `subagent_type: ui-test-engineer`:
+Run `playwright-cli` commands directly via the Bash tool.
 
-```
-Task(
-  description="Test [feature name]",
-  prompt="[test prompt - see templates below]",
-  subagent_type="ui-test-engineer"
-)
-```
+### Example: Login Form Test
 
-## Prompt Template
-
-Use this template when calling `ui-test-engineer`:
-
-```
-Perform [TYPE OF TEST] at http://localhost:[PORT]
-
-## Test Areas
-
-### 1. [Feature Name]
-- Step 1: [Action to perform]
-- Step 2: [Action to perform]
-- Expected: [What should happen]
-
-### 2. [Feature Name]
-- Step 1: [Action to perform]
-- Expected: [What should happen]
-
-## Required Output
-
-Return a detailed report with:
-1. PASS/FAIL status for each test area
-2. Specific notes on any failures
-3. Screenshots or evidence where relevant
-4. Console error check results
-```
-
-## Required Information in Prompts
-
-Always include:
-1. **App URL**: The URL where the app is running (e.g., `http://localhost:5173`)
-2. **Test Steps**: Numbered, specific actions to perform
-3. **Expected Behavior**: What should happen for each step
-4. **Required Output**: Request a structured report format
-
-## Report Output Format
-
-Request reports in this format:
-
-```markdown
-# [Test Name] Report
-
-## Test Summary
-[Brief description of what was tested]
-
-## Environment
-- **URL**: http://localhost:[PORT]
-- **Browser**: Chromium (Playwright)
-- **Date**: [Date]
-
----
-
-## Test Results
-
-### 1. [Feature Name] [PASS/FAIL]
-
-| Test Case | Status | Notes |
-|-----------|--------|-------|
-| 1.1 [Test case] | [STATUS] | [Details] |
-| 1.2 [Test case] | [STATUS] | [Details] |
-
----
-
-## Console Errors
-[List any console errors, or "No console errors"]
-
----
-
-## Final Verdict
-
-| Category | Status |
-|----------|--------|
-| [Category 1] | [STATUS] |
-| [Category 2] | [STATUS] |
-
-**Overall: [PASS/FAIL]**
+```bash
+playwright-cli open http://localhost:5173/login
+playwright-cli snapshot
+# Identify form elements from snapshot output
+playwright-cli fill e1 ""
+playwright-cli click e3  # submit button
+playwright-cli snapshot   # check for validation errors
+playwright-cli fill e1 "valid@email.com"
+playwright-cli fill e2 "password123"
+playwright-cli click e3
+playwright-cli snapshot   # verify redirect/success
+playwright-cli console    # check for errors
+playwright-cli close
 ```
 
 ## Common Test Scenarios
 
 ### Theme Testing
-```
-## Theme System
-- Open settings (Ctrl+, or Cmd+,)
-- Switch between available themes
-- Verify colors change correctly for each theme
-- Refresh the page - verify theme persists
-```
-
-### Keyboard Navigation Testing
-```
-## Keyboard Navigation
-- Use Tab key to navigate through the interface
-- Verify focus rings appear on focusable elements
-- Verify interactive elements can be focused
-- Test keyboard shortcuts
+```bash
+playwright-cli open http://localhost:5173
+playwright-cli snapshot
+# Find settings/theme toggle element
+playwright-cli click e<settings-ref>
+playwright-cli snapshot
+playwright-cli click e<theme-option-ref>
+playwright-cli snapshot  # verify theme changed
+playwright-cli reload
+playwright-cli snapshot  # verify theme persists
 ```
 
-### Drag and Drop Testing
-```
-## Drag and Drop
-- Drag an item
-- Verify visual feedback during drag (opacity change, overlay)
-- Drop the item and verify correct placement
-- Verify state updates correctly
-```
-
-### Modal/Dialog Testing
-```
-## Modal/Dialog
-- Open the modal/dialog
-- Verify it can be closed with Escape key
-- Verify clicking outside closes it (if applicable)
-- Verify close button works
-- Test form submission if applicable
+### Responsive Design
+```bash
+playwright-cli open http://localhost:5173
+playwright-cli resize 375 812   # mobile
+playwright-cli snapshot
+playwright-cli screenshot
+playwright-cli resize 1920 1080 # desktop
+playwright-cli snapshot
+playwright-cli screenshot
 ```
 
-### Form Testing
-```
-## Form Validation
-- Submit form with empty required fields
-- Verify error messages appear
-- Fill in valid data and submit
-- Verify success state
-```
-
-## Full E2E Test Template
-
-For comprehensive end-to-end testing:
-
-```
-Perform a comprehensive end-to-end test of the application at http://localhost:[PORT]
-
-## 1. Initial Load
-- Navigate to the app
-- Verify the page loads without errors
-- Check for any console errors
-
-## 2. Navigation
-- Test all navigation links/buttons
-- Verify correct pages/views load
-- Test browser back/forward
-
-## 3. Core Functionality
-- [List main features to test]
-- Verify CRUD operations if applicable
-- Test user interactions
-
-## 4. Responsive Design (if applicable)
-- Test at different viewport sizes
-- Verify mobile menu/layout if present
-
-## 5. Error Handling
-- Test invalid inputs
-- Verify error messages are displayed
-- Test edge cases
-
-## 6. Accessibility
-- Check keyboard navigation
-- Verify focus management
-- Check for proper labels
-
-Return a detailed PASS/FAIL report for each test area.
+### Keyboard Navigation
+```bash
+playwright-cli open http://localhost:5173
+playwright-cli press Tab
+playwright-cli snapshot  # check focus
+playwright-cli press Tab
+playwright-cli snapshot  # check next focus
+playwright-cli press Enter  # activate focused element
+playwright-cli snapshot
 ```
 
-## Tips
+### Drag and Drop
+```bash
+playwright-cli open http://localhost:5173
+playwright-cli snapshot
+playwright-cli drag e2 e8
+playwright-cli snapshot  # verify new order
+```
 
-1. **Always verify the port**: Check dev server output for actual port
-2. **Wait for server**: Give 2-3 seconds for startup before testing
-3. **Be specific**: Provide exact actions and expected outcomes
-4. **Request console check**: Always ask for console error verification
-5. **Use tables**: Request tabular format for easy scanning of results
-6. **Test in isolation**: Focus on one feature area per test when debugging
+## Report Format
+
+After testing, summarize results as:
+
+```
+## Test Results
+
+| Test Area | Status | Notes |
+|-----------|--------|-------|
+| Initial load | PASS/FAIL | ... |
+| Form validation | PASS/FAIL | ... |
+| Navigation | PASS/FAIL | ... |
+
+Console errors: [none / list]
+Overall: PASS/FAIL
+```
 
 ## Troubleshooting
 
 ### Server not responding
 ```bash
-# Kill processes on common ports
 lsof -ti:5173 | xargs kill -9 2>/dev/null
-lsof -ti:3000 | xargs kill -9 2>/dev/null
 # Then restart the dev server
 ```
 
-### Wrong port
-Check the dev server output for lines like:
-```
-Local:   http://localhost:5176/   <-- Use this port
+### Stale browser sessions
+```bash
+playwright-cli kill-all  # kill zombie processes
 ```
 
-### Tests timing out
-- Ensure server is fully ready before testing
-- Check for slow network requests or heavy initialization
-- Consider increasing timeouts for specific actions
+### Need to persist auth state
+```bash
+playwright-cli state-save auth-state.json
+# Later:
+playwright-cli state-load auth-state.json
+```

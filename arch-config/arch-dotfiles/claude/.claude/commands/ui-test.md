@@ -1,9 +1,9 @@
 ---
-description: Run UI tests using the ui-test-engineer agent with Playwright
+description: Run UI tests using playwright-cli
 argument-hint: [url] [test-type]
 ---
 
-Use the ui-test skill to run UI tests on the web application.
+Use the ui-test skill to run UI tests via `playwright-cli` Bash commands.
 
 **Arguments:**
 - `$1` - URL to test (default: http://localhost:5173)
@@ -18,4 +18,4 @@ First, verify the dev server is running at the specified URL. If arguments are p
 - URL: $1
 - Test type: $2
 
-Then use the ui-test skill to run the appropriate tests and return a structured PASS/FAIL report.
+Then use the ui-test skill to run `playwright-cli` commands directly via Bash (open, snapshot, click, fill, etc.) and return a structured PASS/FAIL report.

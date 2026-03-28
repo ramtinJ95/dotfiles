@@ -42,10 +42,18 @@ fi
 # ── az CLI: allowlist of read-only actions ──
 if echo "$COMMAND" | grep -qE '(^|\||;|&&)\s*az\s'; then
   az_segment=$(echo "$COMMAND" | grep -oP '(^|(?<=\|)|(?<=;)|(?<=&&))\s*az\s+[^|;&]+' | head -1)
-  az_subcommands=$(echo "$az_segment" | sed 's/\s\+--\S\+//g; s/\s\+-\S\+//g' | xargs)
-  az_action=$(echo "$az_subcommands" | awk '{print $NF}')
+  # Strip redirects, then extract only az subcommands (words before first flag)
+  az_clean=$(echo "$az_segment" | sed 's/[0-9]*>[&]*[0-9]*//g' | xargs)
+  az_action=""
+  for word in $az_clean; do
+    case "$word" in
+      az) continue ;;
+      -*) break ;;
+      *) az_action="$word" ;;
+    esac
+  done
 
-  AZ_READ="list|show|get|export|download|display|check|exists|wait"
+  AZ_READ="list|show|get|export|download|download-batch|display|check|exists|wait|account"
   if ! echo "$az_action" | grep -qP "^($AZ_READ)$"; then
     block "az write command needs confirmation"
   fi
