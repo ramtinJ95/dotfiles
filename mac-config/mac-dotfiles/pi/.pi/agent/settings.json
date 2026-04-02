@@ -1,12 +1,16 @@
 {
-  "lastChangelogVersion": "0.60.0",
+  "lastChangelogVersion": "0.64.0",
   "defaultProvider": "github-copilot",
   "defaultModel": "gpt-5.4",
   "hideThinkingBlock": false,
-  "defaultThinkingLevel": "high",
+  "defaultThinkingLevel": "xhigh",
   "skills": [
     "!**/.agents/skills/**"
   ],
   "transport": "websocket",
-  "theme": "dark"
+  "theme": "dark",
+  "packages": [
+    "npm:pi-vim",
+    "git:https://github.com/badlogic/pi-diff-review"
+  ]
 }
