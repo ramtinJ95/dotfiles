@@ -76,3 +76,10 @@ export PATH=/Users/ramtinjavanmardi/.opencode/bin:$PATH
 
 # added by Snowflake SnowflakeCLI installer v1.0
 export PATH=/Applications/SnowflakeCLI.app/Contents/MacOS/:$PATH
+
+# bun completions
+[ -s "/Users/ramtinjavanmardi/.bun/_bun" ] && source "/Users/ramtinjavanmardi/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
