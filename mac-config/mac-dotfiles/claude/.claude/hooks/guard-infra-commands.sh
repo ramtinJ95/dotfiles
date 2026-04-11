@@ -34,19 +34,19 @@ fi
 # ── kubectl: allowlist of read-only subcommands ──
 if echo "$COMMAND" | grep -qE '(^|\||;|&&)\s*kubectl\s'; then
   KUBECTL_READ="get|describe|logs|log|top|explain|api-resources|api-versions|cluster-info|version|auth|diff|config|exec|port-forward|cp|wait"
-  if ! echo "$COMMAND" | grep -qP "kubectl\s+($KUBECTL_READ)(\s|$)"; then
+  if ! echo "$COMMAND" | grep -qE "kubectl\s+($KUBECTL_READ)(\s|$)"; then
     block "kubectl write command needs confirmation"
   fi
 fi
 
 # ── az CLI: allowlist of read-only actions ──
 if echo "$COMMAND" | grep -qE '(^|\||;|&&)\s*az\s'; then
-  az_segment=$(echo "$COMMAND" | grep -oP '(^|(?<=\|)|(?<=;)|(?<=&&))\s*az\s+[^|;&]+' | head -1)
+  az_segment=$(echo "$COMMAND" | grep -oE '(^|\||\;|&&)\s*az\s+[^|;&]+' | head -1)
   az_subcommands=$(echo "$az_segment" | sed 's/\s\+--\S\+//g; s/\s\+-\S\+//g' | xargs)
   az_action=$(echo "$az_subcommands" | awk '{print $NF}')
 
   AZ_READ="list|show|get|export|download|display|check|exists|wait"
-  if ! echo "$az_action" | grep -qP "^($AZ_READ)$"; then
+  if ! echo "$az_action" | grep -qE "^($AZ_READ)$"; then
     block "az write command needs confirmation"
   fi
 fi
@@ -54,7 +54,7 @@ fi
 # ── terraform: block destructive commands ──
 if echo "$COMMAND" | grep -qE '(^|\||;|&&)\s*terraform\s'; then
   TF_READ="plan|show|init|validate|fmt|format|output|state list|state show|graph|providers|workspace list|workspace show|workspace select|version|get|console"
-  if ! echo "$COMMAND" | grep -qP "terraform\s+($TF_READ)(\s|$)"; then
+  if ! echo "$COMMAND" | grep -qE "terraform\s+($TF_READ)(\s|$)"; then
     block "terraform write command needs confirmation"
   fi
 fi
