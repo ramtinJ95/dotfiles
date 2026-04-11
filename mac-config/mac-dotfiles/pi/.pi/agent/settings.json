@@ -1,6 +1,6 @@
 {
-  "lastChangelogVersion": "0.64.0",
-  "defaultProvider": "github-copilot",
+  "lastChangelogVersion": "0.66.1",
+  "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.4",
   "hideThinkingBlock": false,
   "defaultThinkingLevel": "xhigh",
@@ -11,6 +11,7 @@
   "theme": "dark",
   "packages": [
     "npm:pi-vim",
-    "git:https://github.com/badlogic/pi-diff-review"
+    "git:https://github.com/badlogic/pi-diff-review",
+    "git:github.com/pasky/chrome-cdp-skill@v1.0.1"
   ]
 }

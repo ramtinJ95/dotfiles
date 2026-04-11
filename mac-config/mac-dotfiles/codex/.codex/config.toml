@@ -1,6 +1,6 @@
 model = "gpt-5.4"
 model_provider = "openai"
-model_reasoning_effort = "medium"
+model_reasoning_effort = "high"
 model_verbosity = "medium"
 
 sandbox_mode = "danger-full-access"
@@ -53,4 +53,10 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/Users/ramtinjavanmardi/workspace/dotfiles"]
+trust_level = "trusted"
+
+[projects."/Users/ramtinjavanmardi/workspace/Colosseum"]
+trust_level = "trusted"
+
+[projects."/Users/ramtinjavanmardi/workspace/classification_poc"]
 trust_level = "trusted"
