@@ -8,7 +8,7 @@ description: Research framework, library, and language questions using up-to-dat
 ## Overview
 
 Answer technical questions with a source-first workflow:
-1. Get primary docs through local `context7` CLI.
+1. Get primary docs through the local `ctx7` CLI.
 2. Validate with official docs sites and repo evidence when needed.
 3. Return concise, version-aware guidance with links and tradeoffs.
 
@@ -23,24 +23,31 @@ If version is missing and answer could vary by version, ask for it.
 
 ## Step 1: Query Context7 First
 
-Use local CLI commands:
+Use the installed `ctx7` binary directly when it is available. Only fall back to `npx -y ctx7` if `ctx7` is missing from `PATH`.
+
+Do not use the legacy `context7` command name, `context7 resolve-library-id`, `context7 query-docs`, or any `@upstash/context7-cli` package name. If a `ctx7` command fails, correct the command or inputs instead of retrying with old command families.
+
+Preferred command sequence:
 
 ```bash
-# 1) Resolve library ID
-context7 resolve-library-id \
-  --library-name "<library-or-framework>" \
-  --query "<question>"
+# 0) Confirm the CLI you should use
+command -v ctx7 >/dev/null 2>&1 || alias ctx7='npx -y ctx7'
 
-# 2) Query docs with chosen ID
-context7 query-docs \
-  --library-id "</org/project or /org/project/version>" \
-  --query "<specific question with constraints>"
+# 1) Resolve the best library ID
+ctx7 library "<library-or-framework>" "<question>"
+
+# 2) Query docs with the chosen ID
+ctx7 docs "</org/project or /org/project/version>" \
+  "<specific question with constraints>"
 ```
 
 Rules:
+- Prefer `ctx7` over `npx -y ctx7` for speed when the binary is already installed.
 - Prefer a specific versioned library ID when version matters.
 - Run focused queries instead of broad prompts.
 - If multiple libraries are plausible, provide options and ask user which one to proceed with.
+- If the first `ctx7 library` result is clearly authoritative, use it immediately instead of spending extra turns re-resolving the same library.
+- If `ctx7 docs` comes back thin or ambiguous, refine the query once; do not restart the workflow from a different CLI brand or package.
 
 ## Step 2: Use Official Sources Only For Web Verification
 

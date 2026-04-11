@@ -72,7 +72,34 @@
       "skillFolderHash": "3923ffe2ebde0d10f5ed913b3314eb09afa49ace",
       "installedAt": "2026-02-06T07:29:10.912Z",
       "updatedAt": "2026-02-06T07:29:10.912Z"
+    },
+    "playwriter": {
+      "source": "remorses/playwriter",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/remorses/playwriter.git",
+      "skillPath": "skills/playwriter/SKILL.md",
+      "skillFolderHash": "e6cd918f821d35a79dca0277d197df667a240753",
+      "installedAt": "2026-04-02T04:54:33.575Z",
+      "updatedAt": "2026-04-02T04:54:33.575Z"
     }
   },
-  "dismissed": {}
+  "dismissed": {
+    "findSkillsPrompt": true
+  },
+  "lastSelectedAgents": [
+    "amp",
+    "antigravity",
+    "cline",
+    "codex",
+    "cursor",
+    "deepagents",
+    "firebender",
+    "gemini-cli",
+    "github-copilot",
+    "kimi-cli",
+    "opencode",
+    "warp",
+    "pi",
+    "claude-code"
+  ]
 }

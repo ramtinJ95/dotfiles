@@ -20,12 +20,12 @@ alias vim='nvim'
 alias n='nvim'
 
 # Git aliases
-alias gcm='git commit -m'
 alias gs='git status'
 alias gp='git push'
 alias gpl='git pull'
 alias gaa='git add .'
 alias gc='git commit --verbose'
+alias gcm='git checkout main && git pull'
 
 # eza (better 'ls')
 alias ls='eza --icons'

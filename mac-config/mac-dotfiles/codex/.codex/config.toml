@@ -1,6 +1,6 @@
 model = "gpt-5.4"
 model_provider = "openai"
-model_reasoning_effort = "high"
+model_reasoning_effort = "medium"
 model_verbosity = "medium"
 
 sandbox_mode = "danger-full-access"
@@ -12,25 +12,12 @@ suppress_unstable_features_warning = true
 
 [features]
 view_image_tool = true            # enable the view image tool
-rmcp_client = true                # enable the rmcp client
 multi_agent = true
 child_agents_md = true
 memories = true
 
 [sandbox_workspace_write]
 network_access = true
-
-[mcp_servers.context7]
-url = "https://mcp.context7.com/mcp"
-env_http_headers = { "CONTEXT7_API_KEY" = "CONTEXT7_API_KEY" } # keep the API key out of git
-
-[mcp_servers.ghgrep]
-url = "https://mcp.grep.app"
-
-[mcp_servers.playwright]
-command = "npx"
-args = ["@playwright/mcp@latest", "--browser", "chromium"]
-enabled = false
 
 [mcp_servers.dbt]
 command = "uvx"

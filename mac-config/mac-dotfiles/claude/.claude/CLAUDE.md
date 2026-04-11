@@ -1,7 +1,7 @@
 RULES THAT SHOULD ALWAYS BE FOLLOWED:
 <rules>
   <rule> While scanning code, if anything looks off (bad/dead code, poor naming, refactor opportunity, or VISION misalignment), immediately log a stand-alone entry in `./scratch/BACKLOG.md` so it can be picked up, prioritized, and acted on later. </rule>
-  <rule> Always use the researcher agent to fetch up to date documentation that is relevant to the project currently being worked on. </rule>
+  <rule> Always use the ctx7 CLI (for example via `npx ctx7 ...`) to fetch up to date documentation that is relevant to the project currently being worked on. </rule>
   <rule> Always try to give suggestions and comparing different solutions and ask the user which one to go with before implementing. </rule>
   <rule> NEVER add yourself as a co-author in git commits. Do not include any "Co-Authored-By" line in commit messages. </rule>
   <rule> Always ask questions when you are not sure or something is not clear. Dont just assume things. </rule>
