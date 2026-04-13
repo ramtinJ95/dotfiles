@@ -793,13 +793,14 @@ class InfraApprovalOverlay {
 	constructor(
 		private tui: TUI,
 		private theme: Theme,
+		private keybindings: any,
 		private reason: string,
 		private command: string,
 		private done: (approved: boolean) => void,
 	) {}
 
 	handleInput(data: string): void {
-		if (matchesKey(data, Key.escape) || matchesKey(data, Key.ctrl("c")) || matchesKey(data, "n")) {
+		if (this.keybindings.matches(data, "tui.select.cancel") || matchesKey(data, "n")) {
 			this.done(false);
 			return;
 		}
@@ -839,17 +840,29 @@ class InfraApprovalOverlay {
 			return;
 		}
 
-		if (matchesKey(data, "j") || matchesKey(data, Key.right) || matchesKey(data, Key.tab)) {
+		if (
+			this.keybindings.matches(data, "tui.select.down") ||
+			matchesKey(data, "j") ||
+			matchesKey(data, "l") ||
+			matchesKey(data, Key.right) ||
+			matchesKey(data, Key.tab)
+		) {
 			this.moveChoice(1);
 			return;
 		}
 
-		if (matchesKey(data, "k") || matchesKey(data, Key.left) || matchesKey(data, Key.shift("tab"))) {
+		if (
+			this.keybindings.matches(data, "tui.select.up") ||
+			matchesKey(data, "k") ||
+			matchesKey(data, "h") ||
+			matchesKey(data, Key.left) ||
+			matchesKey(data, Key.shift("tab"))
+		) {
 			this.moveChoice(-1);
 			return;
 		}
 
-		if (matchesKey(data, Key.enter)) {
+		if (this.keybindings.matches(data, "tui.select.confirm")) {
 			this.done(this.choiceIndex === 1);
 		}
 	}
@@ -899,7 +912,7 @@ class InfraApprovalOverlay {
 		lines.push(border("│") + padLine(this.renderChoiceLine(1, "Yes, run the command", "success")) + border("│"));
 		lines.push(
 			border("│") +
-				padLine(this.theme.fg("dim", " j/k move choice • Enter confirm • y allow • n or Esc cancel")) +
+				padLine(this.theme.fg("dim", " j/k or h/l move choice • Enter confirm • y allow • n or Esc cancel")) +
 				border("│"),
 		);
 		lines.push(border(`╰${"─".repeat(innerWidth)}╯`));
@@ -952,7 +965,7 @@ function formatApprovalMessage(reason, command) {
 
 async function requestInfraApproval(ctx: any, reason: string, command: string): Promise<boolean> {
 	const approved = await ctx.ui.custom<boolean>(
-		(tui, theme, _keybindings, done) => new InfraApprovalOverlay(tui, theme, reason, command, done),
+		(tui, theme, keybindings, done) => new InfraApprovalOverlay(tui, theme, keybindings, reason, command, done),
 		{
 			overlay: true,
 			overlayOptions: {

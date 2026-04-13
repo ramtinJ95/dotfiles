@@ -953,7 +953,7 @@ export default function reviewExtension(pi: ExtensionAPI) {
 				selectList.onCancel = () => done(null);
 
 				container.addChild(selectList);
-				container.addChild(new Text(theme.fg("dim", "Press enter to confirm or esc to go back")));
+				container.addChild(new Text(theme.fg("dim", "j/k move • enter confirm • esc back")));
 				container.addChild(new DynamicBorder((str) => theme.fg("accent", str)));
 
 				return {
@@ -1083,7 +1083,7 @@ export default function reviewExtension(pi: ExtensionAPI) {
 
 			const listContainer = new Container();
 			container.addChild(listContainer);
-			container.addChild(new Text(theme.fg("dim", "Type to filter • enter to select • esc to cancel")));
+			container.addChild(new Text(theme.fg("dim", "Type to filter • j/k move • enter select • esc cancel")));
 			container.addChild(new DynamicBorder((str) => theme.fg("accent", str)));
 
 			let filteredItems = items;
@@ -1182,7 +1182,7 @@ export default function reviewExtension(pi: ExtensionAPI) {
 
 			const listContainer = new Container();
 			container.addChild(listContainer);
-			container.addChild(new Text(theme.fg("dim", "Type to filter • enter to select • esc to cancel")));
+			container.addChild(new Text(theme.fg("dim", "Type to filter • j/k move • enter select • esc cancel")));
 			container.addChild(new DynamicBorder((str) => theme.fg("accent", str)));
 
 			let filteredItems = items;
