@@ -1,0 +1,16 @@
+[
+  {
+    "summary": "Task title here",
+    "description_lines": [
+      "First detail line",
+      "Second detail line"
+    ]
+  },
+  {
+    "summary": "Another task title",
+    "description_lines": [
+      "Context line",
+      "Reference URL line"
+    ]
+  }
+]
