@@ -222,6 +222,16 @@ function containsInfraText(text) {
 	return INFRA_PATTERN_GLOBAL.test(normalizeForInfraScan(text));
 }
 
+function isKubectlPortForwardOnlyCommand(command) {
+	const normalized = normalizeForInfraScan(command).toLowerCase();
+	const kubectlMentions = normalized.match(/\bkubectl\b(?=[\s;|&()<>]|$)/g) || [];
+	if (kubectlMentions.length === 0) return false;
+	if (/\b(?:terraform|az)\b/.test(normalized)) return false;
+	const kubectlPortForwardMentions =
+		normalized.match(/\bkubectl\b(?=[\s;|&()<>]|$)(?:(?!&&|\|\||[;&|\n]).)*\bport-forward\b/g) || [];
+	return kubectlPortForwardMentions.length === kubectlMentions.length;
+}
+
 function matchesLeadingOption(option, knownSet) {
 	if (knownSet.has(option)) return true;
 	if (option.includes("=")) {
@@ -704,6 +714,7 @@ function evaluateAz(invocation) {
 
 function evaluateCommand(command) {
 	if (!containsInfraText(command)) return allow();
+	if (isKubectlPortForwardOnlyCommand(command)) return allow();
 
 	const parsed = parseSimpleCommands(command);
 	if (parsed.error) {
@@ -1009,6 +1020,7 @@ export const _test = {
 	parseSimpleCommands,
 	extractInvocation,
 	collectPositionals,
+	isKubectlPortForwardOnlyCommand,
 	evaluateCommand,
 	evaluateKubectl,
 	evaluateTerraform,

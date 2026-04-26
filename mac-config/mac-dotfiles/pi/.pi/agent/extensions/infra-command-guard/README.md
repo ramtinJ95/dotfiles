@@ -8,7 +8,7 @@ Global pi extension that wraps the built-in `bash` tool and asks for approval be
 - Add a fast in-process guard before execution
 - Fail closed in non-interactive mode
 - Stay separate from Claude hooks
-- Allow `kubectl port-forward`
+- Allow `kubectl port-forward`, including common wrapped/backgrounded forms
 
 ## What it auto-allows
 
@@ -26,6 +26,7 @@ Low-risk diagnostics and read-style commands, including:
 - `wait`
 - `diff`
 - `port-forward`
+- wrapped/backgrounded `kubectl port-forward` commands when the command's kubectl usage is limited to port-forward
 - `auth can-i`
 - `auth whoami`
 - `rollout status`
@@ -64,7 +65,7 @@ A narrow read-style allowlist:
 
 - Mutating infra commands such as `kubectl delete`, `terraform apply`, `az group delete`
 - Commands the guard cannot classify safely
-- Indirect shell-runner patterns such as `bash -lc "kubectl ..."` or `xargs kubectl ...`
+- Indirect shell-runner patterns such as `bash -lc "kubectl ..."` or `xargs kubectl ...`, except for commands whose kubectl usage is limited to `port-forward`
 - Some sensitive read paths, e.g. `kubectl get secret ...`
 
 ## Notes

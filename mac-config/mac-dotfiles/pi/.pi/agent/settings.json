@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.66.1",
+  "lastChangelogVersion": "0.67.3",
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.4",
   "hideThinkingBlock": false,
@@ -10,8 +10,6 @@
   "transport": "websocket",
   "theme": "dark",
   "packages": [
-    "npm:pi-vim",
-    "git:https://github.com/badlogic/pi-diff-review",
-    "git:github.com/pasky/chrome-cdp-skill@v1.0.1"
+    "npm:pi-vim"
   ]
 }

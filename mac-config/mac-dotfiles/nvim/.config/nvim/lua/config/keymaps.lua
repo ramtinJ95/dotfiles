@@ -18,10 +18,3 @@ vim.keymap.set("n", "<C-u>", "<C-u>zz", opts)
 -- Find and center
 vim.keymap.set("n", "n", "nzzzv", opts)
 vim.keymap.set("n", "N", "Nzzzv", opts)
-
-local md_line_length = vim.api.nvim_create_augroup("md_line_length", { clear = true })
-vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-  command = "setlocal textwidth=80",
-  group = md_line_length,
-  pattern = "*.md",
-})
