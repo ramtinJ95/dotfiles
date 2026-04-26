@@ -11,3 +11,4 @@
 - `arch-config/arch-dotfiles/README.md:16` lists `spicetify/`, but there is no `arch-config/arch-dotfiles/spicetify` package directory.
 - `README.md:37` lists Bat under shared configurations, but `bat/` currently exists only under `mac-config/mac-dotfiles`.
 - `mac-config/mac-dotfiles/pi/.pi/agent/AGENTS.md:4` and `arch-config/arch-dotfiles/pi/.pi/agent/AGENTS.md:4` say "Pre proactive" instead of "Be proactive"; line 15 in both files also has inconsistent rule indentation and the file lacks a closing `</rules>` tag.
+- `mac-config/mac-dotfiles/zsh/.zshrc:1`, `mac-config/mac-dotfiles/zsh/.zshrc:2`, `mac-config/mac-dotfiles/zsh/.zshrc:63`, `mac-config/mac-dotfiles/zsh/.zshrc:65`, and `mac-config/mac-dotfiles/zsh/.zshrc:77` hard-code the current home directory, which makes the macOS bootstrap less portable to a new user/home path.

@@ -38,7 +38,7 @@ See [arch-config/arch-dotfiles/README.md](arch-config/arch-dotfiles/README.md) f
 
 ### macOS Specific
 - **Yabai + skhd** - Tiling window manager and hotkeys
-- **Alacritty** - Terminal emulator
+- **Kitty** - Terminal emulator
 - **Sketchybar** - Custom status bar
 - **Spicetify** - Spotify theming
 - **Zsh** - Shell configuration

@@ -1,3 +1,4 @@
+# Taps
 tap "felixkratz/formulae"
 tap "hashicorp/tap"
 tap "jesseduffield/lazydocker"
@@ -7,93 +8,91 @@ tap "osx-cross/avr"
 tap "qmk/qmk"
 tap "shaunsingh/sfmono-nerd-font-ligaturized"
 tap "sst/tap"
-# Shell extension to jump to frequently used directories
-brew "autojump"
-# Microsoft Azure CLI 2.0
-brew "azure-cli"
-# Clone of cat(1) with syntax highlighting and Git integration
+tap "zegervdv/zathura"
+
+# Core CLI
 brew "bat"
-# Resource monitor. C++ version and continuation of bashtop and bpytop
 brew "btop"
-# Console Bonsai is a bonsai tree generator, written in C using ncurses
-brew "cbonsai"
-# Cross-platform make
-brew "cmake"
-# Modern, maintained replacement for ls
 brew "eza"
-# Simple, fast and user-friendly alternative to find
 brew "fd"
-# Command-line fuzzy finder written in Go
+brew "ffmpeg"
 brew "fzf"
-# Distributed revision control system
+brew "gh"
 brew "git"
-# Open source programming language to build simple/reliable/efficient software
-brew "go"
-# Configurable static site generator
-brew "hugo"
-# Tool to report network interface bandwidth
 brew "ifstat"
-# Lightweight and flexible command-line JSON processor
 brew "jq"
-# Lazier way to manage everything docker
 brew "lazydocker"
-# Simple terminal UI for git commands
 brew "lazygit"
-# Powerful, lightweight programming language
-brew "lua"
-# Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
-# Platform built on V8 to build network applications
-brew "node"
-# Retrieves currently playing media, and simulates media actions
-brew "nowplaying-cli"
-# Execute binaries from Python packages in isolated environments
-brew "pipx"
-# PDF rendering library (based on the xpdf-3.0 code base)
 brew "poppler"
-# Simple and easy-to-use library to learn videogames programming
-brew "raylib"
-# Search tool like grep and The Silver Searcher
 brew "ripgrep"
-# Low-level access to audio, keyboard, mouse, joystick, and graphics
-brew "sdl2"
-# Library for loading images as SDL surfaces and textures
-brew "sdl2_image"
-# Library for using TrueType fonts in SDL applications
-brew "sdl2_ttf"
-# 7-Zip is a file archiver with a high compression ratio
 brew "sevenzip"
-# Cross-shell prompt for astronauts
 brew "starship"
-# Organize software neatly under a single directory tree (e.g. /usr/local)
 brew "stow"
-# Change macOS audio source from the command-line
 brew "switchaudio-osx"
-# Terminal multiplexer
 brew "tmux"
-# Internet file retriever
+brew "uv"
 brew "wget"
-# Blazing fast terminal file manager written in Rust, based on async I/O
 brew "yazi"
-# Shell extension to navigate your filesystem faster
+brew "zegervdv/zathura/zathura-pdf-poppler"
 brew "zoxide"
-# Fish-like fast/unobtrusive autosuggestions for zsh
+
+# Shell
+brew "autojump"
 brew "zsh-autosuggestions"
-# Fish shell like syntax highlighting for zsh
 brew "zsh-syntax-highlighting"
-# Custom macOS statusbar with shell plugin, interaction and graph support
-brew "felixkratz/formulae/sketchybar"
-# Terraform
+
+# Development
+brew "azure-cli"
+brew "cmake"
+brew "go"
 brew "hashicorp/tap/terraform"
-# Simple hotkey-daemon for macOS.
-brew "koekeishiya/formulae/skhd"
-# A tiling window manager for macOS based on binary space partitioning.
-brew "koekeishiya/formulae/yabai"
-# Quantum Mechanical Keyboard (QMK) Firmware
+brew "hugo"
+brew "kind"
+brew "lua"
+brew "node"
+brew "pkgconf"
+brew "rustup"
+brew "tree-sitter"
+
+# Local AI
+brew "llama.cpp", args: ["HEAD"]
+brew "ollama"
+
+# Creative, keyboard, and media tooling
+brew "cbonsai"
+brew "nowplaying-cli"
 brew "qmk/qmk/qmk"
+brew "raylib"
+brew "sdl2"
+brew "sdl2_image"
+brew "sdl2_ttf"
+brew "spicetify-cli"
+
+# macOS window management
+brew "felixkratz/formulae/sketchybar"
+brew "koekeishiya/formulae/skhd"
+brew "koekeishiya/formulae/yabai"
+
+# GUI apps
+cask "blackhole-2ch"
+cask "cursor"
+cask "docker"
+cask "flameshot"
+cask "google-chrome"
+cask "kitty"
+cask "slack"
+cask "spotify"
+cask "tailscale"
+cask "zoom"
+cask "zen"
+
+# Fonts and Apple tooling
 cask "font-blex-mono-nerd-font"
 cask "font-sf-mono"
 cask "font-sf-mono-nerd-font-ligaturized"
 cask "font-sf-pro"
-# Tool that provides consistent, highly configurable symbols for apps
 cask "sf-symbols"
+
+# Go tools
+go "github.com/ramtinj/colosseum/cmd/colosseum"

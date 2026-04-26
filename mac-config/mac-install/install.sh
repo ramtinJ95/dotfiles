@@ -134,7 +134,17 @@ else
     print_success "Zsh already set as default shell"
 fi
 
-# Step 8: Final steps
+# Step 8: Start macOS services
+print_status "Starting macOS services..."
+for service in skhd yabai sketchybar; do
+    if brew services start "$service"; then
+        print_success "$service service started"
+    else
+        print_warning "Could not start $service. Check macOS permissions and run: brew services start $service"
+    fi
+done
+
+# Step 9: Final steps
 print_status "Running final setup steps..."
 
 # Reload shell configuration
@@ -157,4 +167,5 @@ echo "  • Xcode Command Line Tools: ✓"
 echo "  • Homebrew + packages: ✓"
 echo "  • Dotfiles (stow): ✓"
 echo "  • macOS preferences: ✓"
+echo "  • macOS services: ✓"
 echo "  • Shell configuration: ✓"
