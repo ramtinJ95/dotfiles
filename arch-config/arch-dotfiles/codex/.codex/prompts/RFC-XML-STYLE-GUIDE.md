@@ -290,31 +290,7 @@ Output MUST be formatted as [structure].
 </format>
 ```
 
-### Applying to Opencode File Types
-
-#### Agents (`.md` in `.opencode/agent/`)
-```yaml
----
-description: [trigger description]. Use when [contexts].
-mode: primary | subagent | all
----
-```
-```xml
-<role>
-You are [persona]. You specialize in [domain].
-</role>
-
-<instructions>
-- You MUST [requirement]
-- You SHOULD [recommendation]
-- You MAY [option]
-- You MUST NOT [prohibition]
-</instructions>
-
-<workflow>
-[numbered steps]
-</workflow>
-```
+### Applying to Skill Files
 
 #### Skills (`SKILL.md`)
 ```yaml
@@ -341,21 +317,6 @@ Brief description of capability.
 - Skill MUST [requirement]
 - Skill SHOULD [recommendation]
 </rules>
-```
-
-#### Commands (`.md` in `.opencode/command/`)
-```yaml
----
-description: [what command does]
-agent: build | plan
----
-```
-```xml
-<instructions>
-1. [Step with RFC keywords]
-2. The agent MUST [requirement]
-3. The agent SHOULD [recommendation]
-</instructions>
 ```
 
 ---

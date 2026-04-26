@@ -50,7 +50,6 @@ alias ...='cd ../..'
 alias py='python3'
 alias decompress='tar -xvf'
 alias compress='tar -cvf'
-alias oc='opencode'
 
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
@@ -70,9 +69,6 @@ source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 # fzf key bindings and completions
 source /opt/homebrew/opt/fzf/shell/key-bindings.zsh
 source /opt/homebrew/opt/fzf/shell/completion.zsh
-
-# opencode
-export PATH=/Users/ramtinjavanmardi/.opencode/bin:$PATH
 
 # added by Snowflake SnowflakeCLI installer v1.0
 export PATH=/Applications/SnowflakeCLI.app/Contents/MacOS/:$PATH

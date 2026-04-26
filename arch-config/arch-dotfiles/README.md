@@ -13,7 +13,6 @@ Each directory represents a separate "package" that can be managed independently
 - `codex/` - Codex AGENTS, prompts, and custom agent role definitions
 - `hypr/` - Hyprland window manager configuration
 - `nvim/` - Neovim configuration
-- `opencode/` - OpenCode config, commands, and plugins
 - `spicetify/` - Spotify theming configuration
 - `starship/` - Starship prompt configuration
 - `tlp/` - TLP power management configuration (system-wide)
@@ -29,7 +28,7 @@ To install configurations using GNU Stow:
 stow */
 
 # Install specific configurations
-stow bash claude codex agents hypr nvim opencode
+stow bash claude codex agents hypr nvim
 
 # Remove configurations
 stow -D codex agents hypr nvim

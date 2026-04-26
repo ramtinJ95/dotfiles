@@ -54,8 +54,5 @@ trust_level = "trusted"
 [projects."/home/ramtinj/personal-workspace/Colosseum"]
 trust_level = "trusted"
 
-[projects."/home/ramtinj/personal-workspace/opencode-tokenscope"]
-trust_level = "trusted"
-
 [projects."/home/ramtinj/workspace/shared-github-actions"]
 trust_level = "trusted"
