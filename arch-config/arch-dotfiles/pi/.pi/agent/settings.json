@@ -1,11 +1,15 @@
 {
-  "lastChangelogVersion": "0.61.1",
-  "defaultProvider": "github-copilot",
+  "lastChangelogVersion": "0.67.3",
+  "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.4",
   "hideThinkingBlock": false,
-  "defaultThinkingLevel": "high",
+  "defaultThinkingLevel": "xhigh",
   "skills": [
     "!**/.agents/skills/**"
   ],
-  "transport": "websocket"
+  "transport": "websocket",
+  "theme": "dark",
+  "packages": [
+    "npm:pi-vim"
+  ]
 }

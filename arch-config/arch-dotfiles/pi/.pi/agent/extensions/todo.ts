@@ -509,7 +509,7 @@ class TodoActionMenuComponent extends Container {
 		this.selectList.onCancel = () => this.onCancelCallback();
 
 		this.addChild(this.selectList);
-		this.addChild(new Text(theme.fg("dim", "Enter to confirm • Esc back")));
+		this.addChild(new Text(theme.fg("dim", "j/k move • Enter confirm • Esc back")));
 		this.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
 	}
 
@@ -550,7 +550,7 @@ class TodoDeleteConfirmComponent extends Container {
 		this.selectList.onCancel = () => this.onConfirm(false);
 
 		this.addChild(this.selectList);
-		this.addChild(new Text(theme.fg("dim", "Enter to confirm • Esc back")));
+		this.addChild(new Text(theme.fg("dim", "j/k move • Enter confirm • Esc back")));
 		this.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
 	}
 

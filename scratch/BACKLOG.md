@@ -10,3 +10,4 @@
 - `arch-config/arch-dotfiles/codex/.codex/AGENTS.md:4` still says to use the researcher agent for docs, while the macOS Codex instructions use the current ctx7 CLI wording.
 - `arch-config/arch-dotfiles/README.md:16` lists `spicetify/`, but there is no `arch-config/arch-dotfiles/spicetify` package directory.
 - `README.md:37` lists Bat under shared configurations, but `bat/` currently exists only under `mac-config/mac-dotfiles`.
+- `mac-config/mac-dotfiles/pi/.pi/agent/AGENTS.md:4` and `arch-config/arch-dotfiles/pi/.pi/agent/AGENTS.md:4` say "Pre proactive" instead of "Be proactive"; line 15 in both files also has inconsistent rule indentation and the file lacks a closing `</rules>` tag.
