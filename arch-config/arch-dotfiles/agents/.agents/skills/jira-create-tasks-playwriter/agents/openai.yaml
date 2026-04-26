@@ -1,4 +1,0 @@
-interface:
-  display_name: "Jira Task Creator"
-  short_description: "Create Jira tasks under an epic in backlog"
-  default_prompt: "Use $jira-create-tasks-playwriter to create Jira Task issues under an epic from PR context."
