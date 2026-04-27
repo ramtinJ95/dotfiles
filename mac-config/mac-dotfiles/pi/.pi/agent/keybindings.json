@@ -1,8 +1,0 @@
-{
-  "tui.select.up": ["k", "up"],
-  "tui.select.down": ["j", "down"],
-  "tui.select.pageUp": ["ctrl+u", "pageUp"],
-  "tui.select.pageDown": ["ctrl+d", "pageDown"],
-  "app.tree.foldOrUp": ["h", "ctrl+left", "alt+left"],
-  "app.tree.unfoldOrDown": ["l", "ctrl+right", "alt+right"]
-}

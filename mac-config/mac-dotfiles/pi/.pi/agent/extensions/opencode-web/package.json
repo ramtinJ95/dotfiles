@@ -1,9 +1,0 @@
-{
-  "name": "pi-opencode-web",
-  "private": true,
-  "dependencies": {
-    "@mariozechner/pi-tui": "^0.58.1",
-    "@sinclair/typebox": "^0.34.48",
-    "turndown": "^7.2.0"
-  }
-}

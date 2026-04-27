@@ -1,0 +1,16 @@
+bat
+btop
+claude
+codex
+eza
+git
+kitty
+nvim
+sketchybar
+skhd
+spicetify
+starship
+tmux
+yabai
+yazi
+zsh

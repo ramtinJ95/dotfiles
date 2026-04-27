@@ -1,0 +1,15 @@
+{
+  "lastChangelogVersion": "0.70.2",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.5",
+  "hideThinkingBlock": false,
+  "defaultThinkingLevel": "high",
+  "skills": [
+    "!**/.agents/skills/**"
+  ],
+  "transport": "websocket",
+  "theme": "dark",
+  "packages": [
+    "npm:pi-vim"
+  ]
+}

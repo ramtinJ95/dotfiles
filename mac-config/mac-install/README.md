@@ -4,11 +4,11 @@ Automated setup scripts to quickly reproduce your development environment on a n
 
 ## What This Does
 
-- ✅ Installs Xcode Command Line Tools
-- ✅ Installs Homebrew and all your packages
-- ✅ Sets up dotfiles using GNU Stow
-- ✅ Applies your macOS system preferences
-- ✅ Configures shell environment
+- Installs Xcode Command Line Tools
+- Installs Homebrew and all your packages
+- Sets up shared and macOS dotfiles using GNU Stow
+- Applies your macOS system preferences
+- Configures shell environment
 
 ## Files
 
@@ -40,10 +40,19 @@ brew bundle install
 # Apply macOS defaults only  
 ./set-defaults.sh
 
-# Stow dotfiles only
-cd ../mac-dotfiles
-stow -t ~ */
+# Stow shared and macOS dotfiles only, from the repo root
+cd ~/workspace/dotfiles
+stow -d common-config/common-dotfiles -t "$HOME" $(cat packages/common.txt)
+stow -d mac-config/mac-dotfiles -t "$HOME" $(cat packages/mac.txt)
+
+# Restow after package moves or config updates
+stow -R -d common-config/common-dotfiles -t "$HOME" $(cat packages/common.txt)
+stow -R -d mac-config/mac-dotfiles -t "$HOME" $(cat packages/mac.txt)
 ```
+
+If the common Stow command reports conflicts on an existing machine, use the
+existing-machine migration section in the root `README.md` first. Fresh machines
+do not need that step.
 
 ## Updating Your Setup
 
@@ -72,11 +81,22 @@ brew bundle dump --describe --file=Brewfile --force
 - Trackpad: tap to click enabled
 
 ### Dotfiles
-- Zsh configuration with plugins
+- Shared agent configuration from `common-config/common-dotfiles`
+- Zsh configuration
 - Git configuration
 - Terminal tools (btop, eza, starship, etc.)
 - Window management (yabai, skhd)
 - Editor configs (neovim, etc.)
+
+## Package Lists
+
+The install script reads package names from the repository-level `packages/`
+directory:
+
+- `packages/common.txt` - shared packages installed on every machine
+- `packages/mac.txt` - macOS user-level packages
+
+Add new package names to the right list when creating a new Stow package.
 
 ## Troubleshooting
 

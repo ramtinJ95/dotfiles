@@ -1,45 +1,57 @@
 # Arch Linux Dotfiles
 
-This repository contains my Arch Linux configuration files organized for use with [GNU Stow](https://www.gnu.org/software/stow/).
+This directory contains the Arch Linux-specific GNU Stow packages. Shared
+packages live in `../../common-config/common-dotfiles` and are installed first.
 
 ## Structure
 
-Each directory represents a separate "package" that can be managed independently:
+Each directory represents a separate Arch-specific package that can be managed
+independently:
 
-- `agents/` - Shared user-level `.agents/skills` tree for Codex and other agent harnesses
 - `bash/` - Bash configuration (.bashrc, .blerc)
 - `ble/` - ble.sh (Bash Line Editor)
 - `claude/` - Claude Code config, commands, hooks, and skills
 - `codex/` - Codex AGENTS, prompts, and custom agent role definitions
+- `ghostty/` - Ghostty terminal configuration
 - `hypr/` - Hyprland window manager configuration
+- `k9s/` - k9s Kubernetes terminal UI configuration
 - `nvim/` - Neovim configuration
-- `spicetify/` - Spotify theming configuration
+- `scripts/` - Arch helper scripts
 - `starship/` - Starship prompt configuration
 - `tlp/` - TLP power management configuration (system-wide)
 - `tmux/` - tmux terminal multiplexer configuration
+- `waybar/` - Waybar status bar configuration
 - `yazi/` - Yazi file manager configuration
 
 ## Usage
 
-To install configurations using GNU Stow:
+Run these commands from the repository root.
 
 ```bash
-# Install all configurations
-stow */
+# Install shared packages first
+stow -d common-config/common-dotfiles -t "$HOME" $(cat packages/common.txt)
 
-# Install specific configurations
-stow bash claude codex agents hypr nvim
+# Install Arch user-level packages
+stow -d arch-config/arch-dotfiles -t "$HOME" $(cat packages/arch.txt)
 
-# Remove configurations
-stow -D codex agents hypr nvim
+# Install Arch system-level packages
+sudo stow -d arch-config/arch-dotfiles -t / $(cat packages/arch-system.txt)
 
-# Simulate installation (dry run)
-stow -n codex agents
+# Restow after package moves or config updates
+stow -R -d common-config/common-dotfiles -t "$HOME" $(cat packages/common.txt)
+stow -R -d arch-config/arch-dotfiles -t "$HOME" $(cat packages/arch.txt)
+
+# Install or remove one package
+stow -d arch-config/arch-dotfiles -t "$HOME" hypr
+stow -D -d common-config/common-dotfiles -t "$HOME" pi
+
+# Simulate installation
+stow -n -d arch-config/arch-dotfiles -t "$HOME" hypr
 ```
 
 ## Notes
 
-- The `tlp/` package contains system-wide configuration and requires sudo to stow to `/etc/`
+- The `tlp/` package contains system-wide configuration and uses `packages/arch-system.txt`
 - All other packages will create symlinks in your `~/.config/` or home directory
 - The `codex/` package uses `.stow-local-ignore` so stow only links `~/.codex/AGENTS.md`, `~/.codex/agents/`, `~/.codex/agents_config.toml`, and `~/.codex/prompts/`; keep `~/.codex/config.toml`, `~/.codex/skills`, and runtime/state files local for now
 - Make sure to backup your existing configurations before using stow

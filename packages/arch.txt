@@ -1,0 +1,15 @@
+bash
+ble
+claude
+codex
+ghostty
+git
+hypr
+k9s
+kitty
+nvim
+scripts
+starship
+tmux
+waybar
+yazi

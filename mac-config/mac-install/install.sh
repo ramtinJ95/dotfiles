@@ -97,23 +97,38 @@ fi
 
 # Step 5: Stow dotfiles
 print_status "Setting up dotfiles with Stow..."
+DOTFILES_COMMON_DIR="$DOTFILES_DIR/common-config/common-dotfiles"
 DOTFILES_MAC_DIR="$DOTFILES_DIR/mac-config/mac-dotfiles"
+PACKAGE_LIST_DIR="$DOTFILES_DIR/packages"
 
-if [[ -d "$DOTFILES_MAC_DIR" ]]; then
-    cd "$DOTFILES_MAC_DIR"
-    
-    # Stow each package
-    for package in */; do
-        package=${package%/}  # Remove trailing slash
+stow_packages() {
+    local stow_dir="$1"
+    local package_list="$2"
+    local label="$3"
+
+    if [[ ! -d "$stow_dir" ]]; then
+        print_error "$label dotfiles directory not found at $stow_dir"
+        exit 1
+    fi
+
+    if [[ ! -f "$package_list" ]]; then
+        print_error "$label package list not found at $package_list"
+        exit 1
+    fi
+
+    cd "$stow_dir"
+
+    while IFS= read -r package || [[ -n "$package" ]]; do
+        [[ -z "$package" || "$package" == \#* ]] && continue
         print_status "Stowing $package..."
-        stow -t ~ "$package"
-    done
-    
-    print_success "All dotfiles stowed successfully"
-else
-    print_error "Mac dotfiles directory not found at $DOTFILES_MAC_DIR"
-    exit 1
-fi
+        stow -t "$HOME" "$package"
+    done < "$package_list"
+}
+
+stow_packages "$DOTFILES_COMMON_DIR" "$PACKAGE_LIST_DIR/common.txt" "Common"
+stow_packages "$DOTFILES_MAC_DIR" "$PACKAGE_LIST_DIR/mac.txt" "Mac"
+
+print_success "All dotfiles stowed successfully"
 
 # Step 6: Apply macOS defaults
 print_status "Applying macOS system preferences..."
