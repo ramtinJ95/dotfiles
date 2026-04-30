@@ -23,7 +23,7 @@
     "type": "command",
     "command": "~/.claude/statusline.sh"
   },
-  "effortLevel": "xhigh",
+  "effortLevel": "high",
   "autoMemoryEnabled": true,
   "autoDreamEnabled": true,
   "skipDangerousModePermissionPrompt": true,

@@ -9,6 +9,7 @@ personality = "pragmatic"
 web_search = "live"               # replacement for deprecated [features].web_search_request
 project_doc_fallback_filenames = ["CLAUDE.md"]
 suppress_unstable_features_warning = true
+service_tier = "fast"
 
 [features]
 view_image_tool = true            # enable the view image tool
@@ -81,4 +82,10 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/Users/ramtinjavanmardi/workspace/handMadeOasis"]
+trust_level = "trusted"
+
+[projects."/Users/ramtinjavanmardi/workspace/agentic-dev-days-chess"]
+trust_level = "trusted"
+
+[projects."/Users/ramtinjavanmardi/workspace"]
 trust_level = "trusted"
