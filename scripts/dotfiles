@@ -30,10 +30,16 @@ warn() {
 
 usage() {
     cat <<'EOF'
-Usage: scripts/dotfiles doctor
+Usage: scripts/dotfiles <command> [profile]
 
 Commands:
-  doctor  Validate package lists, Stow dry-runs, symlinks, shell, and JSON
+  doctor              Validate package lists, Stow dry-runs, symlinks, shell, and JSON
+  stow mac            Stow common and macOS user packages into $HOME
+  stow arch           Stow common and Arch user packages into $HOME
+  stow arch-system    Stow Arch system packages into /
+  restow mac          Restow common and macOS user packages into $HOME
+  restow arch         Restow common and Arch user packages into $HOME
+  restow arch-system  Restow Arch system packages into /
 EOF
 }
 
@@ -125,6 +131,69 @@ run_stow_dry_run() {
     fi
 }
 
+run_stow_action() {
+    local action="$1"
+    local list_name="$2"
+    local target="$3"
+    local root
+    root="$(package_root "$list_name")"
+
+    if ! command -v stow >/dev/null 2>&1; then
+        fail "stow command is not available"
+        return
+    fi
+
+    local packages
+    packages="$(package_names "$list_name" | tr '\n' ' ')"
+    if [[ -z "$packages" ]]; then
+        fail "$list_name package list is empty"
+        return
+    fi
+
+    case "$action" in
+        stow) ;;
+        restow) ;;
+        *) fail "unknown stow action: $action"; return ;;
+    esac
+
+    info "$action $list_name -> $target"
+    if [[ "$action" == "restow" ]]; then
+        stow -R -d "$root" -t "$target" $packages || fail "$action failed for $list_name"
+    else
+        stow -d "$root" -t "$target" $packages || fail "$action failed for $list_name"
+    fi
+}
+
+run_profile() {
+    local action="$1"
+    local profile="$2"
+
+    failures=0
+
+    case "$profile" in
+        mac)
+            run_stow_action "$action" common "$HOME"
+            run_stow_action "$action" mac "$HOME"
+            ;;
+        arch)
+            run_stow_action "$action" common "$HOME"
+            run_stow_action "$action" arch "$HOME"
+            ;;
+        arch-system)
+            if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
+                warn "arch-system targets / and may require sudo"
+            fi
+            run_stow_action "$action" arch-system /
+            ;;
+        *)
+            usage >&2
+            return 2
+            ;;
+    esac
+
+    [[ "$failures" -eq 0 ]]
+}
+
 check_broken_symlinks() {
     local root
     for root in "$COMMON_DIR" "$MAC_DIR" "$ARCH_DIR"; do
@@ -208,6 +277,13 @@ doctor() {
 case "${1:-}" in
     doctor)
         doctor
+        ;;
+    stow|restow)
+        if [[ $# -ne 2 ]]; then
+            usage >&2
+            exit 2
+        fi
+        run_profile "$1" "$2"
         ;;
     -h|--help|help|'')
         usage
