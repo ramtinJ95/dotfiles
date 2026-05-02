@@ -1,6 +1,12 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+BREWFILE="$SCRIPT_DIR/Brewfile"
+DOTFILES_HELPER="$REPO_ROOT/scripts/dotfiles"
+SET_DEFAULTS="$SCRIPT_DIR/set-defaults.sh"
 
 # Colors for output
 RED='\033[0;31m'
@@ -26,6 +32,14 @@ print_error() {
     echo -e "${RED}✗ $1${NC}"
 }
 
+load_homebrew_shellenv() {
+    if [[ -x /opt/homebrew/bin/brew ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [[ -x /usr/local/bin/brew ]]; then
+        eval "$(/usr/local/bin/brew shellenv)"
+    fi
+}
+
 # Check if we're on macOS
 if [[ "$OSTYPE" != "darwin"* ]]; then
     print_error "This script is only for macOS!"
@@ -46,6 +60,8 @@ sudo -v
 
 # Keep-alive: update existing `sudo` time stamp until script has finished
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+SUDO_KEEPALIVE_PID="$!"
+trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true' EXIT
 
 print_status "Starting Mac setup..."
 
@@ -61,80 +77,49 @@ fi
 
 # Step 2: Install Homebrew
 print_status "Installing Homebrew..."
+load_homebrew_shellenv
+
 if command -v brew &> /dev/null; then
     print_success "Homebrew already installed"
     brew update
 else
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    
-    # Add Homebrew to PATH for Apple Silicon Macs
-    if [[ $(uname -m) == "arm64" ]]; then
-        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
-        eval "$(/opt/homebrew/bin/brew shellenv)"
-    fi
+fi
+
+load_homebrew_shellenv
+
+if ! command -v brew &> /dev/null; then
+    print_error "Homebrew installed, but brew is not available on PATH"
+    exit 1
 fi
 
 # Step 3: Install packages from Brewfile
 print_status "Installing packages from Brewfile..."
-if [[ -f "Brewfile" ]]; then
-    brew bundle install
+if [[ -f "$BREWFILE" ]]; then
+    brew bundle install --file="$BREWFILE"
     print_success "All packages installed successfully"
 else
-    print_error "Brewfile not found in current directory!"
+    print_error "Brewfile not found at $BREWFILE"
     exit 1
 fi
 
-# Step 4: Clone dotfiles if not already present
-DOTFILES_DIR="$HOME/workspace/dotfiles"
-if [[ ! -d "$DOTFILES_DIR" ]]; then
-    print_status "Cloning dotfiles repository..."
-    mkdir -p "$HOME/workspace"
-    # You'll need to replace this with your actual dotfiles repo URL
-    print_warning "Please manually clone your dotfiles to $DOTFILES_DIR and rerun this script"
-    print_warning "Or update this script with your dotfiles repository URL"
+# Step 4: Validate repository helper
+if [[ ! -x "$DOTFILES_HELPER" ]]; then
+    print_error "Dotfiles helper not found or not executable at $DOTFILES_HELPER"
     exit 1
 fi
 
 # Step 5: Stow dotfiles
 print_status "Setting up dotfiles with Stow..."
-DOTFILES_COMMON_DIR="$DOTFILES_DIR/common-config/common-dotfiles"
-DOTFILES_MAC_DIR="$DOTFILES_DIR/mac-config/mac-dotfiles"
-PACKAGE_LIST_DIR="$DOTFILES_DIR/packages"
-
-stow_packages() {
-    local stow_dir="$1"
-    local package_list="$2"
-    local label="$3"
-
-    if [[ ! -d "$stow_dir" ]]; then
-        print_error "$label dotfiles directory not found at $stow_dir"
-        exit 1
-    fi
-
-    if [[ ! -f "$package_list" ]]; then
-        print_error "$label package list not found at $package_list"
-        exit 1
-    fi
-
-    cd "$stow_dir"
-
-    while IFS= read -r package || [[ -n "$package" ]]; do
-        [[ -z "$package" || "$package" == \#* ]] && continue
-        print_status "Stowing $package..."
-        stow -t "$HOME" "$package"
-    done < "$package_list"
-}
-
-stow_packages "$DOTFILES_COMMON_DIR" "$PACKAGE_LIST_DIR/common.txt" "Common"
-stow_packages "$DOTFILES_MAC_DIR" "$PACKAGE_LIST_DIR/mac.txt" "Mac"
+"$DOTFILES_HELPER" doctor
+"$DOTFILES_HELPER" stow mac
 
 print_success "All dotfiles stowed successfully"
 
 # Step 6: Apply macOS defaults
 print_status "Applying macOS system preferences..."
-INSTALL_DIR="$DOTFILES_DIR/mac-config/mac-install"
-if [[ -f "$INSTALL_DIR/set-defaults.sh" ]]; then
-    "$INSTALL_DIR/set-defaults.sh"
+if [[ -f "$SET_DEFAULTS" ]]; then
+    "$SET_DEFAULTS"
     print_success "macOS defaults applied"
 else
     print_warning "set-defaults.sh not found, skipping system preferences"
@@ -142,8 +127,8 @@ fi
 
 # Step 7: Setup shell (if needed)
 print_status "Configuring shell..."
-if [[ "$SHELL" != */zsh ]]; then
-    chsh -s $(which zsh)
+if [[ "${SHELL:-}" != */zsh ]]; then
+    chsh -s "$(command -v zsh)"
     print_success "Default shell changed to zsh"
 else
     print_success "Zsh already set as default shell"

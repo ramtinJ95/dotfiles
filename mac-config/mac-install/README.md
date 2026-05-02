@@ -25,8 +25,8 @@ On a **new Mac**:
 git clone git@github.com:ramtinJ95/dotfiles.git ~/workspace/dotfiles
 
 # 2. Run the setup
-cd ~/workspace/dotfiles/mac-config/mac-install
-./install.sh
+cd ~/workspace/dotfiles
+mac-config/mac-install/install.sh
 ```
 
 ## Manual Steps (if needed)
@@ -35,13 +35,12 @@ If you want to run parts separately:
 
 ```bash
 # Install Homebrew packages only
-brew bundle install
+brew bundle install --file=mac-config/mac-install/Brewfile
 
 # Apply macOS defaults only  
-./set-defaults.sh
+mac-config/mac-install/set-defaults.sh
 
 # Validate and stow shared and macOS dotfiles only, from the repo root
-cd ~/workspace/dotfiles
 scripts/dotfiles doctor
 scripts/dotfiles stow mac
 
@@ -59,7 +58,7 @@ When you install new packages or change settings:
 
 ```bash
 # Update Brewfile with new packages
-brew bundle dump --describe --file=Brewfile --force
+brew bundle dump --describe --file=mac-config/mac-install/Brewfile --force
 
 # Update macOS defaults (edit set-defaults.sh manually)
 ```
@@ -89,8 +88,8 @@ brew bundle dump --describe --file=Brewfile --force
 
 ## Package Lists
 
-The install script reads package names from the repository-level `packages/`
-directory:
+The install script calls `scripts/dotfiles stow mac`, which reads package names
+from the repository-level `packages/` directory:
 
 - `packages/common.txt` - shared packages installed on every machine
 - `packages/mac.txt` - macOS user-level packages
@@ -102,4 +101,5 @@ Add new package names to the right list when creating a new Stow package.
 - If Xcode tools installation hangs, restart and run again
 - Some changes require logout/restart to take effect
 - Run `brew doctor` after setup to check for issues
-- Make sure your dotfiles repo structure matches the expected paths
+- Run the script by path from any working directory; it resolves paths from its
+  own location

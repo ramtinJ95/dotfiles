@@ -9,8 +9,7 @@ Automated setup with Homebrew package management, system preferences, and dotfil
 
 **Quick Start:**
 ```bash
-cd mac-config/mac-install
-./install.sh
+mac-config/mac-install/install.sh
 ```
 
 See [mac-config/mac-install/README.md](mac-config/mac-install/README.md) for detailed setup instructions.
