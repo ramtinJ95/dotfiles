@@ -1,13 +1,13 @@
 {
-  "lastChangelogVersion": "0.70.6",
-  "defaultProvider": "openrouter",
-  "defaultModel": "deepseek/deepseek-v4-pro",
+  "lastChangelogVersion": "0.72.1",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.5",
   "hideThinkingBlock": false,
   "defaultThinkingLevel": "high",
   "skills": [
     "!**/.agents/skills/**"
   ],
-  "transport": "websocket",
+  "transport": "auto",
   "theme": "dark",
   "packages": [
     "npm:pi-vim"

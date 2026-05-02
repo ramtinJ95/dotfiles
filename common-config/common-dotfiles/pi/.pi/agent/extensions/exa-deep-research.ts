@@ -141,7 +141,7 @@ const sharedParameters = Type.Object({
 });
 
 type DeepResearchParams = Static<typeof sharedParameters>;
-type DeepResearchMode = "deep-lite" | "deep" | "deep-reasoning";
+type DeepResearchMode = "deep" | "deep-reasoning";
 
 interface ToolConfig {
 	name: string;
@@ -201,23 +201,6 @@ interface ExaGroundingField {
 
 const toolConfigs: ToolConfig[] = [
 	{
-		name: "deep_research_lite",
-		label: "Deep Research Lite",
-		description:
-			"Run a lighter and faster Exa deep research pass. Best for quick grounded overviews, shortlists, and lighter extraction tasks.",
-		promptSnippet:
-			"Run a lighter, faster grounded research pass for quick overviews, shortlists, and lower-latency evidence gathering.",
-		promptGuidelines: [
-			"Use deep_research_lite when the user wants a quick research pass, a faster turnaround, or a lightweight grounded overview.",
-			"Prefer deep_research or deep_research_reasoning when the question is ambiguous, conflict-heavy, or needs stronger judgment.",
-		],
-		mode: "deep-lite",
-		defaultOutputDescription:
-			"Return a concise grounded research brief with the main findings, notable caveats, and the most useful next questions. Keep it compact and information dense.",
-		extraSystemPrompt:
-			"Keep the final synthesis concise and high-signal while remaining grounded in the retrieved evidence.",
-	},
-	{
 		name: "deep_research",
 		label: "Deep Research",
 		description:
@@ -243,7 +226,7 @@ const toolConfigs: ToolConfig[] = [
 			"Run the highest-effort grounded research tier for ambiguous, conflicting, or high-stakes questions that need extra reasoning.",
 		promptGuidelines: [
 			"Use deep_research_reasoning only when the task needs extra judgment, conflict resolution, or more deliberate reasoning than the default deep research tool.",
-			"This tool is slower and more expensive than deep_research and deep_research_lite, so avoid it for routine lookups.",
+			"This tool is slower and more expensive than deep_research, so avoid it for routine lookups.",
 		],
 		mode: "deep-reasoning",
 		defaultOutputDescription:
