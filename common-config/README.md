@@ -16,10 +16,14 @@ they are intentionally split into shared files plus a small OS overlay.
 From the repository root:
 
 ```bash
-stow -d common-config/common-dotfiles -t "$HOME" $(cat packages/common.txt)
+scripts/dotfiles doctor
+scripts/dotfiles stow mac
+scripts/dotfiles stow arch
 ```
 
-To remove the shared packages:
+Choose the command for the current platform. Each command installs the shared
+package list first, then the selected platform package list. To remove only the
+shared packages, use raw Stow:
 
 ```bash
 stow -D -d common-config/common-dotfiles -t "$HOME" $(cat packages/common.txt)
@@ -49,7 +53,9 @@ done
 cmp -s "$HOME/.pi/agent/AGENTS.md" common-config/common-dotfiles/pi/.pi/agent/AGENTS.md \
   && rm "$HOME/.pi/agent/AGENTS.md"
 
-stow -R -d common-config/common-dotfiles -t "$HOME" $(cat packages/common.txt)
+scripts/dotfiles restow mac
 ```
+
+Use `scripts/dotfiles restow arch` instead on Arch Linux.
 
 Do not remove Pi runtime state such as `auth.json`, `sessions/`, or `git/`.

@@ -22,7 +22,7 @@ On a **new Mac**:
 
 ```bash
 # 1. Clone your dotfiles
-git clone <your-dotfiles-repo> ~/workspace/dotfiles
+git clone git@github.com:ramtinJ95/dotfiles.git ~/workspace/dotfiles
 
 # 2. Run the setup
 cd ~/workspace/dotfiles/mac-config/mac-install
@@ -40,19 +40,18 @@ brew bundle install
 # Apply macOS defaults only  
 ./set-defaults.sh
 
-# Stow shared and macOS dotfiles only, from the repo root
+# Validate and stow shared and macOS dotfiles only, from the repo root
 cd ~/workspace/dotfiles
-stow -d common-config/common-dotfiles -t "$HOME" $(cat packages/common.txt)
-stow -d mac-config/mac-dotfiles -t "$HOME" $(cat packages/mac.txt)
+scripts/dotfiles doctor
+scripts/dotfiles stow mac
 
 # Restow after package moves or config updates
-stow -R -d common-config/common-dotfiles -t "$HOME" $(cat packages/common.txt)
-stow -R -d mac-config/mac-dotfiles -t "$HOME" $(cat packages/mac.txt)
+scripts/dotfiles restow mac
 ```
 
-If the common Stow command reports conflicts on an existing machine, use the
-existing-machine migration section in the root `README.md` first. Fresh machines
-do not need that step.
+If `scripts/dotfiles stow mac` reports conflicts on an existing machine, use
+the existing-machine migration section in the root `README.md` first. Fresh
+machines do not need that step.
 
 ## Updating Your Setup
 

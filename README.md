@@ -20,8 +20,8 @@ Modular dotfiles managed with GNU Stow for a Hyprland-based desktop environment.
 
 **Quick Start:**
 ```bash
-stow -d common-config/common-dotfiles -t "$HOME" $(cat packages/common.txt)
-stow -d arch-config/arch-dotfiles -t "$HOME" $(cat packages/arch.txt)
+scripts/dotfiles doctor
+scripts/dotfiles stow arch
 ```
 
 See [arch-config/arch-dotfiles/README.md](arch-config/arch-dotfiles/README.md) for detailed usage.
@@ -57,23 +57,30 @@ files still differ by operating system. That includes `claude`, `codex`, `git`,
 
 All configurations use the **Catppuccin Mocha** color scheme for a consistent look across applications. Wallpapers are included in the `wallpapers/` directory.
 
-## Stow Commands
+## Helper Commands
 
 Run these commands from the repository root.
 
 ```bash
-# Shared packages for every machine
-stow -d common-config/common-dotfiles -t "$HOME" $(cat packages/common.txt)
+# Validate package lists, clean Stow dry-runs, symlinks, shell, and JSON
+scripts/dotfiles doctor
 
-# macOS user packages
-stow -d mac-config/mac-dotfiles -t "$HOME" $(cat packages/mac.txt)
+# Install user-level dotfiles
+scripts/dotfiles stow mac
+scripts/dotfiles stow arch
 
-# Arch user packages
-stow -d arch-config/arch-dotfiles -t "$HOME" $(cat packages/arch.txt)
+# Restow after package moves or config updates
+scripts/dotfiles restow mac
+scripts/dotfiles restow arch
 
-# Arch system packages
-sudo stow -d arch-config/arch-dotfiles -t / $(cat packages/arch-system.txt)
+# Install Arch system packages
+sudo scripts/dotfiles stow arch-system
+sudo scripts/dotfiles restow arch-system
+```
 
+Use raw Stow for one-off package work:
+
+```bash
 # Install one package
 stow -d mac-config/mac-dotfiles -t "$HOME" nvim
 
@@ -101,12 +108,10 @@ done
 cmp -s "$HOME/.pi/agent/AGENTS.md" common-config/common-dotfiles/pi/.pi/agent/AGENTS.md \
   && rm "$HOME/.pi/agent/AGENTS.md"
 
-stow -R -d common-config/common-dotfiles -t "$HOME" $(cat packages/common.txt)
-stow -R -d mac-config/mac-dotfiles -t "$HOME" $(cat packages/mac.txt)
+scripts/dotfiles restow mac
 ```
 
-Use `arch-config/arch-dotfiles` and `packages/arch.txt` instead of the macOS
-paths on Arch Linux.
+Use `scripts/dotfiles restow arch` instead on Arch Linux.
 
 ## Repository Structure
 
@@ -129,7 +134,7 @@ dotfiles/
 
 1. **Clone the repository:**
    ```bash
-   git clone <your-repo-url> ~/workspace/dotfiles
+   git clone git@github.com:ramtinJ95/dotfiles.git ~/workspace/dotfiles
    cd ~/workspace/dotfiles
    ```
 

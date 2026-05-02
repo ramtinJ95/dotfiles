@@ -28,19 +28,23 @@ independently:
 Run these commands from the repository root.
 
 ```bash
-# Install shared packages first
-stow -d common-config/common-dotfiles -t "$HOME" $(cat packages/common.txt)
+# Validate package lists, Stow dry-runs, symlinks, shell, and JSON
+scripts/dotfiles doctor
 
-# Install Arch user-level packages
-stow -d arch-config/arch-dotfiles -t "$HOME" $(cat packages/arch.txt)
+# Install shared and Arch user-level packages
+scripts/dotfiles stow arch
 
 # Install Arch system-level packages
-sudo stow -d arch-config/arch-dotfiles -t / $(cat packages/arch-system.txt)
+sudo scripts/dotfiles stow arch-system
 
 # Restow after package moves or config updates
-stow -R -d common-config/common-dotfiles -t "$HOME" $(cat packages/common.txt)
-stow -R -d arch-config/arch-dotfiles -t "$HOME" $(cat packages/arch.txt)
+scripts/dotfiles restow arch
+sudo scripts/dotfiles restow arch-system
+```
 
+Use raw Stow for one-off package work:
+
+```bash
 # Install or remove one package
 stow -d arch-config/arch-dotfiles -t "$HOME" hypr
 stow -D -d common-config/common-dotfiles -t "$HOME" pi
