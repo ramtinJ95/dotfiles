@@ -12,9 +12,9 @@ import {
 	formatSize,
 	truncateHead,
 	type ExtensionAPI,
-} from "@mariozechner/pi-coding-agent";
-import { StringEnum, Type } from "@mariozechner/pi-ai";
-import type { Static } from "@sinclair/typebox";
+} from "@earendil-works/pi-coding-agent";
+import { StringEnum } from "@earendil-works/pi-ai";
+import { Type, type Static } from "typebox";
 
 const EXA_SEARCH_URL = "https://api.exa.ai/search";
 const EXA_CONFIG_PATH = join(homedir(), ".pi", "agent", "exa-deep-research.json");

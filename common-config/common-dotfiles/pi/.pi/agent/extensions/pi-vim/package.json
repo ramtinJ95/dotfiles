@@ -1,22 +1,23 @@
 {
-  "name": "pi-opencode-web",
+  "name": "pi-vim-local",
   "private": true,
-  "dependencies": {
-    "turndown": "^7.2.0"
+  "version": "0.3.2-local.1",
+  "description": "Local fork of pi-vim migrated to @earendil-works Pi packages",
+  "type": "module",
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ]
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
-    "@earendil-works/pi-tui": "*",
-    "typebox": "*"
+    "@earendil-works/pi-tui": "*"
   },
   "peerDependenciesMeta": {
     "@earendil-works/pi-coding-agent": {
       "optional": true
     },
     "@earendil-works/pi-tui": {
-      "optional": true
-    },
-    "typebox": {
       "optional": true
     }
   }

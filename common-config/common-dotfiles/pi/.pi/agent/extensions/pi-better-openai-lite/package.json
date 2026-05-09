@@ -1,0 +1,21 @@
+{
+  "name": "pi-better-openai-lite-local",
+  "version": "0.1.17-local.1",
+  "private": true,
+  "type": "module",
+  "description": "Local minimal fork of pi-better-openai with fast mode, usage, settings, and usage footer status only.",
+  "license": "MIT",
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "peerDependenciesMeta": {
+    "@earendil-works/pi-coding-agent": {
+      "optional": true
+    }
+  }
+}

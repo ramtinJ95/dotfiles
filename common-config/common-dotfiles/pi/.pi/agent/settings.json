@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.72.1",
+  "lastChangelogVersion": "0.74.0",
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.5",
   "hideThinkingBlock": false,
@@ -9,7 +9,5 @@
   ],
   "transport": "auto",
   "theme": "dark",
-  "packages": [
-    "npm:pi-vim"
-  ]
+  "packages": []
 }

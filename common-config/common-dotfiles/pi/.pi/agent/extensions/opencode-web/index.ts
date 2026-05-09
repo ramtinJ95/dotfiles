@@ -1,12 +1,12 @@
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent"
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent"
 import {
   DEFAULT_MAX_BYTES,
   DEFAULT_MAX_LINES,
   formatSize,
   truncateHead,
-} from "@mariozechner/pi-coding-agent"
-import { Type } from "@sinclair/typebox"
-import { Text } from "@mariozechner/pi-tui"
+} from "@earendil-works/pi-coding-agent"
+import { Type } from "typebox"
+import { Text } from "@earendil-works/pi-tui"
 import TurndownService from "turndown"
 import { mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
