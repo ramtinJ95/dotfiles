@@ -73,6 +73,7 @@ ex-commands, etc.).
 | key      | action                                 |
 |----------|----------------------------------------|
 | `Esc` / `Ctrl+[` | Insert → Normal mode                   |
+| `jk` quickly | Insert → Normal mode                   |
 | `Esc` / `Ctrl+[` | Normal mode → pass to Pi (abort agent) |
 | `i`      | Normal → Insert at cursor              |
 | `a`      | Normal → Insert after cursor           |

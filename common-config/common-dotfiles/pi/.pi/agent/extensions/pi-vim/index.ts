@@ -4,6 +4,7 @@
  * Usage: pi --extension ./index.ts
  *
  * - Escape / ctrl+[: insert → normal mode (in normal mode, aborts agent)
+ * - jk pressed quickly: insert → normal mode
  * - i: normal → insert mode (at cursor)
  * - a: insert after cursor
  * - A: insert at end of line
@@ -99,6 +100,7 @@ import {
 const BRACKETED_PASTE_START = "\x1b[200~";
 const BRACKETED_PASTE_END = "\x1b[201~";
 const BRACKETED_PASTE_END_TAIL = BRACKETED_PASTE_END.slice(1);
+const JK_ESCAPE_TIMEOUT_MS = 200;
 const MAX_COUNT = 9999;
 
 type EditorSnapshot = {
@@ -133,6 +135,7 @@ export class ModalEditor extends CustomEditor {
   private discardingBracketedPasteInNormalMode: boolean = false;
   private pendingEscWhileDiscardingBracketedPasteInNormalMode: boolean = false;
   private wordBoundaryCache = new WordBoundaryCache();
+  private pendingInsertJTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly redoStack: EditorSnapshot[] = [];
   private currentTransition: TransitionState = "none";
   private onChangeHooked: boolean = false;
@@ -167,6 +170,7 @@ export class ModalEditor extends CustomEditor {
 
   override setText(text: string): void {
     this.clearRedoStack();
+    this.clearPendingInsertJ();
     super.setText(text);
   }
 
@@ -348,6 +352,26 @@ export class ModalEditor extends CustomEditor {
     editor.tui?.requestRender?.();
   }
 
+  private clearPendingInsertJ(): void {
+    if (this.pendingInsertJTimer) clearTimeout(this.pendingInsertJTimer);
+    this.pendingInsertJTimer = null;
+  }
+
+  private insertPendingJ(): void {
+    if (!this.pendingInsertJTimer) return;
+    this.clearPendingInsertJ();
+    super.handleInput("j");
+  }
+
+  private queuePendingJ(): void {
+    this.clearPendingInsertJ();
+    this.pendingInsertJTimer = setTimeout(() => {
+      this.pendingInsertJTimer = null;
+      super.handleInput("j");
+    }, JK_ESCAPE_TIMEOUT_MS);
+    this.pendingInsertJTimer.unref?.();
+  }
+
   private clearPendingState(): void {
     this.pendingMotion = null;
     this.pendingTextObject = null;
@@ -437,11 +461,24 @@ export class ModalEditor extends CustomEditor {
       data = filtered;
     }
 
+    if (this.mode === "insert" && this.pendingInsertJTimer) {
+      if (data === "k") {
+        this.clearPendingInsertJ();
+        return this.handleEscape();
+      }
+      this.insertPendingJ();
+    }
+
     if (this.isEscapeLikeInput(data)) {
       return this.handleEscape();
     }
 
     if (this.mode === "insert") {
+      if (data === "j") {
+        this.queuePendingJ();
+        return;
+      }
+
       // Shift+Alt+A: go to end of line (like Esc -> A but stay in insert)
       if (matchesKey(data, Key.shiftAlt("a")) || data === "\x1bA") {
         return super.handleInput(CTRL_E);

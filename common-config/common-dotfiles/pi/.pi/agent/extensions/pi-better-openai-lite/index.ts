@@ -135,35 +135,27 @@ function formatResetCountdown(seconds: number | null): string | null {
 	return `${secs}s`;
 }
 
-function formatResetClock(seconds: number | null, includeDate = false): string | null {
-	if (typeof seconds !== "number" || Number.isNaN(seconds)) return null;
-	const resetDate = new Date(Date.now() + Math.max(0, seconds) * 1000);
-	const now = new Date();
-	const time = resetDate.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-	if (!includeDate && resetDate.toDateString() === now.toDateString()) return time;
-	const weekday = resetDate.toLocaleDateString(undefined, { weekday: "short" });
-	if (!includeDate) return `${weekday} ${time}`;
-	const date = resetDate.toLocaleDateString(undefined, { month: "numeric", day: "numeric" });
-	return `${weekday} ${date} ${time}`;
-}
-
-function formatCompactReset(label: string, seconds: number | null, includeDate = false): string | null {
+function formatCompactReset(label: string, seconds: number | null): string | null {
 	const countdown = formatResetCountdown(seconds);
-	const clock = formatResetClock(seconds, includeDate);
-	return countdown && clock ? `${label} ↺ ${countdown} - ${clock}` : null;
+	return countdown ? `${label} ↺ ${countdown}` : null;
 }
 
-function formatUsageSnapshot(snapshot: UsageSnapshot, options: { showResetTimes: boolean }): string {
+function formatUsageSnapshot(
+	snapshot: UsageSnapshot,
+	options: { showResetTimes: boolean; fastModeActive?: boolean; fastModeText?: string },
+): string {
 	const fiveHour = formatPercent(snapshot.fiveHourLeftPercent);
 	const sevenDay = formatPercent(snapshot.sevenDayLeftPercent);
 	const resets = options.showResetTimes
 		? [
 				formatCompactReset("5h", snapshot.fiveHourResetInSeconds),
-				formatCompactReset("7d", snapshot.sevenDayResetInSeconds, true),
+				formatCompactReset("7d", snapshot.sevenDayResetInSeconds),
 			].filter((value): value is string => value !== null)
 		: [];
 	const limited = snapshot.isLimited ? " limited" : "";
-	return `OpenAI Usage${limited}: 5h: ${fiveHour} | 7d: ${sevenDay}${resets.length ? ` | ${resets.join(" | ")}` : ""}`;
+	const fastModeText = options.fastModeText ?? (options.fastModeActive ? "Fast mode on" : undefined);
+	const fastMode = fastModeText ? ` | ${fastModeText}` : "";
+	return `OpenAI Usage${limited}: 5h: ${fiveHour} | 7d: ${sevenDay}${fastMode}${resets.length ? ` | ${resets.join(" | ")}` : ""}`;
 }
 
 function configPaths(cwd: string, home = homedir()) {
@@ -239,14 +231,8 @@ function writeConfig(path: string, config: ConfigFile | Record<string, unknown>)
 	writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`, "utf8");
 }
 
-function ensureConfigFile(projectConfigPath: string, globalConfigPath: string): void {
-	if (existsSync(projectConfigPath) || existsSync(globalConfigPath)) return;
-	writeConfig(globalConfigPath, DEFAULT_CONFIG);
-}
-
 function resolveConfig(cwd: string): ResolvedConfig {
 	const paths = configPaths(cwd);
-	ensureConfigFile(paths.project, paths.global);
 	const projectConfigExists = existsSync(paths.project);
 	const globalConfigExists = existsSync(paths.global);
 	const globalConfig = readConfig(paths.global) ?? {};
@@ -430,6 +416,7 @@ function formatUsageStatus(
 	usageSnapshot: UsageSnapshot | undefined,
 	usageUpdatedAt: number | undefined,
 	usageError: string | undefined,
+	fastModeActive = false,
 ): string {
 	if (!cfg.usage.enabled) return "OpenAI usage display is disabled.";
 	if (!isOpenAISubscriptionModel(ctx, cfg)) {
@@ -440,7 +427,7 @@ function formatUsageStatus(
 		usageUpdatedAt && Date.now() - usageUpdatedAt > cfg.usage.refreshIntervalMs * 2
 			? ` | stale ${formatResetCountdown((Date.now() - usageUpdatedAt) / 1000)}`
 			: "";
-	return `${formatUsageSnapshot(usageSnapshot, cfg.usage)}${stale}`;
+	return `${formatUsageSnapshot(usageSnapshot, { ...cfg.usage, fastModeActive })}${stale}`;
 }
 
 function writeSetting(ctx: ExtensionContext, id: string, rawValue: string): ResolvedConfig {
@@ -508,7 +495,7 @@ export default function betterOpenAILite(pi: ExtensionAPI): void {
 	function setUsageStatus(ctx: ExtensionContext, text: string | undefined): void {
 		if (!ctx.hasUI) return;
 		if (!text && !statusInstalled) return;
-		ctx.ui.setStatus(STATUS_KEY, text ? ctx.ui.theme.fg("dim", text) : undefined);
+		ctx.ui.setStatus(STATUS_KEY, text);
 		statusInstalled = text !== undefined;
 	}
 
@@ -518,7 +505,18 @@ export default function betterOpenAILite(pi: ExtensionAPI): void {
 			setUsageStatus(ctx, undefined);
 			return;
 		}
-		setUsageStatus(ctx, formatUsageSnapshot(usageSnapshot, cfg.usage));
+		const fastModePlaceholder = "__PI_BETTER_OPENAI_FAST_MODE_ON__";
+		const usageText = formatUsageSnapshot(usageSnapshot, {
+			...cfg.usage,
+			fastModeText: active ? fastModePlaceholder : undefined,
+		});
+		const styledUsageText = active
+			? usageText
+					.split(fastModePlaceholder)
+					.map((part) => ctx.ui.theme.fg("dim", part))
+					.join(ctx.ui.theme.fg("success", "Fast mode on"))
+			: ctx.ui.theme.fg("dim", usageText);
+		setUsageStatus(ctx, styledUsageText);
 	}
 
 	async function refreshUsage(
@@ -557,7 +555,7 @@ export default function betterOpenAILite(pi: ExtensionAPI): void {
 			updateFooterStatus(ctx);
 			if (options?.notify) {
 				ctx.ui.notify(
-					formatUsageStatus(ctx, cfg, usageSnapshot, usageUpdatedAt, usageError),
+					formatUsageStatus(ctx, cfg, usageSnapshot, usageUpdatedAt, usageError, active),
 					usageSnapshot ? "info" : "warning",
 				);
 			}
@@ -566,7 +564,7 @@ export default function betterOpenAILite(pi: ExtensionAPI): void {
 			usageError = error instanceof Error ? error.message : String(error);
 			updateFooterStatus(ctx);
 			if (options?.notify) {
-				ctx.ui.notify(formatUsageStatus(ctx, cfg, usageSnapshot, usageUpdatedAt, usageError), "warning");
+				ctx.ui.notify(formatUsageStatus(ctx, cfg, usageSnapshot, usageUpdatedAt, usageError, active), "warning");
 			}
 		} finally {
 			usageAbortController = undefined;
@@ -597,12 +595,13 @@ export default function betterOpenAILite(pi: ExtensionAPI): void {
 		desiredActive = next;
 		applyDesiredFastState(ctx, nextConfig);
 		persistFastState(ctx, nextConfig);
+		updateFooterStatus(ctx);
 		ctx.ui.notify(stateText(ctx, desiredActive, active, nextConfig.supportedModels), active ? "info" : next ? "warning" : "info");
 	}
 
 	async function showUsage(ctx: ExtensionCommandContext): Promise<void> {
 		await refreshUsage(ctx, ctx.model?.id);
-		const text = formatUsageStatus(ctx, config(ctx), usageSnapshot, usageUpdatedAt, usageError);
+		const text = formatUsageStatus(ctx, config(ctx), usageSnapshot, usageUpdatedAt, usageError, active);
 		if (ctx.hasUI) {
 			ctx.ui.notify(text, usageSnapshot ? "info" : "warning");
 			return;
