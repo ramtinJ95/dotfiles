@@ -9,5 +9,7 @@
   ],
   "transport": "auto",
   "theme": "dark",
-  "packages": []
+  "packages": [
+    "git:github.com/IgorWarzocha/pi-codex-conversion@dev"
+  ]
 }

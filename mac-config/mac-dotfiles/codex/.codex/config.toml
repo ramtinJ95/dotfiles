@@ -89,3 +89,12 @@ trust_level = "trusted"
 
 [projects."/Users/ramtinjavanmardi/workspace"]
 trust_level = "trusted"
+
+[projects."/Users/ramtinjavanmardi/workspace/session-doctor"]
+trust_level = "trusted"
+
+[projects."/Users/ramtinjavanmardi/workspace/data-platform-infrastructure"]
+trust_level = "trusted"
+
+[projects."/Users/ramtinjavanmardi/Downloads"]
+trust_level = "trusted"
