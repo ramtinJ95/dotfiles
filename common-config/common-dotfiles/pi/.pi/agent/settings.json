@@ -10,6 +10,7 @@
   "transport": "auto",
   "theme": "dark",
   "packages": [
-    "git:github.com/IgorWarzocha/pi-codex-conversion@dev"
+    "npm:@howaboua/pi-codex-conversion",
+    "npm:@howaboua/pi-auto-trees"
   ]
 }

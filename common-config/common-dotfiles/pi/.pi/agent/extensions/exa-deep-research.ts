@@ -38,58 +38,63 @@ const categories = [
 	"financial report",
 ] as const;
 
+const researchModes = ["deep", "deep-reasoning"] as const;
+
 const sharedParameters = Type.Object({
 	query: Type.String({
-		description: "Research question or task to investigate on the web. Use a detailed natural-language query.",
+		description: "Research task/query.",
 	}),
+	mode: Type.Optional(
+		StringEnum(researchModes, {
+			default: "deep",
+			description: '"deep" default; "deep-reasoning" for ambiguity/conflicts/high stakes.',
+		}),
+	),
 	numResults: Type.Optional(
 		Type.Number({
 			minimum: 1,
 			maximum: 100,
-			description: "How many search results Exa should consider. 10 is a good default.",
+			description: "Results to consider; default 10.",
 		}),
 	),
 	category: Type.Optional(
 		StringEnum(categories, {
-			description:
-				"Optional Exa category filter. Use this when you specifically want company pages, people profiles, news, research papers, personal sites, or financial reports.",
+			description: "Optional source category filter.",
 		}),
 	),
 	includeDomains: Type.Optional(
 		Type.Array(Type.String(), {
-			description: "Optional allow-list of domains to include, like ['reuters.com', 'sec.gov'].",
+			description: "Only include these domains.",
 		}),
 	),
 	excludeDomains: Type.Optional(
 		Type.Array(Type.String(), {
-			description: "Optional block-list of domains to exclude.",
+			description: "Exclude these domains.",
 		}),
 	),
 	startPublishedDate: Type.Optional(
 		Type.String({
-			description: "Only include links published after this ISO-8601 date/time.",
+			description: "Published after ISO date/time.",
 		}),
 	),
 	endPublishedDate: Type.Optional(
 		Type.String({
-			description: "Only include links published before this ISO-8601 date/time.",
+			description: "Published before ISO date/time.",
 		}),
 	),
 	maxAgeHours: Type.Optional(
 		Type.Number({
-			description:
-				"Maximum cache age in hours. Use 0 to always live crawl, -1 to never live crawl, or omit for Exa defaults.",
+			description: "Cache age hours: 0 live, -1 cache.",
 		}),
 	),
 	additionalQueries: Type.Optional(
 		Type.Array(Type.String(), {
-			description: "Optional extra query variants for broader or deeper coverage.",
+			description: "Extra query variants.",
 		}),
 	),
 	systemPrompt: Type.Optional(
 		Type.String({
-			description:
-				"Optional extra instructions for Exa's synthesis and planning. Use this for source preferences, novelty constraints, or custom answer behavior.",
+			description: "Extra synthesis instructions.",
 		}),
 	),
 	outputSchema: Type.Optional(
@@ -97,45 +102,43 @@ const sharedParameters = Type.Object({
 			{},
 			{
 				additionalProperties: true,
-				description:
-					"Optional Exa outputSchema object. If omitted, the tool requests a grounded text report. Provide this when you want structured JSON output.",
+				description: "Optional structured output schema.",
 			},
 		),
 	),
 	textMaxCharacters: Type.Optional(
 		Type.Number({
 			minimum: 1,
-			description: "If set, fetch full page text for each result up to this character limit.",
+			description: "Max page text chars/result.",
 		}),
 	),
 	highlightMaxCharacters: Type.Optional(
 		Type.Number({
 			minimum: 1,
-			description:
-				"How many highlight characters to fetch per result. Defaults to 2000 so the tool can return compact evidence snippets.",
+			description: "Max highlight chars/result; default 2000.",
 		}),
 	),
 	subpages: Type.Optional(
 		Type.Number({
 			minimum: 0,
-			description: "How many subpages to crawl per result.",
+			description: "Subpages per result.",
 		}),
 	),
 	subpageTarget: Type.Optional(
 		Type.Array(Type.String(), {
-			description: "Keywords to target when selecting subpages.",
+			description: "Subpage target keywords.",
 		}),
 	),
 	userLocation: Type.Optional(
 		Type.String({
 			minLength: 2,
 			maxLength: 2,
-			description: "Two-letter ISO country code such as US or DE.",
+			description: "ISO country code, e.g. US.",
 		}),
 	),
 	moderation: Type.Optional(
 		Type.Boolean({
-			description: "Whether Exa should enable content moderation on results.",
+			description: "Enable Exa moderation.",
 		}),
 	),
 });
@@ -149,6 +152,9 @@ interface ToolConfig {
 	description: string;
 	promptSnippet: string;
 	promptGuidelines: string[];
+}
+
+interface ModeConfig {
 	mode: DeepResearchMode;
 	defaultOutputDescription: string;
 	extraSystemPrompt: string;
@@ -199,42 +205,34 @@ interface ExaGroundingField {
 	confidence?: string;
 }
 
-const toolConfigs: ToolConfig[] = [
-	{
-		name: "deep_research",
-		label: "Deep Research",
-		description:
-			"Run Exa deep research. This is the best default for serious multi-source web research and grounded synthesis.",
-		promptSnippet:
-			"Run serious multi-source grounded research. Use this as the default deep research tool for substantial investigation.",
-		promptGuidelines: [
-			"Use deep_research as the default tool for substantial multi-source research, comparison, and grounded synthesis.",
-			"Prefer deep_research_reasoning only when the task is unusually ambiguous, conflicting, or judgment-heavy.",
-		],
+const toolConfig: ToolConfig = {
+	name: "deep_research",
+	label: "Deep Research",
+	description:
+		'Run Exa deep research. Use mode="deep" by default for substantial multi-source research; use mode="deep-reasoning" for ambiguous, conflicting, high-stakes, or judgment-heavy research.',
+	promptSnippet:
+		'Run serious multi-source grounded research. mode="deep" is the default; mode="deep-reasoning" spends extra effort on ambiguity, conflicts, and high-stakes judgment.',
+	promptGuidelines: [
+		'Use mode="deep" by default; set mode="deep-reasoning" only for ambiguous, conflicting, high-stakes, or judgment-heavy research.',
+	],
+};
+
+const modeConfigs: Record<DeepResearchMode, ModeConfig> = {
+	deep: {
 		mode: "deep",
 		defaultOutputDescription:
 			"Return a grounded research synthesis with key findings, caveats, notable disagreements, and the most important implications.",
 		extraSystemPrompt:
 			"Aim for thorough coverage while staying grounded and avoiding unnecessary repetition.",
 	},
-	{
-		name: "deep_research_reasoning",
-		label: "Deep Research Reasoning",
-		description:
-			"Run Exa's highest-effort deep research tier. Use this for ambiguous, conflicting, or high-stakes research that needs extra reasoning.",
-		promptSnippet:
-			"Run the highest-effort grounded research tier for ambiguous, conflicting, or high-stakes questions that need extra reasoning.",
-		promptGuidelines: [
-			"Use deep_research_reasoning only when the task needs extra judgment, conflict resolution, or more deliberate reasoning than the default deep research tool.",
-			"This tool is slower and more expensive than deep_research, so avoid it for routine lookups.",
-		],
+	"deep-reasoning": {
 		mode: "deep-reasoning",
 		defaultOutputDescription:
 			"Return a grounded research analysis that resolves ambiguity where possible, weighs conflicting evidence, and states the best-supported conclusion with uncertainty.",
 		extraSystemPrompt:
 			"Spend extra effort reconciling ambiguity, conflicting reporting, and edge cases before reaching a conclusion.",
 	},
-];
+};
 
 function getDefaultKeychainAccount(): string {
 	try {
@@ -266,14 +264,14 @@ function clipText(value: string | undefined | null, maxCharacters: number): stri
 	return normalized.length <= maxCharacters ? normalized : `${normalized.slice(0, maxCharacters - 1)}…`;
 }
 
-function defaultOutputSchema(config: ToolConfig): Record<string, string> {
+function defaultOutputSchema(config: ModeConfig): Record<string, string> {
 	return {
 		type: "text",
 		description: config.defaultOutputDescription,
 	};
 }
 
-function buildSystemPrompt(config: ToolConfig, userSystemPrompt?: string): string {
+function buildSystemPrompt(config: ModeConfig, userSystemPrompt?: string): string {
 	return [
 		"Perform grounded web research using the retrieved evidence.",
 		"Prefer primary, official, and first-hand sources when they exist, then high-quality secondary sources.",
@@ -511,6 +509,7 @@ async function runDeepResearch(
 ): Promise<{ content: Array<{ type: "text"; text: string }>; details: Record<string, unknown> }> {
 	const query = params.query.trim();
 	if (!query) throw new Error("query must not be empty.");
+	const modeConfig = modeConfigs[params.mode ?? "deep"];
 
 	const includeDomains = normalizeDomains(params.includeDomains);
 	const excludeDomains = normalizeDomains(params.excludeDomains);
@@ -528,17 +527,17 @@ async function runDeepResearch(
 	});
 
 	onUpdate?.({
-		content: [{ type: "text", text: `Running Exa ${config.mode} research...` }],
-		details: { phase: "requesting", mode: config.mode },
+		content: [{ type: "text", text: `Running Exa ${modeConfig.mode} research...` }],
+		details: { phase: "requesting", mode: modeConfig.mode },
 	});
 
 	const exaConfig = await loadExaConfig(signal);
 	const requestBody: Record<string, unknown> = {
 		query,
-		type: config.mode,
+		type: modeConfig.mode,
 		numResults: params.numResults ?? DEFAULT_NUM_RESULTS,
-		systemPrompt: buildSystemPrompt(config, params.systemPrompt),
-		outputSchema: (params.outputSchema as Record<string, unknown> | undefined) ?? defaultOutputSchema(config),
+		systemPrompt: buildSystemPrompt(modeConfig, params.systemPrompt),
+		outputSchema: (params.outputSchema as Record<string, unknown> | undefined) ?? defaultOutputSchema(modeConfig),
 		contents: {
 			highlights: {
 				maxCharacters: params.highlightMaxCharacters ?? DEFAULT_HIGHLIGHT_MAX_CHARACTERS,
@@ -613,9 +612,9 @@ async function runDeepResearch(
 
 		const normalizedOutput = {
 			tool: config.name,
-			mode: config.mode,
+			mode: modeConfig.mode,
 			requestId: parsedBody.requestId ?? null,
-			searchType: parsedBody.searchType ?? config.mode,
+			searchType: parsedBody.searchType ?? modeConfig.mode,
 			query,
 			synthesizedOutput: parsedBody.output?.content ?? null,
 			grounding,
@@ -642,9 +641,9 @@ async function runDeepResearch(
 		return {
 			content: [{ type: "text", text: content }],
 			details: {
-				mode: config.mode,
+				mode: modeConfig.mode,
 				requestId: parsedBody.requestId ?? null,
-				searchType: parsedBody.searchType ?? config.mode,
+				searchType: parsedBody.searchType ?? modeConfig.mode,
 				query,
 				request: requestBody,
 				resultCount: results.length,
@@ -691,7 +690,5 @@ function createDeepResearchTool(config: ToolConfig) {
 }
 
 export default function exaDeepResearchExtension(pi: ExtensionAPI) {
-	for (const config of toolConfigs) {
-		pi.registerTool(createDeepResearchTool(config));
-	}
+	pi.registerTool(createDeepResearchTool(toolConfig));
 }
