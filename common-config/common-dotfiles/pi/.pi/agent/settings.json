@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.74.0",
+  "lastChangelogVersion": "0.74.1",
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.5",
   "hideThinkingBlock": false,
@@ -11,6 +11,8 @@
   "theme": "dark",
   "packages": [
     "npm:@howaboua/pi-codex-conversion",
-    "npm:@howaboua/pi-auto-trees"
+    "npm:@howaboua/pi-auto-trees",
+    "npm:@howaboua/pi-explore-subagents",
+    "npm:@howaboua/pi-subagent-review"
   ]
 }
