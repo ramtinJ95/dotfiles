@@ -137,7 +137,7 @@ function formatResetCountdown(seconds: number | null): string | null {
 
 function formatCompactReset(label: string, seconds: number | null): string | null {
 	const countdown = formatResetCountdown(seconds);
-	return countdown ? `${label} ↺ ${countdown}` : null;
+	return countdown ? `${label}:${countdown}` : null;
 }
 
 function formatUsageSnapshot(
@@ -154,8 +154,8 @@ function formatUsageSnapshot(
 		: [];
 	const limited = snapshot.isLimited ? " limited" : "";
 	const fastModeText = options.fastModeText ?? (options.fastModeActive ? "Fast mode on" : undefined);
-	const fastMode = fastModeText ? ` | ${fastModeText}` : "";
-	return `OpenAI Usage${limited}: 5h: ${fiveHour} | 7d: ${sevenDay}${fastMode}${resets.length ? ` | ${resets.join(" | ")}` : ""}`;
+	const fastMode = fastModeText ? ` ${fastModeText}` : "";
+	return `OpenAI${limited} 5h:${fiveHour} 7d:${sevenDay}${fastMode}${resets.length ? ` ↺${resets.join("/")}` : ""}`;
 }
 
 function configPaths(cwd: string, home = homedir()) {
