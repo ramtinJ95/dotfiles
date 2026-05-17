@@ -19,8 +19,27 @@ function formatTokens(count: number): string {
 }
 
 function formatPercent(percent: number): string {
-	const s = percent.toFixed(1);
-	return s.endsWith(".0") ? s.slice(0, -2) : s;
+	return `${percent.toFixed(1)}%`;
+}
+
+function truecolor(text: string, red: number, green: number, blue: number): string {
+	return `\u001b[38;2;${red};${green};${blue}m${text}\u001b[0m`;
+}
+
+function colorContextText(text: string, percent: number | null, dim: (text: string) => string): string {
+	if (percent === null || percent <= 55) return dim(text);
+
+	const colors: Array<[number, number, number]> = [
+		[255, 220, 0],
+		[255, 190, 0],
+		[255, 150, 0],
+		[255, 110, 0],
+		[255, 70, 0],
+		[255, 0, 0],
+	];
+	const index = Math.min(colors.length - 1, Math.max(0, Math.ceil((percent - 55) / 5) - 1));
+	const [red, green, blue] = colors[index];
+	return truecolor(text, red, green, blue);
 }
 
 export default function (pi: ExtensionAPI) {
@@ -45,29 +64,16 @@ export default function (pi: ExtensionAPI) {
 					const sessionName = pi.getSessionName();
 					if (sessionName) pwd = `${pwd} • ${sessionName}`;
 
-					// Line 2 left side: usage stats + custom context format
-					let totalInput = 0;
-					let totalOutput = 0;
-					let totalCacheRead = 0;
-					let totalCacheWrite = 0;
+					// Line 2 left side: estimated API cost + context usage
 					let totalCost = 0;
 
 					for (const entry of ctx.sessionManager.getEntries()) {
 						if (entry.type !== "message" || entry.message.role !== "assistant") continue;
 						const msg = entry.message as AssistantMessage;
-						totalInput += msg.usage?.input ?? 0;
-						totalOutput += msg.usage?.output ?? 0;
-						totalCacheRead += msg.usage?.cacheRead ?? 0;
-						totalCacheWrite += msg.usage?.cacheWrite ?? 0;
 						totalCost += msg.usage?.cost?.total ?? 0;
 					}
 
 					const parts: string[] = [];
-					if (totalInput) parts.push(theme.fg("dim", `↑${formatTokens(totalInput)}`));
-					if (totalOutput) parts.push(theme.fg("dim", `↓${formatTokens(totalOutput)}`));
-					if (totalCacheRead) parts.push(theme.fg("dim", `R${formatTokens(totalCacheRead)}`));
-					if (totalCacheWrite) parts.push(theme.fg("dim", `W${formatTokens(totalCacheWrite)}`));
-
 					const usingSubscription = ctx.model ? ctx.modelRegistry.isUsingOAuth(ctx.model) : false;
 					if (totalCost || usingSubscription) {
 						parts.push(theme.fg("dim", `$${totalCost.toFixed(3)}${usingSubscription ? " (sub)" : ""}`));
@@ -79,17 +85,11 @@ export default function (pi: ExtensionAPI) {
 					const percent = usage?.percent ?? null;
 
 					let contextText =
-						used === null || contextWindow <= 0
-							? `?/${formatTokens(contextWindow)} ?%`
-							: `${formatTokens(used)}/${formatTokens(contextWindow)} ${formatPercent(percent ?? 0)}%`;
+						used === null || contextWindow <= 0 || percent === null
+							? `?% ?/${formatTokens(contextWindow)}`
+							: `${formatPercent(percent)} ${formatTokens(used)}/${formatTokens(contextWindow)}`;
 
-					if (percent !== null && percent > 90) {
-						contextText = theme.fg("error", contextText);
-					} else if (percent !== null && percent > 70) {
-						contextText = theme.fg("warning", contextText);
-					} else {
-						contextText = theme.fg("dim", contextText);
-					}
+					contextText = colorContextText(contextText, percent, (text) => theme.fg("dim", text));
 					parts.push(contextText);
 
 					const left = parts.join(" ");
