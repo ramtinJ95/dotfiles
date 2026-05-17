@@ -14,5 +14,11 @@
     "npm:@howaboua/pi-auto-trees",
     "npm:@howaboua/pi-explore-subagents",
     "npm:@howaboua/pi-subagent-review"
-  ]
+  ],
+  "compaction": {
+    "enabled": true
+  },
+  "retry": {
+    "enabled": true
+  }
 }
