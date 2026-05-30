@@ -1,0 +1,12 @@
+{
+  "applyPatchOnly": false,
+  "fast": false,
+  "imageGeneration": true,
+  "compactionModel": "gpt-5.5",
+  "compactionReasoning": "current",
+  "responsesCompaction": false,
+  "statusLine": true,
+  "useOnAllModels": false,
+  "webSearch": true,
+  "verbosity": "low"
+}

@@ -1,4 +1,9 @@
 {
   "model": "openai-codex/gpt-5.5",
-  "thinking": "high"
+  "thinking": "high",
+  "summary": {
+    "enabled": true,
+    "model": "openai-codex/gpt-5.5",
+    "thinking": "low"
+  }
 }
