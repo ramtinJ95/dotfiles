@@ -10,6 +10,7 @@ web_search = "live"               # replacement for deprecated [features].web_se
 project_doc_fallback_filenames = ["CLAUDE.md"]
 suppress_unstable_features_warning = true
 service_tier = "fast"
+approvals_reviewer = "user"
 
 [features]
 view_image_tool = true            # enable the view image tool
@@ -19,12 +20,6 @@ memories = true
 
 [sandbox_workspace_write]
 network_access = true
-
-[mcp_servers.dbt]
-command = "uvx"
-args = ["dbt-mcp"]
-enabled = false
-env = { "DBT_PROJECT_DIR" = "/Users/ramtinjavanmardi/workspace/analytics-platform/dbt_project", "DBT_PATH" = "/Users/ramtinjavanmardi/workspace/analytics-platform/dbt_project/.venv/bin/dbt", "DBT_PROFILES_DIR" = "/Users/ramtinjavanmardi/workspace/analytics-platform/dbt_project/profiles" }
 
 [notice]
 hide_gpt5_1_migration_prompt = true
@@ -39,62 +34,72 @@ status_line = ["current-dir", "model-with-reasoning", "five-hour-limit", "weekly
 [tui.model_availability_nux]
 "gpt-5.5" = 4
 
-[projects."/Users/ramtinjavanmardi/personal-workspace/archivist"]
+[projects."/Users/ramtin/personal-workspace/archivist"]
 trust_level = "trusted"
 
-[projects."/Users/ramtinjavanmardi"]
+
+[projects."/Users/ramtin/workspace/prefect-data-flows"]
 trust_level = "trusted"
 
-[projects."/Users/ramtinjavanmardi/workspace/prefect-data-flows"]
+[projects."/Users/ramtin/personal-workspace/Colosseum"]
 trust_level = "trusted"
 
-[projects."/Users/ramtinjavanmardi/personal-workspace/Colosseum"]
+[projects."/Users/ramtin/workspace/shared-github-actions"]
 trust_level = "trusted"
 
-[projects."/Users/ramtinjavanmardi/workspace/shared-github-actions"]
+[projects."/Users/ramtin/workspace/dotfiles"]
 trust_level = "trusted"
 
-[projects."/Users/ramtinjavanmardi/workspace/dotfiles"]
+[projects."/Users/ramtin/workspace/Colosseum"]
 trust_level = "trusted"
 
-[projects."/Users/ramtinjavanmardi/workspace/Colosseum"]
+[projects."/Users/ramtin/workspace/classification_poc"]
 trust_level = "trusted"
 
-[projects."/Users/ramtinjavanmardi/workspace/classification_poc"]
+[projects."/Users/ramtin/.codex"]
 trust_level = "trusted"
 
-[projects."/Users/ramtinjavanmardi/.codex"]
+[projects."/Users/ramtin/workspace/dataplatform-case"]
 trust_level = "trusted"
 
-[projects."/Users/ramtinjavanmardi/workspace/dataplatform-case"]
+[projects."/Users/ramtin/workspace/bannerflow-prefect-orchestrator"]
 trust_level = "trusted"
 
-[projects."/Users/ramtinjavanmardi/workspace/bannerflow-prefect-orchestrator"]
+[projects."/Users/ramtin/workspace/archivist"]
 trust_level = "trusted"
 
-[projects."/Users/ramtinjavanmardi/workspace/archivist"]
+[projects."/Users/ramtin/workspace/analytics-platform"]
 trust_level = "trusted"
 
-[projects."/Users/ramtinjavanmardi/workspace/analytics-platform"]
+[projects."/Users/ramtin/workspace/brand-compliance-service"]
 trust_level = "trusted"
 
-[projects."/Users/ramtinjavanmardi/workspace/brand-compliance-service"]
+[projects."/Users/ramtin/workspace/handMadeOasis"]
 trust_level = "trusted"
 
-[projects."/Users/ramtinjavanmardi/workspace/handMadeOasis"]
+[projects."/Users/ramtin/workspace/agentic-dev-days-chess"]
 trust_level = "trusted"
 
-[projects."/Users/ramtinjavanmardi/workspace/agentic-dev-days-chess"]
+[projects."/Users/ramtin/workspace"]
 trust_level = "trusted"
 
-[projects."/Users/ramtinjavanmardi/workspace"]
+[projects."/Users/ramtin/workspace/session-doctor"]
 trust_level = "trusted"
 
-[projects."/Users/ramtinjavanmardi/workspace/session-doctor"]
+[projects."/Users/ramtin/workspace/data-platform-infrastructure"]
 trust_level = "trusted"
 
-[projects."/Users/ramtinjavanmardi/workspace/data-platform-infrastructure"]
+[projects."/Users/ramtin/Downloads"]
 trust_level = "trusted"
 
-[projects."/Users/ramtinjavanmardi/Downloads"]
+[projects."/Users/ramtin"]
+trust_level = "trusted"
+
+[projects."/Users/ramtin/dotfiles"]
+trust_level = "trusted"
+
+[projects."/Users/ramtin/workspace/intric-infrastructure"]
+trust_level = "trusted"
+
+[projects."/Users/ramtin/personal"]
 trust_level = "trusted"
