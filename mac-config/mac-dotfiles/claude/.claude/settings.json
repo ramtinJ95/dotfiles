@@ -13,7 +13,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/guard-infra-commands.sh"
+            "command": "$HOME/.claude/hooks/guard_infra_commands.py"
           }
         ]
       }
@@ -27,5 +27,6 @@
   "autoMemoryEnabled": true,
   "autoDreamEnabled": true,
   "skipDangerousModePermissionPrompt": true,
+  "theme": "dark",
   "editorMode": "vim"
 }
