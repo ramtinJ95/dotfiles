@@ -213,7 +213,8 @@ const toolConfig: ToolConfig = {
 	promptSnippet:
 		'Run serious multi-source grounded research. mode="deep" is the default; mode="deep-reasoning" spends extra effort on ambiguity, conflicts, and high-stakes judgment.',
 	promptGuidelines: [
-		'Use mode="deep" by default; set mode="deep-reasoning" only for ambiguous, conflicting, high-stakes, or judgment-heavy research.',
+		'deep_research: Use mode="deep" for substantial multi-source research.',
+		'deep_research: Switch to mode="deep-reasoning" only for ambiguity, conflicting sources, high-stakes claims, or judgment-heavy tradeoffs.',
 	],
 };
 

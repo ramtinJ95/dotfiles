@@ -5,7 +5,8 @@
   "hideThinkingBlock": false,
   "defaultThinkingLevel": "high",
   "skills": [
-    "!**/.agents/skills/**"
+    "-skills/jira-create-tasks/SKILL.md",
+    "-skills/playwriter/SKILL.md"
   ],
   "transport": "auto",
   "theme": "dark",
@@ -14,7 +15,8 @@
     "npm:@howaboua/pi-auto-trees",
     "npm:@howaboua/pi-explore-subagents",
     "npm:@howaboua/pi-subagent-review",
-    "npm:@howaboua/pi-skill-chrome-cdp"
+    "npm:@howaboua/pi-skill-chrome-cdp",
+    "npm:@howaboua/pi-markdown-workflows"
   ],
   "compaction": {
     "enabled": true
