@@ -13,7 +13,8 @@
     "npm:@howaboua/pi-codex-conversion",
     "npm:@howaboua/pi-auto-trees",
     "npm:@howaboua/pi-explore-subagents",
-    "npm:@howaboua/pi-subagent-review"
+    "npm:@howaboua/pi-subagent-review",
+    "npm:@howaboua/pi-skill-chrome-cdp"
   ],
   "compaction": {
     "enabled": true

@@ -1,0 +1,10 @@
+{
+  "shallow": {
+    "model": "openai-codex/gpt-5.4-mini",
+    "thinking": "medium"
+  },
+  "deep": {
+    "model": "openai-codex/gpt-5.5",
+    "thinking": "low"
+  }
+}
