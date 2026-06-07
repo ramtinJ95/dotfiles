@@ -18,9 +18,34 @@ defaults write -g KeyRepeat -int 2
 defaults write -g InitialKeyRepeat -int 25
 defaults write -g ApplePressAndHoldEnabled -bool false
 
-# Caps Lock to Control, matching the current machine.
-defaults -currentHost write -g "com.apple.keyboard.modifiermapping.0-0-0" -array \
-    '{ HIDKeyboardModifierMappingSrc = 30064771129; HIDKeyboardModifierMappingDst = 30064771300; }'
+# Caps Lock to left Control. The older defaults modifiermapping key is not
+# reliably applied on modern macOS, so use hidutil and persist it at login.
+CAPS_TO_CONTROL_MAPPING='{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x700000039,"HIDKeyboardModifierMappingDst":0x7000000E0}]}'
+hidutil property --set "$CAPS_TO_CONTROL_MAPPING"
+
+mkdir -p "$HOME/Library/LaunchAgents"
+cat > "$HOME/Library/LaunchAgents/com.ramtin.keyboard-remap.plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.ramtin.keyboard-remap</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/hidutil</string>
+    <string>property</string>
+    <string>--set</string>
+    <string>{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x700000039,"HIDKeyboardModifierMappingDst":0x7000000E0}]}</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+</dict>
+</plist>
+EOF
+
+launchctl bootout "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.ramtin.keyboard-remap.plist" 2>/dev/null || true
+launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.ramtin.keyboard-remap.plist" 2>/dev/null || true
 
 # Finder preferences
 echo "→ Setting Finder preferences..."
@@ -38,6 +63,7 @@ defaults write com.apple.screencapture disable-shadow -bool true
 
 # Menu bar preferences
 echo "→ Setting menu bar preferences..."
+defaults write NSGlobalDomain _HIHideMenuBar -bool true
 defaults write com.apple.menuextra.clock DateFormat -string "EEE MMM d  h:mm a"
 
 # Activity Monitor preferences

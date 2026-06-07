@@ -8,7 +8,6 @@ tap "osx-cross/avr"
 tap "qmk/qmk"
 tap "shaunsingh/sfmono-nerd-font-ligaturized"
 tap "sst/tap"
-tap "zegervdv/zathura"
 
 # Core CLI
 brew "bat"
@@ -34,7 +33,6 @@ brew "tmux"
 brew "uv"
 brew "wget"
 brew "yazi"
-brew "zegervdv/zathura/zathura-pdf-poppler"
 brew "zoxide"
 
 # Shell
@@ -49,11 +47,12 @@ brew "go"
 brew "hashicorp/tap/terraform"
 brew "hugo"
 brew "kind"
+brew "kubernetes-cli"
 brew "lua"
 brew "node"
 brew "pkgconf"
 brew "rustup"
-brew "tree-sitter"
+brew "tree-sitter-cli"
 
 # Local AI
 brew "llama.cpp", args: ["HEAD"]
@@ -89,6 +88,8 @@ cask "zen"
 
 # Fonts and Apple tooling
 cask "font-blex-mono-nerd-font"
+cask "font-meslo-lg-nerd-font"
+cask "font-sketchybar-app-font"
 cask "font-sf-mono"
 cask "font-sf-mono-nerd-font-ligaturized"
 cask "font-sf-pro"

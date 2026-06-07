@@ -5,10 +5,9 @@ return {
     init = function()
       vim.g.vimwiki_list = {
         {
-          template_path = vim.fn.stdpath("data") .. "/site/pack/packer/start/vimwiki/autoload/",
+          path = "/Users/ramtin/personal/Mywiki/",
           syntax = "markdown",
           ext = ".md",
-          path = "~/workspace/Mywiki", -- does not work?=!?!?
         },
       }
       vim.g.vimwiki_global_ext = 0

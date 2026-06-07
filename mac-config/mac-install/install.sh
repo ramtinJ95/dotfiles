@@ -40,6 +40,22 @@ load_homebrew_shellenv() {
     fi
 }
 
+install_sbarlua() {
+    local module="$HOME/.local/share/sketchybar_lua/sketchybar.so"
+
+    if [[ -f "$module" ]]; then
+        print_success "SbarLua already installed"
+        return
+    fi
+
+    print_status "Installing SbarLua for Sketchybar Lua config..."
+    local tmp_dir
+    tmp_dir="$(mktemp -d)"
+    git clone https://github.com/FelixKratz/SbarLua.git "$tmp_dir/SbarLua"
+    make -C "$tmp_dir/SbarLua" install
+    rm -rf "$tmp_dir"
+}
+
 # Check if we're on macOS
 if [[ "$OSTYPE" != "darwin"* ]]; then
     print_error "This script is only for macOS!"
@@ -92,6 +108,8 @@ if ! command -v brew &> /dev/null; then
     print_error "Homebrew installed, but brew is not available on PATH"
     exit 1
 fi
+
+install_sbarlua
 
 # Step 3: Install packages from Brewfile
 print_status "Installing packages from Brewfile..."

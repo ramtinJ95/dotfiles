@@ -9,8 +9,8 @@ yabai -m config window_insertion_point first
 yabai -m config auto_balance off
 yabai -m config split_ratio 0.30
 
-# padding set to 12px
-yabai -m config top_padding 5
+# padding around managed windows
+yabai -m config top_padding 0
 yabai -m config bottom_padding 5
 yabai -m config left_padding 5
 yabai -m config right_padding 5
@@ -41,4 +41,4 @@ yabai -m rule --add title="^SFML$" manage=off
 yabai -m rule --add title="Our Love Story$" manage=off
 yabai -m rule --add title="^Software Renderer$" manage=off
 
-yabai -m config external_bar all:40:0
+yabai -m config external_bar all:0:0
