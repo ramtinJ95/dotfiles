@@ -1,7 +1,9 @@
-export EZA_CONFIG_DIR="/Users/ramtinjavanmardi/.config/eza"
-export XDG_CONFIG_HOME=/Users/ramtinjavanmardi/.config
+export EZA_CONFIG_DIR="$HOME/.config/eza"
+export XDG_CONFIG_HOME="$HOME/.config"
 export BAT_THEME="Catppuccin Mocha"
 export EDITOR="nvim"
+
+setopt SHARE_HISTORY
 
 bindkey '^y' autosuggest-accept
 source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
@@ -51,18 +53,38 @@ alias py='python3'
 alias decompress='tar -xvf'
 alias compress='tar -cvf'
 
+function control() {
+	local target="$1" host
+
+	case "$target" in
+		macmini|ramtins-mac-mini)
+			host="ramtins-mac-mini.tailc817d3.ts.net"
+			;;
+		"")
+			echo "usage: control macmini"
+			return 2
+			;;
+		*)
+			host="$(ssh -G "$target" 2>/dev/null | awk '/^hostname / { print $2; exit }')"
+			[[ -z "$host" ]] && host="$target"
+			;;
+	esac
+
+	open "vnc://$host"
+}
+
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
 # Created by `pipx` on 2024-08-14 10:33:54
-export PATH="$PATH:/Users/ramjav/.local/bin"
+export PATH="$PATH:$HOME/.local/bin"
 export CPATH=/opt/homebrew/include:$CPATH
 export LIBRARY_PATH=/opt/homebrew/lib:$LIBRARY_PATH
 
 
 # Created by `pipx` on 2025-06-28 08:41:46
-export PATH="$PATH:/Users/ramtinjavanmardi/.local/bin"
+export PATH="$PATH:$HOME/.local/bin"
 
-export PATH=$PATH:/Users/ramtinjavanmardi/.spicetify
+export PATH="$PATH:$HOME/.spicetify"
 
 source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
@@ -74,8 +96,13 @@ source /opt/homebrew/opt/fzf/shell/completion.zsh
 export PATH=/Applications/SnowflakeCLI.app/Contents/MacOS/:$PATH
 
 # bun completions
-[ -s "/Users/ramtinjavanmardi/.bun/_bun" ] && source "/Users/ramtinjavanmardi/.bun/_bun"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
+
+# opencode
+export PATH=/Users/ramtin/.opencode/bin:$PATH
+export PATH="$HOME/go/bin:$PATH"
