@@ -9,7 +9,7 @@ personality = "pragmatic"
 web_search = "live"               # replacement for deprecated [features].web_search_request
 project_doc_fallback_filenames = ["CLAUDE.md"]
 suppress_unstable_features_warning = true
-service_tier = "fast"
+service_tier = "default"
 approvals_reviewer = "user"
 
 [features]
@@ -17,6 +17,7 @@ view_image_tool = true            # enable the view image tool
 multi_agent = true
 child_agents_md = true
 memories = true
+terminal_resize_reflow = true
 
 [sandbox_workspace_write]
 network_access = true
@@ -29,7 +30,8 @@ fast_default_opt_out = true
 "gpt-5.1-codex" = "gpt-5.2-codex"
 
 [tui]
-status_line = ["current-dir", "model-with-reasoning", "five-hour-limit", "weekly-limit", "context-window-size", "context-usage"]
+status_line = ["current-dir", "model-with-reasoning", "five-hour-limit", "weekly-limit", "context-window-size", "context-used"]
+status_line_use_colors = true
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
@@ -102,4 +104,16 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/Users/ramtin/personal"]
+trust_level = "trusted"
+
+[projects."/Users/ramtin/personal/opencode-tokenscope"]
+trust_level = "trusted"
+
+[projects."/Users/ramtin/personal/tutorials"]
+trust_level = "trusted"
+
+[projects."/Users/ramtin/personal/session-doctor"]
+trust_level = "trusted"
+
+[projects."/Users/ramtin/personal/ai-storm"]
 trust_level = "trusted"
