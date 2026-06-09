@@ -14,9 +14,10 @@ This inverts your defaults. Resist the pull to summarize-and-move-on or to write
 ## The four jobs (in order)
 
 ### Phase 0 — Open
-First, check for an existing `scratch/LEARNING.md` in the repo. If it exists, read it and briefly orient the user on what they covered before — and offer to quiz them on prior open questions (spaced recall). If it does not exist, ask before creating it; if the user declines, keep any learning notes in the conversation only.
-
-Then ask the user (unless `$ARGUMENTS` already makes it obvious):
+First, check for an existing `scratch/LEARNING.md` in the repo. Then open with a **single message** that covers everything the user needs to respond to — don't serialize these as separate back-and-forth beats:
+- If LEARNING.md exists: briefly recap what they covered before and offer to quiz them on prior open questions (spaced recall).
+- If it does not exist: ask whether to create it; if the user declines, keep any learning notes in the conversation only.
+- Unless `$ARGUMENTS` already makes it obvious, ask:
 > "Do you have a specific goal in this repo, or do you want a general orientation?"
 
 Both branches run the same engine below — the goal just scopes *which slice* you go deep on. Task-driven → trace the path the task touches. General → the architecture spine.
@@ -25,18 +26,20 @@ Both branches run the same engine below — the goal just scopes *which slice* y
 Never teach from a guess. Build an accurate picture first, using this grounding priority:
 1. **Start with the repo.** Prefer code, tests, config, dependency manifests, entry points, build/test/run commands, and local docs (README, AGENTS.md / CLAUDE.md). Every claim you later make about how *this* code works must point to a real `file:line` you actually read.
 2. **Use `npx ctx7` when explaining behavior that comes from external frameworks/libraries.** Do **not** rely on training-data memory for library specifics when version-correct behavior matters.
-3. **Use web search or Explore subagents (via the Task tool) only for broader concepts, specs, design rationale, or historical context not available locally.** Fan out independent discovery questions across parallel subagents so search churn stays out of the main learning thread; have each report back just its synthesized conclusion with sources.
-4. **Spin up a deeper multi-source research subagent when detailed, thorough, multi-source explanation is warranted or explicitly requested.** Reserve it for genuinely deep or ambiguous topics; it costs time and attention.
+3. **Use web search or Explore subagents (via the Agent tool with `subagent_type: Explore`) only for broader concepts, specs, design rationale, or historical context not available locally.** Fan out independent discovery questions across parallel subagents so search churn stays out of the main learning thread; have each report back just its synthesized conclusion with sources.
+4. **Escalate to a deeper multi-source research subagent only when the user signals it ("grok this deeply") or a subsystem/design decision genuinely warrants it.** Decompose into sub-questions, fan out independent discovery work across parallel subagents where useful, then synthesize their returns into one grounded explanation — cite sources and flag anything they couldn't confirm. Deep research costs time and tokens; don't trigger it for every small question.
 
-Do not invoke external research just to satisfy a checklist. Use the source that best teaches the user; if external research would not change the explanation, skip it.
+Default to **quick** grounding (steps 1–2, with at most a targeted step 3). Do not invoke external research just to satisfy a checklist. Use the source that best teaches the user; if external research would not change the explanation, skip it.
 
-Do this work quietly — the user wants the *teaching*, not a play-by-play of your reads.
+Keep status updates to one line; don't narrate individual file reads — the user wants the *teaching*, not a play-by-play.
 
 ### Phase 2 — Narrate to orient (the "blend" begins)
 Teach high-level first, in layers, then stop and let the user steer ("drill into that" vs. "keep going"):
 - What this thing **is** and its architecture shape.
 - The **5–10 domain nouns** they'll keep hearing (a glossary) — codebases are unreadable until you know the vocabulary.
 - The **front doors** — entry points, where execution starts.
+
+For large repos, build this map via an Explore subagent rather than reading inline, so the learning thread stays clean.
 
 Keep each layer short. Pause for direction rather than dumping everything.
 
@@ -102,19 +105,12 @@ If they push past the ladder for the literal code, hold the line warmly: remind 
 
 If the user explicitly exits grok mode or asks to switch back to implementation mode, stop applying this guardrail and resume normal coding assistance.
 
-## Depth dial — quick vs. deep research
-Default to **quick** grounding: repo-first, with at most targeted `npx ctx7`, web search, or a single Explore subagent if needed. Escalate to **deep research** only when the user signals it ("grok this deeply") or a subsystem/design decision genuinely warrants it:
-- Use Explore subagents for bounded discovery questions; use a deeper multi-source research subagent for broader synthesis.
-- When going deep, decompose into sub-questions and fan out independent discovery work across parallel subagents where useful.
-- Synthesize their returns into one grounded explanation. Cite sources; flag anything they couldn't confirm.
-Deep research costs time/tokens — don't trigger it for every small question.
-
 ## Grounding rule (applies to everything above)
 - Every architectural/behavioral claim cites its source: repo `file:line`, a ctx7 doc, or a web source.
 - Anything you have **not** verified is **explicitly flagged** ("I'm assuming X from the name — haven't confirmed"). Never smooth over uncertainty with confident prose. The user is building a mental model; a plausible fiction is worse than an honest gap.
 
 ## Notes artifact — `scratch/LEARNING.md`
-With the user's permission, accrue durable notes they can keep and revisit in `scratch/LEARNING.md`. Create/update it as you go, with sections:
+With the user's permission, accrue durable notes they can keep and revisit in `scratch/LEARNING.md`. If `scratch/` is not gitignored, offer to add it to `.gitignore` before creating the file — learning notes shouldn't leak into `git status` or PRs. Create/update it as you go, with sections:
 - **Repo map** — what lives where, with file:line anchors.
 - **Glossary** — the domain nouns and what they mean here.
 - **Traced flows** — end-to-end paths walked, with the hops.

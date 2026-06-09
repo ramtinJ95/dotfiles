@@ -29,5 +29,6 @@
   "autoDreamEnabled": true,
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark",
-  "editorMode": "vim"
+  "editorMode": "vim",
+  "switchModelsOnFlag": false
 }
