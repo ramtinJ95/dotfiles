@@ -11,6 +11,11 @@ require("default")
 require("items")
 sbar.end_config()
 
+-- Coordinate with the native (auto-hidden, Liquid Glass transparent) menu bar:
+-- hide sketchybar when the cursor reaches the top so the native bar reveals
+-- cleanly, then slide it back. See malpern/sketchybar-toggle.
+sbar.exec("pkill -x sketchybar-toggle; sketchybar-toggle &")
+
 -- Run the event loop of the sketchybar module (without this there will be no
 -- callback functions executed in the lua module)
 sbar.event_loop()

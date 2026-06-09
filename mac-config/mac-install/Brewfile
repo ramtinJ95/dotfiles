@@ -3,6 +3,7 @@ tap "felixkratz/formulae"
 tap "hashicorp/tap"
 tap "jesseduffield/lazydocker"
 tap "koekeishiya/formulae"
+tap "malpern/tap"
 tap "osx-cross/arm"
 tap "osx-cross/avr"
 tap "qmk/qmk"
@@ -72,6 +73,9 @@ brew "spicetify-cli"
 brew "felixkratz/formulae/sketchybar"
 brew "koekeishiya/formulae/skhd"
 brew "koekeishiya/formulae/yabai"
+# Coordinates sketchybar with the native auto-hidden menu bar (hover-to-reveal).
+# Autostarted from sketchybar's init.lua via sbar.exec.
+brew "malpern/tap/sketchybar-toggle"
 
 # GUI apps
 cask "blackhole-2ch"
