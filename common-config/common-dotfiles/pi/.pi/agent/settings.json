@@ -1,7 +1,7 @@
 {
-  "lastChangelogVersion": "0.78.1",
-  "defaultProvider": "openai-codex",
-  "defaultModel": "gpt-5.5",
+  "lastChangelogVersion": "0.79.0",
+  "defaultProvider": "mlx-vlm",
+  "defaultModel": "unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit",
   "hideThinkingBlock": false,
   "defaultThinkingLevel": "high",
   "skills": [

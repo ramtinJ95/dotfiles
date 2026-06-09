@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SESSION="${SESSION:-gemma4-mlx}"
+MODEL="${1:-unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit}"
+LOG="$HOME/.pi/agent/local-llm/logs/${SESSION}.log"
+START="$HOME/.pi/agent/local-llm/bin/start-gemma4-mlx"
+
+if tmux has-session -t "$SESSION" 2>/dev/null; then
+  echo "tmux session '$SESSION' already running"
+  echo "Attach: tmux attach -t $SESSION"
+  echo "Logs:   tail -f $LOG"
+  exit 0
+fi
+
+mkdir -p "$(dirname "$LOG")"
+: > "$LOG"
+tmux new-session -d -s "$SESSION" "exec '$START' '$MODEL' 2>&1 | tee -a '$LOG'"
+echo "Started $MODEL in tmux session '$SESSION'"
+echo "Attach: tmux attach -t $SESSION"
+echo "Logs:   tail -f $LOG"

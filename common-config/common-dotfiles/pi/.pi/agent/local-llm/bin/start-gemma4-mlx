@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+MODEL="${1:-unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit}"
+HOST="${HOST:-127.0.0.1}"
+PORT="${PORT:-8080}"
+MAX_KV_SIZE="${MAX_KV_SIZE:-200000}"
+MAX_TOKENS="${MAX_TOKENS:-4096}"
+VENV="$HOME/.pi/agent/local-llm/mlx-vlm-venv"
+
+exec "$VENV/bin/python" -m mlx_vlm.server \
+  --host "$HOST" \
+  --port "$PORT" \
+  --model "$MODEL" \
+  --max-kv-size "$MAX_KV_SIZE" \
+  --max-tokens "$MAX_TOKENS"

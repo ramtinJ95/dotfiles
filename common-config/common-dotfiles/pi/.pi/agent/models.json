@@ -1,0 +1,51 @@
+{
+  "providers": {
+    "mlx-vlm": {
+      "baseUrl": "http://127.0.0.1:8080/v1",
+      "api": "openai-completions",
+      "apiKey": "local",
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsUsageInStreaming": false,
+        "supportsStore": false,
+        "supportsStrictMode": false,
+        "maxTokensField": "max_tokens"
+      },
+      "models": [
+        {
+          "id": "unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit",
+          "name": "Unsloth Gemma 4 26B A4B UD MLX 4bit",
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 4096,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
+        },
+        {
+          "id": "unsloth/gemma-4-31b-it-UD-MLX-4bit",
+          "name": "Unsloth Gemma 4 31B IT UD MLX 4bit",
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 4096,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
+        }
+      ]
+    }
+  }
+}

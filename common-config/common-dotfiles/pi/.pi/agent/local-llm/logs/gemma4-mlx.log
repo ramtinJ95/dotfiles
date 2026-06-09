@@ -1,0 +1,90 @@
+INFO:     Started server process [65206]
+INFO:     Waiting for application startup.
+2026-06-09 21:01:52,267 - INFO - Pre-loading model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit
+2026-06-09 21:01:52,441 - INFO - HTTP Request: GET https://huggingface.co/api/models/unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit/revision/main "HTTP/1.1 200 OK"
+Loading model from: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Fetching 11 files: 100%|██████████| 11/11 [00:00<00:00, 14066.26it/s]
+/Users/ramtin/dotfiles/common-config/common-dotfiles/pi/.pi/agent/local-llm/mlx-vlm-venv/lib/python3.13/site-packages/transformers/audio_utils.py:559: UserWarning: At least one mel filter has all zero values. The value for `num_mel_filters` (128) may be set too high. Or, the value for `num_frequency_bins` (257) may be set too low.
+  warnings.warn(
+2026-06-09 21:01:55,557 - INFO - Model ready, continuous batching enabled.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8080 (Press CTRL+C to quit)
+Model and processor loaded successfully.
+INFO:     127.0.0.1:52332 - "GET /v1/models HTTP/1.1" 200 OK
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52433 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52433 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52473 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52512 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52512 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52512 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52512 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52512 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52567 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52577 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52577 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52577 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52577 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52577 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52647 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52647 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52702 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52702 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52702 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52878 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52878 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:52926 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:53048 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:53109 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:53160 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Stream finished, cleared cache.
+Using cached model: unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit, Adapter: None
+INFO:     127.0.0.1:53218 - "POST /v1/chat/completions HTTP/1.1" 200 OK
