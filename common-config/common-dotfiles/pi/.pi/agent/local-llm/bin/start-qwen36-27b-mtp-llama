@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+HOST="${HOST:-127.0.0.1}"
+PORT="${PORT:-8002}"
+CTX_SIZE="${CTX_SIZE:-200000}"
+MODEL_PATH="${MODEL_PATH:-$HOME/models/Qwen3.6-27B-MTP-GGUF/Qwen3.6-27B-UD-Q4_K_XL.gguf}"
+LLAMA_SERVER="${LLAMA_SERVER:-$HOME/llama.cpp/build/bin/llama-server}"
+exec "$LLAMA_SERVER" \
+  --model "$MODEL_PATH" \
+  --alias "unsloth/Qwen3.6-27B-MTP" \
+  --host "$HOST" \
+  --port "$PORT" \
+  --ctx-size "$CTX_SIZE" \
+  --parallel 1 \
+  --flash-attn on \
+  --jinja \
+  --no-mmproj \
+  --temp 0.7 \
+  --top-p 0.8 \
+  --top-k 20 \
+  --min-p 0.00 \
+  --presence-penalty 1.5 \
+  --spec-type draft-mtp \
+  --spec-draft-n-max 2 \
+  --reasoning off

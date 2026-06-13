@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+python3 - <<'PY'
+import json
+import urllib.request
+from pathlib import Path
+
+models_path = Path.home() / ".pi/agent/models.json"
+providers = json.loads(models_path.read_text()).get("providers", {})
+
+print("pi configured context windows:")
+for provider_id, provider in providers.items():
+    base_url = provider.get("baseUrl", "")
+    for model in provider.get("models", []):
+        print(f"  {model.get('id')}: {model.get('contextWindow')} tokens ({provider_id}, {base_url})")
+
+print("\nlive llama-server contexts:")
+checked = set()
+for provider_id, provider in providers.items():
+    base_url = provider.get("baseUrl", "")
+    if not base_url.startswith("http://") and not base_url.startswith("https://"):
+        continue
+    url = base_url.rstrip("/") + "/models"
+    if url in checked:
+        continue
+    checked.add(url)
+    try:
+        with urllib.request.urlopen(url, timeout=2) as response:
+            payload = json.load(response)
+    except Exception as error:
+        print(f"  {provider_id}: not running or unavailable ({base_url})")
+        continue
+
+    data = payload.get("data") or payload.get("models") or []
+    for item in data:
+        model_id = item.get("id") or item.get("model") or item.get("name") or "unknown"
+        meta = item.get("meta") or {}
+        n_ctx = meta.get("n_ctx")
+        n_ctx_train = meta.get("n_ctx_train")
+        if n_ctx is None:
+            print(f"  {model_id}: running, context not reported ({base_url})")
+        else:
+            suffix = f" / train {n_ctx_train}" if n_ctx_train else ""
+            print(f"  {model_id}: live n_ctx {n_ctx}{suffix} ({base_url})")
+PY

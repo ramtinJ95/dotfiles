@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SESSION="${SESSION:-qwen36-27b-mtp-llama}"
+tmux kill-session -t "$SESSION" 2>/dev/null || true
