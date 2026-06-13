@@ -1,7 +1,7 @@
 {
-  "lastChangelogVersion": "0.79.0",
-  "defaultProvider": "mlx-vlm",
-  "defaultModel": "unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit",
+  "lastChangelogVersion": "0.79.3",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.5",
   "hideThinkingBlock": false,
   "defaultThinkingLevel": "high",
   "skills": [
@@ -16,7 +16,8 @@
     "npm:@howaboua/pi-explore-subagents",
     "npm:@howaboua/pi-subagent-review",
     "npm:@howaboua/pi-skill-chrome-cdp",
-    "npm:@howaboua/pi-markdown-workflows"
+    "npm:@howaboua/pi-markdown-workflows",
+    "git:https://github.com/badlogic/pi-diff-review"
   ],
   "compaction": {
     "enabled": true
