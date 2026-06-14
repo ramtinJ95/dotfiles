@@ -1,14 +1,16 @@
 # infra-command-guard
 
-Global pi extension that wraps the built-in `bash` tool and asks for approval before running higher-risk `kubectl`, `terraform`, and `az` commands.
+Global pi extension that wraps the built-in `bash` tool and intercepts `exec_command`, asking for approval before running higher-risk `kubectl`, `terraform`, and `rm` commands.
 
 ## Goals
 
 - Keep normal `bash` behavior and rendering for allowed commands
+- Guard the `exec_command` developer tool used by API-style Pi sessions
 - Add a fast in-process guard before execution
-- Fail closed in non-interactive mode
+- Fail closed outside TUI mode
 - Stay separate from Claude hooks
 - Allow `kubectl port-forward`, including common wrapped/backgrounded forms
+- Mirror the Claude hook flow: block first, have the model call an approval tool with a plain-language explanation, then allow one exact retry only if approved
 
 ## What it auto-allows
 
@@ -49,24 +51,28 @@ Low-risk planning and inspection commands, including:
 - `workspace show`
 - `workspace select`
 
-### az
-A narrow read-style allowlist:
-
-- `show`
-- `list`
-- `get`
-- `exists`
-- `check`
-- `wait`
-- `download`
-- `version`
-
 ## What requires approval
 
-- Mutating infra commands such as `kubectl delete`, `terraform apply`, `az group delete`
+- Mutating infra commands such as `kubectl delete` and `terraform apply`
+- `rm` commands
 - Commands the guard cannot classify safely
 - Indirect shell-runner patterns such as `bash -lc "kubectl ..."` or `xargs kubectl ...`, except for commands whose kubectl usage is limited to `port-forward`
 - Some sensitive read paths, e.g. `kubectl get secret ...`
+
+## Approval flow
+
+1. The wrapped `bash` tool or `exec_command` preflight blocks the command and returns instructions to the model.
+2. The model must call `approve_infra_command` with:
+   - the exact blocked command
+   - the guard reason
+   - a structured summary of what the command does
+   - important flags/options and what they change
+   - the concrete blast radius
+3. Pi opens a scrollable overlay with one consistent layout: command, guard reason, summary, flags/options, blast radius, then `Cancel` / `Approve and run`.
+4. If approved, the extension records a one-time approval for that exact command string.
+5. The model retries the exact same shell command; the guard consumes the approval and runs it.
+
+If the command changes by even one byte, the retry is blocked again.
 
 ## Notes
 
@@ -75,7 +81,8 @@ A narrow read-style allowlist:
   - `↑` / `↓` scroll
   - `PgUp` / `PgDn` or `Ctrl+u` / `Ctrl+d` page
   - `g` / `G` jump to top/bottom
-  - `j` / `k` move between `No` and `Yes`
+  - `j` / `k` move between `Cancel` and `Approve and run`
+- The model supplies structured fields rather than a markdown blob, so the UI avoids repeating command/reason/blast-radius text.
 - Because it overrides the built-in `bash` tool, pi may show the standard override warning in interactive mode.
 - No settings change is required; placing this folder under `~/.pi/agent/extensions/` is enough.
 
