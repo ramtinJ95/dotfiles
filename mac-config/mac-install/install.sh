@@ -70,6 +70,58 @@ install_sketchybar_toggle() {
     brew install malpern/tap/sketchybar-toggle
 }
 
+install_tmux_plugins() {
+    local tmux_conf="$HOME/.tmux.conf"
+    local plugins_dir="$HOME/.tmux/plugins"
+    local tpm_dir="$plugins_dir/tpm"
+    local tpm_installer="$tpm_dir/bin/install_plugins"
+
+    if ! command -v tmux &>/dev/null; then
+        print_warning "tmux is not available; skipping tmux plugin setup"
+        return
+    fi
+
+    if [[ ! -f "$tmux_conf" ]]; then
+        print_warning "tmux config not found at $tmux_conf; skipping tmux plugin setup"
+        return
+    fi
+
+    mkdir -p "$plugins_dir"
+
+    if [[ ! -d "$tpm_dir" ]]; then
+        print_status "Installing Tmux Plugin Manager..."
+        git clone https://github.com/tmux-plugins/tpm "$tpm_dir"
+    elif [[ ! -x "$tpm_installer" ]]; then
+        print_error "TPM exists at $tpm_dir, but $tpm_installer is missing or not executable"
+        exit 1
+    else
+        print_success "Tmux Plugin Manager already installed"
+    fi
+
+    local bootstrap_session=""
+    if tmux info &>/dev/null; then
+        tmux source-file "$tmux_conf"
+    else
+        bootstrap_session="dotfiles-tpm-bootstrap-$$"
+        tmux new-session -d -s "$bootstrap_session" "sleep 60"
+    fi
+
+    print_status "Installing tmux plugins..."
+    if ! "$tpm_installer"; then
+        if [[ -n "$bootstrap_session" ]]; then
+            tmux kill-session -t "$bootstrap_session" &>/dev/null || true
+        fi
+        print_error "tmux plugin installation failed"
+        exit 1
+    fi
+
+    if [[ -n "$bootstrap_session" ]]; then
+        tmux kill-session -t "$bootstrap_session" &>/dev/null || true
+    fi
+
+    print_success "tmux plugins installed"
+}
+
 # Check if we're on macOS
 if [[ "$OSTYPE" != "darwin"* ]]; then
     print_error "This script is only for macOS!"
@@ -149,7 +201,10 @@ print_status "Setting up dotfiles with Stow..."
 
 print_success "All dotfiles stowed successfully"
 
-# Step 6: Apply macOS defaults
+# Step 6: Install tmux plugins from stowed tmux config
+install_tmux_plugins
+
+# Step 7: Apply macOS defaults
 print_status "Applying macOS system preferences..."
 if [[ -f "$SET_DEFAULTS" ]]; then
     "$SET_DEFAULTS"
@@ -158,7 +213,7 @@ else
     print_warning "set-defaults.sh not found, skipping system preferences"
 fi
 
-# Step 7: Setup shell (if needed)
+# Step 8: Setup shell (if needed)
 print_status "Configuring shell..."
 if [[ "${SHELL:-}" != */zsh ]]; then
     chsh -s "$(command -v zsh)"
@@ -167,7 +222,7 @@ else
     print_success "Zsh already set as default shell"
 fi
 
-# Step 8: Start macOS services
+# Step 9: Start macOS services
 print_status "Starting macOS services..."
 for service in skhd yabai sketchybar; do
     if brew services start "$service"; then
@@ -177,7 +232,7 @@ for service in skhd yabai sketchybar; do
     fi
 done
 
-# Step 9: Final steps
+# Step 10: Final steps
 print_status "Running final setup steps..."
 
 # Reload shell configuration
@@ -199,6 +254,7 @@ print_status "Setup summary:"
 echo "  • Xcode Command Line Tools: ✓"
 echo "  • Homebrew + packages: ✓"
 echo "  • Dotfiles (stow): ✓"
+echo "  • tmux plugins: ✓"
 echo "  • macOS preferences: ✓"
 echo "  • macOS services: ✓"
 echo "  • Shell configuration: ✓"

@@ -207,9 +207,22 @@ check_broken_symlinks() {
                 resolved="$(dirname "$link")/$target"
             fi
 
-            [[ -e "$resolved" ]] || fail "broken symlink: $link -> $target"
+            [[ -e "$resolved" ]] \
+                || is_optional_claude_bridge "$link" "$target" \
+                || fail "broken symlink: $link -> $target"
         done < <(find "$root" -type l -print)
     done
+}
+
+is_optional_claude_bridge() {
+    local link="$1"
+    local target="$2"
+
+    case "$link:$target" in
+        */codex/.codex/prompts/agent-*.md:*/claude/.claude/agents/*.md) return 0 ;;
+        */codex/.codex/skills/*:*/claude/.claude/skills/*) return 0 ;;
+        *) return 1 ;;
+    esac
 }
 
 check_shell_syntax() {
@@ -237,7 +250,7 @@ check_json() {
     local file
     while IFS= read -r file; do
         jq empty "$file" >/dev/null || fail "JSON validation failed: $file"
-    done < <(find "$COMMON_DIR" "$MAC_DIR" "$ARCH_DIR" -type f -name '*.json' -print)
+    done < <(find "$COMMON_DIR" "$MAC_DIR" "$ARCH_DIR" -path '*/node_modules/*' -prune -o -type f -name '*.json' -print)
 }
 
 doctor() {
