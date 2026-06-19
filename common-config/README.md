@@ -8,8 +8,16 @@ they are intentionally split into shared files plus a small OS overlay.
 
 ## Packages
 
-- `agents/` - User-level `.agents/skills` tree
+- `agents/` - Canonical user-level `.agents/skills` tree for shared skills
 - `pi/` - Pi agent configuration, extensions, and skills
+
+## Shared Skills
+
+Cross-harness skills live in `common-dotfiles/agents/.agents/skills`. Pi loads
+that global skill directory directly through `~/.agents/skills`; do not add
+duplicate shared-skill links under `.pi/agent/skills`. Claude and Codex packages
+bridge to shared skills with repo-relative symlinks from their native skills
+directories.
 
 ## Usage
 
