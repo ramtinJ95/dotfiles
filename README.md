@@ -28,7 +28,7 @@ See [arch-config/arch-dotfiles/README.md](arch-config/arch-dotfiles/README.md) f
 ## What's Included
 
 ### Shared Configurations
-- **Agents** - User-level `.agents/skills` tree
+- **Agents** - Canonical user-level `.agents/skills` tree for shared skills
 - **Pi** - Pi agent configuration, extensions, and skills
 
 ### macOS Specific
@@ -86,6 +86,13 @@ stow -d mac-config/mac-dotfiles -t "$HOME" nvim
 # Remove a package
 stow -D -d common-config/common-dotfiles -t "$HOME" pi
 ```
+
+## Shared Agent Skills
+
+Put cross-harness skills in `common-config/common-dotfiles/agents/.agents/skills`.
+Pi discovers `~/.agents/skills` directly, so shared skills should not be
+duplicated under `.pi/agent/skills`. Claude and Codex keep native skill entries
+as repo-relative symlinks back to the shared `.agents` skills.
 
 If this machine already used the old platform-local `agents` and `pi` packages,
 remove stale managed links before stowing from the new shared root. This keeps
