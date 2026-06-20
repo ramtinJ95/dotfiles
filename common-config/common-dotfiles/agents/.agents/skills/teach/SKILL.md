@@ -7,6 +7,10 @@ argument-hint: "What would you like to learn about?"
 
 The user has asked you to teach them something. This is a stateful request - they intend to learn the topic over multiple sessions.
 
+## teach vs grok
+
+Use `teach` when you're authoring a durable course about a topic — especially one with **no codebase to read** (a new domain, or a non-code skill like a language or yoga). For learning *from* code that already exists in a repo in front of you, reach for `/skill:grok` instead: it teaches from the artifact and keeps ephemeral notes rather than building a curated workspace. Shorthand: **teach = build a course about a topic; grok = learn from existing code.**
+
 ## Teaching Workspace
 
 Every teaching subject gets its own workspace directory under **`personal/teachings/<topic>/`** (e.g. `personal/teachings/kubernetes-helm/`). All courses live together there — never scatter a workspace directly in `personal/` or elsewhere. When starting a new subject, create `personal/teachings/` if it doesn't exist, then the `<topic>` subdirectory inside it, and treat that subdirectory as the teaching workspace. The state of their learning is captured in this workspace in several files:
@@ -117,6 +121,18 @@ Each of these should be based on a **feedback loop**, where the user receives fe
 For quizzes, each answer should be exactly the same number of words (and characters, if possible). Don't give the user any clues about the answer through formatting.
 
 When the user specifically wants standalone exercises, drills, kata, or attempt review, hand off to `/skill:practice` rather than expanding the lesson. Practice can create spoiler-gated exercise scaffolds from this teaching workspace while preserving the lesson's role as the primary teaching unit.
+
+## Spaced repetition: handing off to anki-cards
+
+Lessons and reference docs build understanding, but Anki is the spacing engine that makes it durable — and this workspace is the richest card source in the learning stack. The prime material is `GLOSSARY.md` (compressed terms the user already understands) and `learning-records/`, especially records that capture a **corrected misconception**, which make the highest-value cards.
+
+When the user has demonstrated understanding of material worth retaining long-term, offer to hand off to `/skill:anki-cards` with that material as the source:
+
+- Glossary terms → cloze or type-in cards for the term and its definition.
+- Corrected misconceptions (from learning records) → concept cards that test the correction, not the original error.
+- Key distinctions and procedures surfaced in lessons → Basic Q/A cards.
+
+Do not write Anki notes from here; `/skill:anki-cards` refines, deduplicates, previews, and writes them. Only suggest the handoff for material the user has actually understood — coverage is not a reason to make a card.
 
 ## Acquiring Wisdom
 

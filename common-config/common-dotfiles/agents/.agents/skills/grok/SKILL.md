@@ -16,6 +16,10 @@ Use a depth dial instead of one fixed behavior:
 
 If the user invoked `/skill:grok quick ...`, `/skill:grok task ...`, or `/skill:grok deep ...`, use that mode. If the mode is unclear, infer from the request; ask only when the choice materially changes the session.
 
+## grok vs teach
+
+Use `grok` when the thing you're learning from **already exists as code you can read** — a repo, subsystem, library, or codebase. You learn *from* the artifact in front of you, and any notes are an ephemeral byproduct. Reach for `/skill:teach` instead when there's no codebase to read and you want a durable, authored course built from external sources (a new domain, or a non-code skill). Shorthand: **grok = learn from existing code; teach = build a course about a topic.**
+
 ## When to use each mode
 
 ### Quick coaching

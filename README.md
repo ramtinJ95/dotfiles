@@ -28,7 +28,7 @@ See [arch-config/arch-dotfiles/README.md](arch-config/arch-dotfiles/README.md) f
 ## What's Included
 
 ### Shared Configurations
-- **Agents** - Canonical user-level `.agents/skills` tree for shared skills
+- **Agents** - Canonical user-level `.agents/AGENTS.md` and `.agents/skills` tree for shared agent instructions and skills
 - **Pi** - Pi agent configuration, extensions, and skills
 
 ### macOS Specific
@@ -48,9 +48,10 @@ See [arch-config/arch-dotfiles/README.md](arch-config/arch-dotfiles/README.md) f
 
 ### Platform Packages With Similar Names
 
-Some packages exist in both platform trees but are not shared yet because their
-files still differ by operating system. That includes `claude`, `codex`, `git`,
-`kitty`, `nvim`, `starship`, `tmux`, and `yazi`.
+Some packages exist in both platform trees because most of their files still
+differ by operating system. `claude` and `codex` share their global instruction
+file through symlinks, but keep platform-specific commands, settings, runtime
+state, and skills in the platform trees for now.
 
 ## Theme
 
@@ -87,7 +88,19 @@ stow -d mac-config/mac-dotfiles -t "$HOME" nvim
 stow -D -d common-config/common-dotfiles -t "$HOME" pi
 ```
 
-## Shared Agent Skills
+## Shared Agent Instructions and Skills
+
+The canonical cross-harness instruction file is:
+
+```text
+common-config/common-dotfiles/agents/.agents/AGENTS.md
+```
+
+Harness-specific instruction paths symlink back to that file:
+
+- Pi: `common-config/common-dotfiles/pi/.pi/agent/AGENTS.md`
+- Claude Code: `mac-config/mac-dotfiles/claude/.claude/CLAUDE.md` and `arch-config/arch-dotfiles/claude/.claude/CLAUDE.md`
+- Codex: `mac-config/mac-dotfiles/codex/.codex/AGENTS.md` and `arch-config/arch-dotfiles/codex/.codex/AGENTS.md`
 
 Put cross-harness skills in `common-config/common-dotfiles/agents/.agents/skills`.
 Pi discovers `~/.agents/skills` directly, so shared skills should not be

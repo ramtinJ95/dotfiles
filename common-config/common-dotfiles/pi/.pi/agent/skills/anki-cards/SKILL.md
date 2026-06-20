@@ -6,11 +6,12 @@ disable-model-invocation: true
 
 # Anki Cards
 
-Use this skill when the user asks to create, inspect, deduplicate, import, or improve Anki cards from notes such as `scratch/LEARNING.md`, wiki pages, documentation, or a pasted learning summary.
+Use this skill when the user asks to create, inspect, deduplicate, import, or improve Anki cards from notes such as `scratch/LEARNING.md`, a `/skill:teach` workspace (`GLOSSARY.md`, `learning-records/`), wiki pages, documentation, or a pasted learning summary.
 
 This skill is intentionally separate from `/skill:grok`:
 
 - `/skill:grok` teaches, scaffolds, and records learning notes.
+- `/skill:teach` builds durable courses; its `GLOSSARY.md` and corrected-misconception learning records are prime card sources.
 - `/skill:practice` creates spoiler-gated exercises and can emit card candidates after attempts reveal mistakes or durable insights.
 - `/skill:anki-cards` turns selected learning material into high-quality Anki notes and manages existing cards.
 - Anki handles spaced-repetition scheduling; do not reimplement scheduling here.
@@ -110,6 +111,7 @@ Base card generation on these principles:
 
 2. **Read and extract candidates**
    - Pull out concepts, distinctions, procedures, misconceptions, examples, transfer questions, and source anchors.
+   - From a `/skill:teach` workspace, prioritize `GLOSSARY.md` terms and `learning-records/` (corrected misconceptions are highest value).
    - Ignore trivia, one-off file paths, giant summaries, and facts unlikely to be reviewed.
 
 3. **Inspect Anki setup**

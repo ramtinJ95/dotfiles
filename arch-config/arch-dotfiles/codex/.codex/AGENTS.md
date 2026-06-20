@@ -1,1 +1,1 @@
-../../claude/.claude/CLAUDE.md
+../../../../common-config/common-dotfiles/agents/.agents/AGENTS.md

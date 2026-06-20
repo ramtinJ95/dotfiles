@@ -8,10 +8,18 @@ they are intentionally split into shared files plus a small OS overlay.
 
 ## Packages
 
-- `agents/` - Canonical user-level `.agents/skills` tree for shared skills
+- `agents/` - Canonical user-level `.agents/AGENTS.md` and `.agents/skills` tree for shared agent instructions and skills
 - `pi/` - Pi agent configuration, extensions, and skills
 
-## Shared Skills
+## Shared Agent Instructions and Skills
+
+Cross-harness instructions live in `common-dotfiles/agents/.agents/AGENTS.md`.
+Each harness keeps the filename it expects, but links back to that canonical
+file:
+
+- Pi: `.pi/agent/AGENTS.md`
+- Claude Code: `.claude/CLAUDE.md`
+- Codex: `.codex/AGENTS.md`
 
 Cross-harness skills live in `common-dotfiles/agents/.agents/skills`. Pi loads
 that global skill directory directly through `~/.agents/skills`; do not add

@@ -1,6 +1,0 @@
-interface:
-  display_name: "Grok"
-  short_description: "Deep repo comprehension mode"
-  default_prompt: "Use $grok to understand this repo or subsystem deeply."
-policy:
-  allow_implicit_invocation: false
