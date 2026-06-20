@@ -11,6 +11,7 @@ Use this skill when the user asks to create, inspect, deduplicate, import, or im
 This skill is intentionally separate from `/skill:grok`:
 
 - `/skill:grok` teaches, scaffolds, and records learning notes.
+- `/skill:practice` creates spoiler-gated exercises and can emit card candidates after attempts reveal mistakes or durable insights.
 - `/skill:anki-cards` turns selected learning material into high-quality Anki notes and manages existing cards.
 - Anki handles spaced-repetition scheduling; do not reimplement scheduling here.
 

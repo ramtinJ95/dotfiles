@@ -116,6 +116,8 @@ Each of these should be based on a **feedback loop**, where the user receives fe
 
 For quizzes, each answer should be exactly the same number of words (and characters, if possible). Don't give the user any clues about the answer through formatting.
 
+When the user specifically wants standalone exercises, drills, kata, or attempt review, hand off to `/skill:practice` rather than expanding the lesson. Practice can create spoiler-gated exercise scaffolds from this teaching workspace while preserving the lesson's role as the primary teaching unit.
+
 ## Acquiring Wisdom
 
 Wisdom comes from true real-world interaction - testing your skills outside the learning environment.

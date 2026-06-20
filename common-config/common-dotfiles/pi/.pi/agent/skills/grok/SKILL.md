@@ -213,6 +213,8 @@ After a worked example or explanation, ask the user to transfer the idea. Exampl
 
 As the user demonstrates understanding, reduce examples and shift toward questions, review, and transfer tasks.
 
+If the user wants durable exercises or drills from the grok session, hand off to `/skill:practice`. Practice should use `scratch/LEARNING.md`, traced flows, misconceptions, and transfer questions as source material; it prepares spoiler-gated solutions and coaches attempts without revealing full answers too early.
+
 ## Notes artifact — `scratch/LEARNING.md`
 
 In deep grokking, first check for `scratch/LEARNING.md`. If it exists, read it and briefly orient the user on prior learning; offer a recall quiz on open questions. If it does not exist, ask before creating it.
