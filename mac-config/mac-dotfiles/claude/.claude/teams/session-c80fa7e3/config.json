@@ -1,0 +1,18 @@
+{
+  "name": "session-c80fa7e3",
+  "createdAt": 1781942108187,
+  "leadAgentId": "team-lead@session-c80fa7e3",
+  "leadSessionId": "c80fa7e3-2730-4deb-95cc-1cb4c2642def",
+  "members": [
+    {
+      "agentId": "team-lead@session-c80fa7e3",
+      "name": "team-lead",
+      "agentType": "team-lead",
+      "joinedAt": 1781942108187,
+      "tmuxPaneId": "leader",
+      "cwd": "/Users/ramtin/workspace/intric-infrastructure",
+      "subscriptions": [],
+      "backendType": "in-process"
+    }
+  ]
+}

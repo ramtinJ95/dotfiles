@@ -9,7 +9,7 @@ The user has asked you to teach them something. This is a stateful request - the
 
 ## Teaching Workspace
 
-Treat the current directory as a teaching workspace. The state of their learning is captured in this directory in several files:
+Every teaching subject gets its own workspace directory under **`personal/teachings/<topic>/`** (e.g. `personal/teachings/kubernetes-helm/`). All courses live together there — never scatter a workspace directly in `personal/` or elsewhere. When starting a new subject, create `personal/teachings/` if it doesn't exist, then the `<topic>` subdirectory inside it, and treat that subdirectory as the teaching workspace. The state of their learning is captured in this workspace in several files:
 
 - `MISSION.md`: A document capturing the _reason_ the user is interested in the topic. This should be used to ground all teaching. Use the format in [MISSION-FORMAT.md](./MISSION-FORMAT.md).
 - `./reference/*.html`: A directory of reference materials. These are the compressed learnings from the lessons - cheat sheets, reference algorithms, syntax, yoga poses, glossaries. They are the raw units of learning. They should be beautiful documents which print out well, and are designed for quick reference.
@@ -50,6 +50,8 @@ A lesson is the main thing you produce — the unit in which knowledge and skill
 
 A lesson should be **beautiful** — clean, readable typography and layout — since the user will return to these later to review. Think Tufte.
 
+Every lesson (and reference document) must support **both light and dark mode**, with a visible toggle the user can switch at any time. Implement this as a shared component in `./assets/` (a theme stylesheet driven by CSS variables plus a small toggle script), not inline per lesson — see [Assets](#assets). The toggle should follow the OS preference on first visit, remember the user's explicit choice across pages, and avoid a flash of the wrong theme on load.
+
 The lesson should be short, and completable very quickly. Learners' working memory is very small, and we need to stay within it. But each lesson should give the user a single tangible win that they can build on. It should be directly tied to the mission, and should be in the user's zone of proximal development.
 
 If possible, open the lesson file for the user by running a CLI command.
@@ -67,6 +69,11 @@ Lessons are built from reusable **components**, stored in `./assets/`: styleshee
 Reuse is the default, not the exception. Before authoring a lesson, read `./assets/` and build from the components already there. When a lesson needs something new and reusable, write it as a component in `./assets/` and link to it — never inline code a future lesson would duplicate.
 
 A shared stylesheet is the first component every workspace earns: every lesson links it, so the lessons look like one consistent course rather than a pile of one-offs. As the workspace grows, so should the component library.
+
+Two components every workspace should establish early, alongside the stylesheet:
+
+- **Light/dark theming.** Drive all colours through CSS custom properties in the shared stylesheet, with a `:root[data-theme="dark"]` palette override. Pair it with a small `theme.js` that sets the theme as early as possible (loaded in the page `<head>` to avoid a flash), respects `prefers-color-scheme` on first visit, persists the user's explicit choice in `localStorage`, and injects a floating toggle button. Each page then needs only one line — `<script src="../assets/theme.js"></script>` after the stylesheet link — to get the toggle. New surfaces added later must use the theme variables (never hard-coded colours) so they work in both modes.
+- A reusable interactive widget (e.g. a quiz engine) for the retrieval-practice feedback loops described under [Skills](#skills).
 
 ## The Mission
 
