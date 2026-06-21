@@ -1,7 +1,6 @@
 ---
 name: anki-cards
 description: Create, inspect, deduplicate, and improve high-quality Anki cards from learning notes, project notes, wiki pages, or selected source material using AnkiConnect. Manual invocation only.
-disable-model-invocation: true
 ---
 
 # Anki Cards

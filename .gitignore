@@ -15,6 +15,7 @@ arch-config/arch-dotfiles/claude/.claude/session-env/
 arch-config/arch-dotfiles/claude/.claude/sessions/
 arch-config/arch-dotfiles/claude/.claude/shell-snapshots/
 arch-config/arch-dotfiles/claude/.claude/telemetry/
+arch-config/arch-dotfiles/claude/.claude/teams/session-*/
 mac-config/mac-dotfiles/claude/.claude/.last-cleanup
 mac-config/mac-dotfiles/claude/.claude/.last-update-result.json
 mac-config/mac-dotfiles/claude/.claude/backups/
@@ -32,3 +33,4 @@ mac-config/mac-dotfiles/claude/.claude/session-env/
 mac-config/mac-dotfiles/claude/.claude/sessions/
 mac-config/mac-dotfiles/claude/.claude/shell-snapshots/
 mac-config/mac-dotfiles/claude/.claude/telemetry/
+mac-config/mac-dotfiles/claude/.claude/teams/session-*/
