@@ -193,6 +193,18 @@ Use tags that are stable and searchable. Avoid spaces in tags.
 
 If Anki rejects colon tags in the user's version/config, use hyphenated equivalents such as `source-grok`.
 
+## MyWiki-specific source tracking
+
+When creating cards from the user's MyWiki notes, always tag each card with:
+
+- `source:mywiki`
+- a stable source-file tag indicating the note file the card came from, e.g. `source:load-balancing`, `source:proxy-server`, `source:ch1-computer-networks`
+- relevant topic/type tags as usual
+
+Before creating cards while working from the MyWiki repository/cwd, inspect existing Anki cards for MyWiki source tags first. Use those tags to identify which source files have already been converted into cards, and avoid recreating cards from those files unless the user explicitly says the files have new material or asks for regeneration/improvement.
+
+If a MyWiki source file has changed since a previous import, prefer checking existing cards for that source tag and proposing updates, splits, or only new incremental cards rather than duplicating similar cards.
+
 ## Suggested deck conventions
 
 Use decks for broad review contexts, and tags for precise filtering.
