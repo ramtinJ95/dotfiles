@@ -8,6 +8,7 @@ hypr
 k9s
 kitty
 nvim
+omarchy
 scripts
 starship
 tmux

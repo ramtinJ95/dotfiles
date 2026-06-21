@@ -1,0 +1,39 @@
+#!/bin/bash
+
+set -e
+
+THEME_NAME=$1
+WAYBAR_CONFIG_DIR="$HOME/.config/waybar"
+LAVENDER_PROFILE_DIR="$HOME/.config/omarchy/waybar-profiles/lavender"
+PURPLE_DREAM_PROFILE_DIR="$HOME/.config/omarchy/waybar-profiles/purple-dream"
+THEMED_PROFILE_DIR="$HOME/.config/omarchy/waybar-profiles/themed"
+
+copy_if_changed() {
+  local source_file=$1
+  local target_file=$2
+
+  if [[ ! -f $target_file ]] || ! cmp -s "$source_file" "$target_file"; then
+    rm -f "$target_file"
+    cp "$source_file" "$target_file"
+    waybar_changed=1
+  fi
+}
+
+waybar_changed=0
+mkdir -p "$WAYBAR_CONFIG_DIR"
+
+if [[ $THEME_NAME == "lavender" ]]; then
+  copy_if_changed "$LAVENDER_PROFILE_DIR/config.jsonc" "$WAYBAR_CONFIG_DIR/config.jsonc"
+  copy_if_changed "$LAVENDER_PROFILE_DIR/style.css" "$WAYBAR_CONFIG_DIR/style.css"
+  copy_if_changed "$LAVENDER_PROFILE_DIR/colors.css" "$WAYBAR_CONFIG_DIR/colors.css"
+elif [[ $THEME_NAME == "purple-dream" ]]; then
+  copy_if_changed "$PURPLE_DREAM_PROFILE_DIR/config.jsonc" "$WAYBAR_CONFIG_DIR/config.jsonc"
+  copy_if_changed "$PURPLE_DREAM_PROFILE_DIR/style.css" "$WAYBAR_CONFIG_DIR/style.css"
+else
+  copy_if_changed "$THEMED_PROFILE_DIR/config.jsonc" "$WAYBAR_CONFIG_DIR/config.jsonc"
+  copy_if_changed "$THEMED_PROFILE_DIR/style.css" "$WAYBAR_CONFIG_DIR/style.css"
+fi
+
+if (( waybar_changed )) && pgrep -x waybar >/dev/null; then
+  omarchy restart waybar
+fi
