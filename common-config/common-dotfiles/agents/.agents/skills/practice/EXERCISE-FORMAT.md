@@ -2,7 +2,7 @@
 
 Saved exercises live in one of these roots:
 
-- Teaching workspace: `personal/teachings/<topic>/exercises/`
+- Teaching workspace: `~/personal/teachings/<topic>/exercises/`
 - Repo/task workspace: `scratch/exercises/`
 - User-specified path: use the requested path
 

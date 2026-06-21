@@ -13,7 +13,9 @@ Use `teach` when you're authoring a durable course about a topic — especially 
 
 ## Teaching Workspace
 
-Every teaching subject gets its own workspace directory under **`personal/teachings/<topic>/`** (e.g. `personal/teachings/kubernetes-helm/`). All courses live together there — never scatter a workspace directly in `personal/` or elsewhere. When starting a new subject, create `personal/teachings/` if it doesn't exist, then the `<topic>` subdirectory inside it, and treat that subdirectory as the teaching workspace. The state of their learning is captured in this workspace in several files:
+Every teaching subject gets its own workspace directory under the fixed home **`~/personal/teachings/<topic>/`** (e.g. `~/personal/teachings/kubernetes-helm/`) — always this absolute location, regardless of the current working directory when the skill is invoked. Never resolve the workspace relative to the cwd, and never scatter one into the repo you happen to be in: all courses live together under `~/personal/teachings/` so they accumulate in one findable place across sessions.
+
+When the user asks to work on a topic, resolve `~/personal/teachings/` first. If a `<topic>` workspace already exists there, treat the request as **resuming** that course: read its existing state (mission, learning records, notes, lessons) and continue from there rather than starting over. Otherwise create `~/personal/teachings/` if it doesn't exist, then the `<topic>` subdirectory inside it, and treat that subdirectory as the teaching workspace. The state of their learning is captured in this workspace in several files:
 
 - `MISSION.md`: A document capturing the _reason_ the user is interested in the topic. This should be used to ground all teaching. Use the format in [MISSION-FORMAT.md](./MISSION-FORMAT.md).
 - `./reference/*.html`: A directory of reference materials. These are the compressed learnings from the lessons - cheat sheets, reference algorithms, syntax, yoga poses, glossaries. They are the raw units of learning. They should be beautiful documents which print out well, and are designed for quick reference.

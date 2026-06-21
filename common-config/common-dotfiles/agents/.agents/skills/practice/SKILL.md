@@ -36,7 +36,7 @@ If the user asks for help before attempting, use the hint ladder instead of the 
 Ground exercise design in the best available source:
 
 1. **Grok context** — if `scratch/LEARNING.md` exists, read it for concepts learned, misconceptions corrected, traced flows, transfer questions, and card candidates.
-2. **Teach workspace** — if inside `personal/teachings/<topic>/`, read `MISSION.md`, `RESOURCES.md`, `learning-records/`, `reference/`, relevant `lessons/`, and `GLOSSARY.md` if present.
+2. **Teach workspace** — if inside `~/personal/teachings/<topic>/`, read `MISSION.md`, `RESOURCES.md`, `learning-records/`, `reference/`, relevant `lessons/`, and `GLOSSARY.md` if present.
 3. **Repo context** — for codebase exercises, inspect relevant code/tests/docs first. Cite `file:line` anchors in prompts, rubrics, and explanations when making claims about this repo.
 4. **Provided material** — use pasted notes, docs, wiki pages, plans, or user-selected source text.
 5. **External docs** — use `npx ctx7` for current framework/library behavior when version-correct details matter. Use web/deep research only for broader or ambiguous topics that local sources cannot answer.
@@ -143,8 +143,8 @@ Use dash-case names. For sequential exercise folders, scan existing siblings and
 Examples:
 
 - `scratch/exercises/0001-trace-auth-request/`
-- `personal/teachings/go-context/exercises/0003-cancel-a-worker/`
-- `personal/teachings/typescript/exercises/02-generics/02.03-infer-a-result-type/`
+- `~/personal/teachings/go-context/exercises/0003-cancel-a-worker/`
+- `~/personal/teachings/typescript/exercises/02-generics/02.03-infer-a-result-type/`
 
 ## Integration with grok
 
