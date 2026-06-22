@@ -1,6 +1,6 @@
 ---
 name: conventional-commit
-description: Create properly formatted conventional commits with type prefixes and optional scope
+description: Create conventional commits with optional scopes.
 ---
 
 # Conventional Commit Skill

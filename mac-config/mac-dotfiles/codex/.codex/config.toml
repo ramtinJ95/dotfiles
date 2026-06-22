@@ -1,6 +1,6 @@
 model = "gpt-5.5"
 model_provider = "openai"
-model_reasoning_effort = "low"
+model_reasoning_effort = "high"
 model_verbosity = "medium"
 
 sandbox_mode = "danger-full-access"
@@ -122,6 +122,15 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/Users/ramtin/personal/go-practice/basics"]
+trust_level = "trusted"
+
+[projects."/Users/ramtinjavanmardi/workspace/analytics-platform"]
+trust_level = "trusted"
+
+[projects."/Users/ramtinjavanmardi/workspace/prefect-data-flows"]
+trust_level = "trusted"
+
+[projects."/Users/ramtinjavanmardi/workspace/data-platform-infrastructure"]
 trust_level = "trusted"
 
 [marketplaces.openai-bundled]

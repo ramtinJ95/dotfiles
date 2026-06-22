@@ -1,12 +1,14 @@
-## Conversational style
+# Workspace rules
 
-* Technical prose only, be direct
+## Style
 
-## Code Quality
+* For technical work, use concise technical prose.
 
-* Read files in full before wide-ranging changes, before editing files you have not fully inspected, and when asked to investigate or audit. Do not rely on search snippets for broad changes.
-* Do not preserve backward compatibility unless the user asks for it.
-* Inline single-line helpers that have only one call site.
-* Never remove or downgrade code to fix type errors from outdated deps; upgrade the dep instead.
-* Prefer descriptive function/method and variable names over comments.
-* Only add comments for non-obvious constraints or rationale the code cannot express.
+## Code quality
+
+* Read files in full before broad changes, audits, or editing unfamiliar files.
+* Do not preserve backward compatibility unless asked.
+* Inline single-use single-line helpers.
+* Fix type errors from outdated dependencies by upgrading dependencies, not downgrading code.
+* Prefer descriptive names over comments.
+* Add comments only for non-obvious constraints or rationale.

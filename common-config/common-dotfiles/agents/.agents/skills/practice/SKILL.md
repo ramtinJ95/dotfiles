@@ -1,6 +1,6 @@
 ---
 name: practice
-description: Create and coach exercises from grok sessions, teach workspaces, repo context, notes, docs, or standalone topic requests. Prepares solutions but gates reveal until the user has attempted and used hints.
+description: Create coached exercises from notes, repos, docs, or topics. Reveal solutions only after attempts/hints.
 argument-hint: "What should we practice?"
 ---
 
