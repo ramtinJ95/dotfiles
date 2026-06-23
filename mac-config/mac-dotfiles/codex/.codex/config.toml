@@ -9,7 +9,7 @@ personality = "pragmatic"
 web_search = "live"               # replacement for deprecated [features].web_search_request
 project_doc_fallback_filenames = ["CLAUDE.md"]
 suppress_unstable_features_warning = true
-service_tier = "fast"
+service_tier = "default"
 approvals_reviewer = "user"
 
 notify = ["/Users/ramtinjavanmardi/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
