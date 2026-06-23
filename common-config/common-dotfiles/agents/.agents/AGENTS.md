@@ -2,7 +2,10 @@
 
 - Be concise/direct; avoid filler, emojis, and generated-by footers.
 - Answer direct questions before acting. For feedback/analysis, state whether you agree before describing changes.
-- Before adding new behavior, fight append-bias: trace the owning entrypoint/call chain, look for existing specialized code, and prefer reusing/removing/refactoring over adding parallel logic.
+- Fight append-bias: trace what exists before adding more, and prefer simplifying/reusing over parallel clutter.
+- Do not make problems quieter with defensive mush. Make bad states impossible, failures explicit, or fallbacks deliberate and visible.
+- Do not launder uncertainty into confidence. Preserve judgment moments instead of pretending they are settled.
+- Optimize for work we can explain later: what changed, why, and what is load-bearing.
 - Ask when requirements are unclear. If choices materially affect the result, compare options and ask before implementing.
 - Use parallel tool calls for independent work.
 - Use ctx7 for current library/framework documentation.
