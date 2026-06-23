@@ -41,106 +41,71 @@ const categories = [
 const researchModes = ["deep", "deep-reasoning"] as const;
 
 const sharedParameters = Type.Object({
-	query: Type.String({
-		description: "Research task/query.",
-	}),
+	query: Type.String(),
 	mode: Type.Optional(
 		StringEnum(researchModes, {
 			default: "deep",
-			description: '"deep" default; "deep-reasoning" for ambiguity/conflicts/high stakes.',
+			description: "default deep; deep-reasoning for requested reasoning, ambiguity/conflicts/high stakes",
 		}),
 	),
 	numResults: Type.Optional(
 		Type.Number({
 			minimum: 1,
 			maximum: 100,
-			description: "Results to consider; default 10.",
+			description: "default 10",
 		}),
 	),
-	category: Type.Optional(
-		StringEnum(categories, {
-			description: "Optional source category filter.",
-		}),
-	),
-	includeDomains: Type.Optional(
-		Type.Array(Type.String(), {
-			description: "Only include these domains.",
-		}),
-	),
-	excludeDomains: Type.Optional(
-		Type.Array(Type.String(), {
-			description: "Exclude these domains.",
-		}),
-	),
-	startPublishedDate: Type.Optional(
-		Type.String({
-			description: "Published after ISO date/time.",
-		}),
-	),
-	endPublishedDate: Type.Optional(
-		Type.String({
-			description: "Published before ISO date/time.",
-		}),
-	),
+	category: Type.Optional(StringEnum(categories)),
+	includeDomains: Type.Optional(Type.Array(Type.String())),
+	excludeDomains: Type.Optional(Type.Array(Type.String())),
+	startPublishedDate: Type.Optional(Type.String()),
+	endPublishedDate: Type.Optional(Type.String()),
 	maxAgeHours: Type.Optional(
 		Type.Number({
-			description: "Cache age hours: 0 live, -1 cache.",
+			description: "0 live; -1 cache",
 		}),
 	),
-	additionalQueries: Type.Optional(
-		Type.Array(Type.String(), {
-			description: "Extra query variants.",
-		}),
-	),
-	systemPrompt: Type.Optional(
-		Type.String({
-			description: "Extra synthesis instructions.",
-		}),
-	),
+	additionalQueries: Type.Optional(Type.Array(Type.String())),
+	systemPrompt: Type.Optional(Type.String()),
 	outputSchema: Type.Optional(
 		Type.Object(
 			{},
 			{
 				additionalProperties: true,
-				description: "Optional structured output schema.",
 			},
 		),
 	),
 	textMaxCharacters: Type.Optional(
 		Type.Number({
 			minimum: 1,
-			description: "Max page text chars/result.",
+			description: "max page text chars/result",
 		}),
 	),
 	highlightMaxCharacters: Type.Optional(
 		Type.Number({
 			minimum: 1,
-			description: "Max highlight chars/result; default 2000.",
+			description: "max highlight chars/result",
 		}),
 	),
 	subpages: Type.Optional(
 		Type.Number({
 			minimum: 0,
-			description: "Subpages per result.",
+			description: "subpages/result",
 		}),
 	),
 	subpageTarget: Type.Optional(
 		Type.Array(Type.String(), {
-			description: "Subpage target keywords.",
+			description: "subpage keywords",
 		}),
 	),
 	userLocation: Type.Optional(
 		Type.String({
 			minLength: 2,
 			maxLength: 2,
-			description: "ISO country code, e.g. US.",
+			description: "2-letter country code",
 		}),
 	),
-	moderation: Type.Optional(
-		Type.Boolean({
-			description: "Enable Exa moderation.",
-		}),
-	),
+	moderation: Type.Optional(Type.Boolean()),
 });
 
 type DeepResearchParams = Static<typeof sharedParameters>;
@@ -208,13 +173,10 @@ interface ExaGroundingField {
 const toolConfig: ToolConfig = {
 	name: "deep_research",
 	label: "Deep Research",
-	description:
-		'Run Exa deep research. Use mode="deep" by default for substantial multi-source research; use mode="deep-reasoning" for ambiguous, conflicting, high-stakes, or judgment-heavy research.',
-	promptSnippet:
-		'Run serious multi-source grounded research. mode="deep" is the default; mode="deep-reasoning" spends extra effort on ambiguity, conflicts, and high-stakes judgment.',
+	description: "Run Exa deep research.",
+	promptSnippet: "Run grounded multi-source research.",
 	promptGuidelines: [
-		'deep_research: Use mode="deep" for substantial multi-source research.',
-		'deep_research: Switch to mode="deep-reasoning" only for ambiguity, conflicting sources, high-stakes claims, or judgment-heavy tradeoffs.',
+		"deep_research: Use deep-reasoning for user-requested deep reasoning, ambiguity, conflicts, high stakes, or judgment-heavy tradeoffs.",
 	],
 };
 
