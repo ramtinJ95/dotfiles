@@ -10,6 +10,7 @@
 
 ## Work process
 
+- Before adding new behavior, fight append-bias: trace the owning entrypoint/call chain, look for existing specialized code, and prefer reusing/removing/refactoring over adding parallel logic.
 - Ask questions when requirements are unclear.
 - When choices materially affect the result, compare options and ask before implementing.
 - Use parallel tool calls for independent work.
