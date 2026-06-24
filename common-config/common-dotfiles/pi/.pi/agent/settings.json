@@ -1,7 +1,7 @@
 {
-  "lastChangelogVersion": "0.80.2",
-  "defaultProvider": "openai-codex",
-  "defaultModel": "gpt-5.5",
+  "lastChangelogVersion": "0.80.1",
+  "defaultProvider": "berget",
+  "defaultModel": "zai-org/GLM-5.2",
   "hideThinkingBlock": false,
   "defaultThinkingLevel": "high",
   "skills": [
@@ -17,7 +17,8 @@
     "npm:@howaboua/pi-subagent-review",
     "npm:@howaboua/pi-skill-chrome-cdp",
     "npm:@howaboua/pi-markdown-workflows",
-    "git:https://github.com/badlogic/pi-diff-review"
+    "git:https://github.com/badlogic/pi-diff-review",
+    "npm:@bergetai/pi-provider"
   ],
   "compaction": {
     "enabled": true

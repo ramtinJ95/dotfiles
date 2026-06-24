@@ -68,6 +68,17 @@ Each lesson should recommend a primary source for the user to read or watch. Thi
 
 Each lesson should contain a reminder to ask followup questions to the agent. The agent is their teacher, and can assist with anything that's unclear.
 
+### Lesson structure: lean core + "Going deeper"
+
+Lessons are **tiered**, so depth never costs working memory. Two layers:
+
+- **The core lesson** stays short and completable in one sitting, delivering the single tangible win — the part above still governs it. Do not pad it. A learner who reads only the core should get the whole win cleanly, start to finish.
+- **A "Going deeper" section** follows the core (after the quizzes / recall / tangible-win, alongside the primary-source and ask-teacher blocks), visibly fenced off (e.g. an `<hr>` then an `## Going deeper` heading) and explicitly optional. It holds 2–4 subsections at full reference depth: the mechanism under the mechanism, edge cases and caveats, comparison tables, and the answers to the natural follow-up questions a sharp learner asks. This is durable reading the user returns to, so it can be dense — the working-memory constraint that binds the core does not bind here.
+
+Prime sources for "Going deeper" subsections: the follow-up questions the user actually asked in session (capture the good ones rather than letting them evaporate in chat), and the topics the "ask your teacher" prompt raised once they've been answered. When a session produces a strong explanation of an important question, fold it into the lesson's "Going deeper" rather than leaving it only in the conversation.
+
+Keep the two layers distinct: enriching "Going deeper" is not licence to bloat the core. If the core is creeping longer, the new material almost always belongs below the fence.
+
 ## Assets
 
 Lessons are built from reusable **components**, stored in `./assets/`: stylesheets, quiz widgets, simulators, diagram helpers — anything a second lesson could reuse.
@@ -133,6 +144,8 @@ When the user has demonstrated understanding of material worth retaining long-te
 - Glossary terms → cloze or type-in cards for the term and its definition.
 - Corrected misconceptions (from learning records) → concept cards that test the correction, not the original error.
 - Key distinctions and procedures surfaced in lessons → Basic Q/A cards.
+
+Cards come from the **lean core** of a lesson by default — the material carrying the tangible win. A lesson's "Going deeper" section is reference depth, not a default retrieval target; only source cards from it when the user explicitly asks for deeper coverage of that lesson.
 
 Do not write Anki notes from here; `/skill:anki-cards` refines, deduplicates, previews, and writes them. Only suggest the handoff for material the user has actually understood — coverage is not a reason to make a card.
 

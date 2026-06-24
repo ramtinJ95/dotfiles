@@ -111,6 +111,7 @@ Base card generation on these principles:
 2. **Read and extract candidates**
    - Pull out concepts, distinctions, procedures, misconceptions, examples, transfer questions, and source anchors.
    - From a `/skill:teach` workspace, prioritize `GLOSSARY.md` terms and `learning-records/` (corrected misconceptions are highest value).
+   - From a `/skill:teach` **lesson**, draw cards from the **lean core** of the lesson by default — the part carrying the tangible win. A lesson's fenced **"Going deeper"** section is dense reference reading, not a default retrieval target; do **not** mine it for cards unless the user explicitly asks for deeper coverage on that lesson. (Rationale: the core is what should stick; promoting Going-deeper material to spaced repetition is an opt-in, not the default.)
    - Ignore trivia, one-off file paths, giant summaries, and facts unlikely to be reviewed.
 
 3. **Inspect Anki setup**
