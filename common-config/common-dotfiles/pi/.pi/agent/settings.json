@@ -1,9 +1,9 @@
 {
-  "lastChangelogVersion": "0.80.1",
-  "defaultProvider": "berget",
-  "defaultModel": "zai-org/GLM-5.2",
+  "lastChangelogVersion": "0.80.2",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.5",
   "hideThinkingBlock": false,
-  "defaultThinkingLevel": "high",
+  "defaultThinkingLevel": "xhigh",
   "skills": [
     "-skills/jira-create-tasks/SKILL.md",
     "-skills/playwriter/SKILL.md"
