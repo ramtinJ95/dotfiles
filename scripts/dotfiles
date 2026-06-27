@@ -40,6 +40,7 @@ Commands:
   restow mac          Restow common and macOS user packages into $HOME
   restow arch         Restow common and Arch user packages into $HOME
   restow arch-system  Restow Arch system packages into /
+  install-herdr arch   Install Herdr from the AUR, or the official installer when no AUR helper exists
 EOF
 }
 
@@ -194,6 +195,30 @@ run_profile() {
     [[ "$failures" -eq 0 ]]
 }
 
+install_herdr_arch() {
+    failures=0
+
+    if command -v herdr >/dev/null 2>&1; then
+        pass "herdr already installed: $(herdr --version 2>/dev/null || printf 'version unknown')"
+        return 0
+    fi
+
+    if command -v paru >/dev/null 2>&1; then
+        info "install herdr-bin with paru"
+        paru -S --needed herdr-bin || fail "failed to install herdr-bin with paru"
+    elif command -v yay >/dev/null 2>&1; then
+        info "install herdr-bin with yay"
+        yay -S --needed herdr-bin || fail "failed to install herdr-bin with yay"
+    elif command -v curl >/dev/null 2>&1; then
+        info "install herdr with official installer"
+        curl -fsSL https://herdr.dev/install.sh | sh || fail "failed to install herdr with official installer"
+    else
+        fail "no AUR helper or curl found; install herdr-bin with paru/yay or run: curl -fsSL https://herdr.dev/install.sh | sh"
+    fi
+
+    [[ "$failures" -eq 0 ]]
+}
+
 check_broken_symlinks() {
     local root
     for root in "$COMMON_DIR" "$MAC_DIR" "$ARCH_DIR"; do
@@ -290,6 +315,13 @@ doctor() {
 case "${1:-}" in
     doctor)
         doctor
+        ;;
+    install-herdr)
+        if [[ $# -ne 2 || "$2" != "arch" ]]; then
+            usage >&2
+            exit 2
+        fi
+        install_herdr_arch
         ;;
     stow|restow)
         if [[ $# -ne 2 ]]; then

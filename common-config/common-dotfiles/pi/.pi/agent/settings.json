@@ -3,7 +3,7 @@
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.5",
   "hideThinkingBlock": false,
-  "defaultThinkingLevel": "xhigh",
+  "defaultThinkingLevel": "high",
   "skills": [
     "-skills/jira-create-tasks/SKILL.md",
     "-skills/playwriter/SKILL.md"

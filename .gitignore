@@ -16,6 +16,10 @@ arch-config/arch-dotfiles/claude/.claude/sessions/
 arch-config/arch-dotfiles/claude/.claude/shell-snapshots/
 arch-config/arch-dotfiles/claude/.claude/telemetry/
 arch-config/arch-dotfiles/claude/.claude/teams/session-*/
+common-config/common-dotfiles/herdr/.config/herdr/*.log
+common-config/common-dotfiles/herdr/.config/herdr/*.sock
+common-config/common-dotfiles/herdr/.config/herdr/session*.json
+common-config/common-dotfiles/herdr/.config/herdr/*.pre-dotfiles-*
 mac-config/mac-dotfiles/claude/.claude/.last-cleanup
 mac-config/mac-dotfiles/claude/.claude/.last-update-result.json
 mac-config/mac-dotfiles/claude/.claude/backups/

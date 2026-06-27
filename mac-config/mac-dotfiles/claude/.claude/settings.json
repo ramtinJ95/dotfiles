@@ -1,33 +1,45 @@
 {
+  "autoDreamEnabled": true,
+  "autoMemoryEnabled": true,
+  "editorMode": "vim",
+  "effortLevel": "high",
   "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
-    "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1"
-  },
-  "permissions": {
-    "defaultMode": "bypassPermissions"
+    "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash",
         "hooks": [
           {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/guard_infra_commands.py"
+            "command": "$HOME/.claude/hooks/guard_infra_commands.py",
+            "type": "command"
           }
-        ]
+        ],
+        "matcher": "Bash"
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "bash '/Users/ramtin/.claude/hooks/herdr-agent-state.sh' session",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
       }
     ]
   },
-  "statusLine": {
-    "type": "command",
-    "command": "~/.claude/statusline.sh"
+  "permissions": {
+    "defaultMode": "bypassPermissions"
   },
-  "effortLevel": "high",
-  "autoMemoryEnabled": true,
-  "autoDreamEnabled": true,
   "skipDangerousModePermissionPrompt": true,
-  "theme": "dark",
-  "editorMode": "vim",
-  "switchModelsOnFlag": false
+  "statusLine": {
+    "command": "~/.claude/statusline.sh",
+    "type": "command"
+  },
+  "switchModelsOnFlag": false,
+  "theme": "dark"
 }

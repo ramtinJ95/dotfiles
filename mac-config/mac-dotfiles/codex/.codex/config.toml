@@ -15,6 +15,7 @@ approvals_reviewer = "user"
 notify = ["/Users/ramtin/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
 
 [features]
+hooks = true
 view_image_tool = true            # enable the view image tool
 multi_agent = true
 child_agents_md = true

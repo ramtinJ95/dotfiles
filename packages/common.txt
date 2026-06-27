@@ -1,3 +1,4 @@
 agents
+herdr
 pi
 workspace-agent
