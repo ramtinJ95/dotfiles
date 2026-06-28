@@ -1,9 +1,20 @@
+import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import type { ExtensionAPI, Theme } from "@earendil-works/pi-coding-agent";
 import { createBashTool } from "@earendil-works/pi-coding-agent";
 import { Key, matchesKey, truncateToWidth, visibleWidth, wrapTextWithAnsi, type TUI } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 
 const INFRA_PATTERN_GLOBAL = /\b(?:kubectl|terraform)\b/i;
+const REQUEST_SOUND_PATH = fileURLToPath(new URL("./sounds/peon-something-need-doing.mp3", import.meta.url));
+
+function playApprovalRequestSound(): void {
+	if (process.platform !== "darwin") return;
+	const child = spawn("afplay", [REQUEST_SOUND_PATH], { detached: true, stdio: "ignore" });
+	child.on("error", () => {});
+	child.unref();
+}
+
 
 const SHELL_RUNNERS = new Set([
 	"sh",
@@ -1039,6 +1050,7 @@ export default function createExtension(pi: ExtensionAPI) {
 				};
 			}
 
+			playApprovalRequestSound();
 			const approved = await requestInfraApproval(
 				ctx,
 				{ summary: params.summary, flags: params.flags, blastRadius: params.blastRadius },
