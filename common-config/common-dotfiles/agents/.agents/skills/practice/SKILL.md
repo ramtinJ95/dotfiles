@@ -1,14 +1,12 @@
 ---
 name: practice
-description: Create coached exercises from notes, repos, docs, or topics. Reveal solutions only after attempts/hints.
+description: Create coached exercises and review attempts from notes, repos, docs, or topics. Gate solutions until a genuine attempt, exhausted hints, or explicit reveal.
 argument-hint: "What should we practice?"
 ---
 
 # Practice
 
-Use this skill when the user wants exercises, drills, kata, practice problems, quizzes with feedback, repo tasks for learning, or review of an attempted answer.
-
-The deliverable is **practice with protected thinking time**. Prepare complete solutions, rubrics, and hints, but do not reveal the full solution until the user has made a genuine attempt, exhausted useful hints, or explicitly asks to reveal/exit practice mode.
+The deliverable is **practice with protected thinking time**: turn understood or selected material into exercises and coach attempts.
 
 This skill is intentionally separate from `/skill:teach` and `/skill:grok`:
 
@@ -17,30 +15,36 @@ This skill is intentionally separate from `/skill:teach` and `/skill:grok`:
 - `/skill:practice` turns understood or selected material into exercises and coaches attempts.
 - `/skill:anki-cards` turns durable learning material into Anki notes; do not manage Anki here.
 
-## Core rule: prepared but gated solutions
+## The gate
 
-For every saved exercise, create a complete solution at `solution/SPOILER-solution.md`. The file may exist on disk, but the assistant must not print, summarize, quote, or walk through the full solution before the learner has attempted the exercise unless the user explicitly says something like:
+The solution is **gated**: prepared in full but withheld until the gate opens. For every saved exercise, create a complete solution at `solution/SPOILER-solution.md`, but never print, summarize, quote, or walk through it while the gate is closed.
 
-- "show solution"
-- "reveal"
-- "exit practice mode"
-- "I want the answer now"
+The gate opens when the user has made a **genuine attempt** — code, a written answer, a design sketch, a debugging hypothesis, a partial solution, or a clear account of where they got stuck after thinking — or explicitly asks to open it ("show solution", "reveal", "exit practice mode", "I want the answer now").
 
-A genuine attempt can be code, a written answer, a design sketch, a debugging hypothesis, a partial solution, or a clear explanation of where the user got stuck after thinking.
+While the gate is closed and the user asks for help, climb the hint ladder instead. If one or two hints don't unstick them, shrink the task or give a worked analogy — not the answer.
 
-If the user asks for help before attempting, use the hint ladder instead of the solution. If the user keeps struggling after one or two hints, switch to a smaller worked analogy or partial scaffold, not the full answer.
+## Sources & integrations
 
-## Exercise sources
+Ground every exercise in the best available source, and honor each source's conventions. Do not invent repo behavior; flag assumptions.
 
-Ground exercise design in the best available source:
+- **Grok** — if `scratch/LEARNING.md` exists, read it and prefer exercises from its *Misconceptions corrected*, *Transfer questions*, *Traced flows*, and *Card candidates*. Use repo-grounded tasks with `file:line` anchors. Default saved exercises to `scratch/exercises/`. Don't solve the user's real ticket while the gate is closed.
+- **Teach** — if inside `~/personal/teachings/<topic>/`, read `MISSION.md` (keep exercises mission-relevant), `learning-records/`, `reference/`, relevant `lessons/`, and `GLOSSARY.md` if present (calibrate difficulty and terminology); link prompts to lessons/reference when helpful. Default saved exercises to the workspace `exercises/`. If an exercise reveals new understanding, suggest a learning record — confirm before writing.
+- **Repo** — inspect relevant code/tests/docs first; cite `file:line` anchors in prompts, rubrics, and explanations.
+- **Provided material** — pasted notes, docs, wiki pages, plans, or user-selected text.
+- **External docs** — `npx ctx7` for version-correct framework/library behavior; web/deep research only for broader or ambiguous topics local sources can't answer.
+- **Anki** — never write Anki notes here. After an attempt or solution review, emit card candidates when useful (template below); `/skill:anki-cards` later refines, dedupes, and writes them.
 
-1. **Grok context** — if `scratch/LEARNING.md` exists, read it for concepts learned, misconceptions corrected, traced flows, transfer questions, and card candidates.
-2. **Teach workspace** — if inside `~/personal/teachings/<topic>/`, read `MISSION.md`, `RESOURCES.md`, `learning-records/`, `reference/`, relevant `lessons/`, and `GLOSSARY.md` if present.
-3. **Repo context** — for codebase exercises, inspect relevant code/tests/docs first. Cite `file:line` anchors in prompts, rubrics, and explanations when making claims about this repo.
-4. **Provided material** — use pasted notes, docs, wiki pages, plans, or user-selected source text.
-5. **External docs** — use `npx ctx7` for current framework/library behavior when version-correct details matter. Use web/deep research only for broader or ambiguous topics that local sources cannot answer.
+```md
+## Card candidates
+- Type: misconception | procedure | distinction | concept | code | cloze
+  Prompt idea: ...
+  Key answer points:
+  - ...
+  Source: ...
+  Tags: ...
+```
 
-Do not invent repo behavior. Flag assumptions clearly.
+Focus card candidates on mistakes, distinctions, procedures, and transfer insights surfaced by practice.
 
 ## Output modes
 
@@ -54,9 +58,7 @@ Use when the user wants a quick exercise in chat. Provide:
 - constraints
 - deliverable
 - first hint only if requested
-- statement that a solution can be revealed later
-
-Do not display the solution in the initial exercise.
+- a note that a gated solution can be opened later
 
 ### Saved exercise scaffold
 
@@ -68,23 +70,9 @@ Follow [EXERCISE-FORMAT.md](./EXERCISE-FORMAT.md). Default roots:
 - In a repo or task context: `scratch/exercises/`
 - Elsewhere: ask for a target path or stay conversational
 
-Default shape:
-
-```txt
-0001-exercise-name/
-  prompt.md
-  hints.md
-  rubric.md
-  explainer.md
-  solution/
-    SPOILER-solution.md
-  starter/   # optional
-  tests/     # optional
-```
-
 ### Attempt review
 
-Use when the user submits an answer, patch, plan, or explanation. Compare against the rubric and prepared solution without revealing more than needed.
+Use when the user submits an answer, patch, plan, or explanation. Compare against the rubric and prepared solution without opening the gate.
 
 Response shape:
 
@@ -93,8 +81,6 @@ Response shape:
 - **Smallest mismatch** — name the most important gap.
 - **Next hint** — give the next useful nudge, not the full answer.
 - **Rubric check** — optional concise pass/partial/missing bullets.
-
-Only reveal the full solution after the user asks or after the exercise has reached a natural review point.
 
 ## Exercise design principles
 
@@ -107,7 +93,7 @@ Only reveal the full solution after the user asks or after the exercise has reac
 - **Progressive scaffolding.** Hints should move from orientation to invariants to approach shape to partial scaffold.
 - **No hidden gotchas.** Difficulty should come from the concept, not ambiguous wording.
 - **Code exercises should be runnable when practical.** If creating starter code or tests, run the relevant formatter/test/lint when safe and available.
-- **Respect the learning mode.** Do not hand over pasteable answers unless the user explicitly exits practice mode.
+- **Respect the gate.** No pasteable answers while it is closed.
 
 ## Hint ladder
 
@@ -118,7 +104,7 @@ Escalate one rung at a time, ideally after each user attempt:
 3. **Approach shape** — the broad strategy.
 4. **Worked analogy** — a tiny analogous example that does not solve the exact exercise.
 5. **Partial scaffold** — pseudocode, blanks, or a near-solution checkpoint.
-6. **Solution reveal** — only after attempt/hints or explicit user request.
+6. **Solution reveal** — only once the gate opens.
 
 If the same issue persists after one or two hints, reduce the task size or switch to a worked analogy.
 
@@ -129,7 +115,7 @@ If the same issue persists after one or two hints, reduce the task size or switc
 3. **Pick exercise type** — recall, transfer, debugging, implementation, design, explanation, refactor, test-writing, or mixed.
 4. **Create scaffold** — prompt, hints, rubric, explainer, spoiler solution, and optional starter/tests.
 5. **Validate if applicable** — run safe tests/formatters/linters for generated code or tests.
-6. **Present only learner-facing paths** — show `prompt.md`, `hints.md`, and `rubric.md`; mention that a spoiler solution exists but do not summarize it.
+6. **Present only learner-facing paths** — show `prompt.md`, `hints.md`, and `rubric.md`; note the gated solution exists.
 7. **Coach the attempt** — use attempt review and hint ladder.
 8. **Post-attempt consolidation** — after review, suggest card candidates or learning-record updates when useful.
 
@@ -144,48 +130,3 @@ Examples:
 - `scratch/exercises/0001-trace-auth-request/`
 - `~/personal/teachings/go-context/exercises/0003-cancel-a-worker/`
 - `~/personal/teachings/typescript/exercises/02-generics/02.03-infer-a-result-type/`
-
-## Integration with grok
-
-When the user asks for practice after a grok session:
-
-- Read `scratch/LEARNING.md` if present.
-- Prefer exercises from `Misconceptions corrected`, `Transfer questions`, `Traced flows`, and `Card candidates`.
-- Use repo-grounded tasks with file anchors when practicing a codebase.
-- Default to `scratch/exercises/` for saved exercises.
-- Do not solve the user's real ticket for them unless they exit practice mode.
-
-## Integration with teach
-
-When the user asks for practice in a teaching workspace:
-
-- Read `MISSION.md` to keep exercises mission-relevant.
-- Use `learning-records/` and `GLOSSARY.md` to calibrate difficulty and terminology.
-- Link prompts to relevant `lessons/` and `reference/` docs when helpful.
-- Default to the workspace `exercises/` directory.
-- If an exercise reveals a new understanding, suggest a learning record. Confirm before writing one.
-
-## Integration with anki-cards
-
-Do not write to Anki from this skill. After an attempt or solution review, emit concise card candidates when useful:
-
-```md
-## Card candidates
-- Type: misconception | procedure | distinction | concept | code | cloze
-  Prompt idea: ...
-  Key answer points:
-  - ...
-  Source: ...
-  Tags: ...
-```
-
-Focus card candidates on mistakes, distinctions, procedures, and transfer insights surfaced by practice. `/skill:anki-cards` can later refine, deduplicate, preview, and write cards.
-
-## What not to do
-
-- Do not reveal the full solution in the initial prompt.
-- Do not make exercises from ungrounded guesses when source material is available.
-- Do not create large courses; that is `/skill:teach`.
-- Do not turn every fact into a drill; prefer high-value transfer and misconception practice.
-- Do not write Anki notes directly.
-- Do not automatically commit generated exercise files.
