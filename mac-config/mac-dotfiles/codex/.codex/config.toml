@@ -126,17 +126,14 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [marketplaces.openai-bundled]
-last_updated = "2026-06-14T16:35:32Z"
+last_updated = "2026-06-29T19:49:57Z"
 source_type = "local"
 source = "/Users/ramtin/.codex/.tmp/bundled-marketplaces/openai-bundled"
 
 [marketplaces.openai-primary-runtime]
-last_updated = "2026-06-14T16:35:58Z"
+last_updated = "2026-06-29T20:24:07Z"
 source_type = "local"
 source = "/Users/ramtin/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
-
-[plugins."browser@openai-bundled"]
-enabled = true
 
 [plugins."documents@openai-primary-runtime"]
 enabled = true
@@ -147,6 +144,15 @@ enabled = true
 [plugins."presentations@openai-primary-runtime"]
 enabled = true
 
+[plugins."browser@openai-bundled"]
+enabled = true
+
+[plugins."pdf@openai-primary-runtime"]
+enabled = true
+
+[plugins."template-creator@openai-primary-runtime"]
+enabled = true
+
 [mcp_servers.node_repl]
 args = []
 command = "/Applications/Codex.app/Contents/Resources/cua_node/bin/node_repl"
@@ -154,17 +160,25 @@ startup_timeout_sec = 120
 
 [mcp_servers.node_repl.env]
 NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
-NODE_REPL_NODE_MODULE_DIRS = "/Applications/Codex.app/Contents/Resources/app.asar.unpacked/node_modules:/Applications/Codex.app/Contents/Resources/plugins/openai-bundled/plugins/browser/scripts/node_modules"
+NODE_REPL_NODE_MODULE_DIRS = "/Applications/Codex.app/Contents/Resources/cua_node/lib/node_modules"
 NODE_REPL_NODE_PATH = "/Applications/Codex.app/Contents/Resources/cua_node/bin/node"
 NODE_REPL_TRUSTED_CODE_PATHS = "/Users/ramtin/.codex"
 CODEX_HOME = "/Users/ramtin/.codex"
-NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "27dca86fd6b571c49414a4b78e46b57bcf683a46cd1319799c11fbb6cfae3110"
-BROWSER_USE_AVAILABLE_BACKENDS = "iab"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "d5cbb8ec1ee520cba7943b1e1accb6b25acd9941ea4e2e9e4dbcf25ff9983a2d"
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
 NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
+NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
 BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
-BROWSER_USE_CODEX_APP_VERSION = "26.609.41114"
+BROWSER_USE_CODEX_APP_VERSION = "26.623.70822"
 CODEX_CLI_PATH = "/Applications/Codex.app/Contents/Resources/codex"
 
 [desktop]
 conversationDetailMode = "STEPS_COMMANDS"
 ambient-suggestions-enabled = true
+followUpQueueMode = "queue"
+
+[hooks.state]
+
+[hooks.state."/Users/ramtin/.codex/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:ce3df07c232ca0c8f6788bdfcd2aaeb9f3610f1e122c273a944187930d13e6c4"
+enabled = true
