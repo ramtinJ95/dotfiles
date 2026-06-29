@@ -21,11 +21,11 @@ file:
 - Claude Code: `.claude/CLAUDE.md`
 - Codex: `.codex/AGENTS.md`
 
-Cross-harness skills live in `common-dotfiles/agents/.agents/skills`. Pi loads
-that global skill directory directly through `~/.agents/skills`; do not add
-duplicate shared-skill links under `.pi/agent/skills`. Claude and Codex packages
-bridge to shared skills with repo-relative symlinks from their native skills
-directories.
+Cross-harness skills live in `common-dotfiles/agents/.agents/skills`. Pi and
+Codex load that global skill directory directly through `~/.agents/skills`; do
+not add duplicate shared-skill links under `.pi/agent/skills` or `.codex/skills`.
+Claude does not read `~/.agents/skills`, so the macOS and Arch Claude packages
+bridge every shared skill with repo-relative symlinks from `.claude/skills`.
 
 ## Usage
 
@@ -50,8 +50,9 @@ layer.
 
 ## Existing Machine Migration
 
-If a machine already has symlinks from the old platform-local `agents` or `pi`
-packages, remove only those stale managed links before stowing this shared root:
+If a machine already has symlinks from the old platform-local `agents`, `pi`,
+or Codex skill packages, remove only those stale managed links before stowing
+this shared root:
 
 ```bash
 for path in \
@@ -65,6 +66,11 @@ for path in \
 do
   [[ -L "$path" ]] && rm "$path"
 done
+
+if [[ -d "$HOME/.codex/skills" ]]; then
+  find "$HOME/.codex/skills" -maxdepth 1 -type l -exec rm {} +
+  rmdir "$HOME/.codex/skills" 2>/dev/null || true
+fi
 
 cmp -s "$HOME/.pi/agent/AGENTS.md" common-config/common-dotfiles/pi/.pi/agent/AGENTS.md \
   && rm "$HOME/.pi/agent/AGENTS.md"
