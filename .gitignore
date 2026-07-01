@@ -38,3 +38,8 @@ mac-config/mac-dotfiles/claude/.claude/sessions/
 mac-config/mac-dotfiles/claude/.claude/shell-snapshots/
 mac-config/mac-dotfiles/claude/.claude/telemetry/
 mac-config/mac-dotfiles/claude/.claude/teams/session-*/
+
+# Local repos live here via the stowed workspace; keep only shared agent files tracked.
+/common-config/common-dotfiles/workspace-agent/workspace/*
+!/common-config/common-dotfiles/workspace-agent/workspace/AGENTS.md
+!/common-config/common-dotfiles/workspace-agent/workspace/CLAUDE.md

@@ -321,8 +321,50 @@ async function loadMacOsKeychainApiKey(
 	}
 }
 
+function isMissingSecretServiceItem(error: unknown): boolean {
+	if (typeof error !== "object" || error === null) return false;
+	const code = "code" in error ? (error as { code?: unknown }).code : undefined;
+	const stderr = "stderr" in error ? String((error as { stderr?: unknown }).stderr ?? "") : "";
+	return code === 1 && !stderr.trim();
+}
+
+async function loadLinuxSecretServiceApiKey(
+	service: string,
+	account: string,
+	signal?: AbortSignal,
+): Promise<string | undefined> {
+	try {
+		const { stdout } = await execFileAsync("secret-tool", ["lookup", "service", service, "account", account], {
+			signal,
+			timeout: KEYCHAIN_LOOKUP_TIMEOUT_MS,
+		});
+		const apiKey = stdout.trim();
+		return apiKey || undefined;
+	} catch (error) {
+		if (isMissingSecretServiceItem(error)) return undefined;
+		if (error instanceof Error && error.name === "AbortError") throw error;
+		const code = typeof error === "object" && error && "code" in error ? (error as { code?: unknown }).code : undefined;
+		if (code === "ENOENT") return undefined;
+		const stderr =
+			typeof error === "object" && error !== null && "stderr" in error ? String((error as { stderr?: unknown }).stderr ?? "") : "";
+		const message = stderr.trim() || (error instanceof Error ? error.message : String(error));
+		throw new Error(
+			`Failed to read Exa API key from Linux Secret Service for service ${JSON.stringify(service)} and account ${JSON.stringify(account)} (${message}).`,
+		);
+	}
+}
+
 function buildMissingApiKeyMessage(service: string, account: string): string {
 	const fallback = `Alternatively set EXA_API_KEY before launching pi. ${EXA_CONFIG_PATH} may still be used for non-secret settings like baseUrl, keychainService, and keychainAccount.`;
+	if (process.platform === "linux") {
+		return [
+			"Exa API key not configured.",
+			`On Linux, store it securely in Secret Service with: secret-tool store --label='Pi Exa Deep Research API Key' service ${JSON.stringify(service)} account ${JSON.stringify(account)}`,
+			"That command prompts for the secret without echoing it.",
+			fallback,
+		].join(" ");
+	}
+
 	if (process.platform !== "darwin") {
 		return `Exa API key not configured. ${fallback}`;
 	}
@@ -345,6 +387,8 @@ async function loadExaConfig(signal?: AbortSignal): Promise<ExaConfig> {
 	const keychainApiKey =
 		!envApiKey && process.platform === "darwin"
 			? await loadMacOsKeychainApiKey(keychainService, keychainAccount, signal)
+			: !envApiKey && process.platform === "linux"
+				? await loadLinuxSecretServiceApiKey(keychainService, keychainAccount, signal)
 			: undefined;
 	const apiKey = envApiKey || keychainApiKey;
 	const baseUrl = fileConfig?.baseUrl?.trim() || EXA_SEARCH_URL;
