@@ -110,7 +110,7 @@ alt - s : open -a 'Slack'
 alt - a : open -a 'kitty'
 cmd - k : open -a 'kitty'
 alt - b : open -a 'Google Chrome'
-alt - m : open -a 'Spotify'
+alt - m : osascript -e 'tell application id "com.spotify.client" to reopen' -e 'tell application id "com.spotify.client" to activate'
 alt - g : open -a 'Google Chrome' https://github.com
 alt - c : open -a 'Google Chrome' https://chatgpt.com
 alt - t : /Applications/kitty.app/Contents/MacOS/kitty -e btop

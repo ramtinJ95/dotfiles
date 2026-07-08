@@ -125,6 +125,12 @@ trust_level = "trusted"
 [projects."/Users/ramtin/personal/go-practice/basics"]
 trust_level = "trusted"
 
+[projects."/Users/ramtin/personal/scribebase"]
+trust_level = "trusted"
+
+[projects."/Users/ramtin/personal/voxcraft"]
+trust_level = "trusted"
+
 [marketplaces.openai-bundled]
 last_updated = "2026-06-29T19:49:57Z"
 source_type = "local"

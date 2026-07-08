@@ -106,3 +106,5 @@ export PATH="$HOME/.local/bin:$PATH"
 # opencode
 export PATH=/Users/ramtin/.opencode/bin:$PATH
 export PATH="$HOME/go/bin:$PATH"
+# ScribeBase remote API
+[ -f "$HOME/.scribebase.env" ] && source "$HOME/.scribebase.env"

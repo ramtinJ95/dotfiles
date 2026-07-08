@@ -41,4 +41,5 @@ yabai -m rule --add title="^SFML$" manage=off
 yabai -m rule --add title="Our Love Story$" manage=off
 yabai -m rule --add title="^Software Renderer$" manage=off
 
-yabai -m config external_bar all:0:0
+# Reserve room for sketchybar plus a small gap (sketchybar height is 30).
+yabai -m config external_bar all:35:0

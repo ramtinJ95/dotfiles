@@ -14,8 +14,10 @@ arch-config/arch-dotfiles/claude/.claude/remote-settings.json
 arch-config/arch-dotfiles/claude/.claude/session-env/
 arch-config/arch-dotfiles/claude/.claude/sessions/
 arch-config/arch-dotfiles/claude/.claude/shell-snapshots/
+arch-config/arch-dotfiles/claude/.claude/tasks/
 arch-config/arch-dotfiles/claude/.claude/telemetry/
 arch-config/arch-dotfiles/claude/.claude/teams/session-*/
+arch-config/arch-dotfiles/claude/.claude/usage-data/
 common-config/common-dotfiles/herdr/.config/herdr/*.log
 common-config/common-dotfiles/herdr/.config/herdr/*.sock
 common-config/common-dotfiles/herdr/.config/herdr/session*.json
@@ -36,8 +38,10 @@ mac-config/mac-dotfiles/claude/.claude/remote-settings.json
 mac-config/mac-dotfiles/claude/.claude/session-env/
 mac-config/mac-dotfiles/claude/.claude/sessions/
 mac-config/mac-dotfiles/claude/.claude/shell-snapshots/
+mac-config/mac-dotfiles/claude/.claude/tasks/
 mac-config/mac-dotfiles/claude/.claude/telemetry/
 mac-config/mac-dotfiles/claude/.claude/teams/session-*/
+mac-config/mac-dotfiles/claude/.claude/usage-data/
 
 # Local repos live here via the stowed workspace; keep only shared agent files tracked.
 /common-config/common-dotfiles/workspace-agent/workspace/*
