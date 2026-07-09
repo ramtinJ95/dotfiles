@@ -108,3 +108,6 @@ export PATH=/Users/ramtin/.opencode/bin:$PATH
 export PATH="$HOME/go/bin:$PATH"
 # ScribeBase remote API
 [ -f "$HOME/.scribebase.env" ] && source "$HOME/.scribebase.env"
+
+# Voxcraft remote API
+[ -f "$HOME/.voxcraft.env" ] && source "$HOME/.voxcraft.env"

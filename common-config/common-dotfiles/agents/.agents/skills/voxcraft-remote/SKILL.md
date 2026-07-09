@@ -18,22 +18,51 @@ User-invoked only. If this skill was not explicitly named by the user, stop.
 
    Completion: the command resolves. If it does not, report that the local wrapper is missing.
 
-2. **Submit.** For a YouTube URL, run:
+2. **Choose local output.** By default, save a local copy under `~/Downloads/voxcraft/` and tell the user the path. Create the directory if needed.
 
-   ```bash
-   voxcraft-remote submit-job "<youtube-url>" --wait 300 --print-final
+   For a URL, prefer a human-readable filename from the video title plus the YouTube id:
+
+   ```text
+   ~/Downloads/voxcraft/<video_title_slug>--<youtube_id>-final.md
    ```
 
-   Completion: either `final.md` prints, or the status table includes a `job_id`.
+   Include the YouTube id to avoid collisions and keep the file traceable. If the title lookup fails, fall back to:
 
-3. **Return.** If `final.md` printed, return that markdown. If the job is still `queued` or `running`, report the `job_id`, status/message, and this check command:
-
-   ```bash
-   voxcraft-remote check-job <job_id> --wait 300 --print-final
-   voxcraft-remote fetch-final <job_id> --output ./final.md
+   ```text
+   ~/Downloads/voxcraft/<youtube_id>-final.md
    ```
 
-4. **Failure.** If the job failed, fetch logs before explaining:
+   For an existing job id where the video title is unknown, use:
+
+   ```text
+   ~/Downloads/voxcraft/<job_id>-final.md
+   ```
+
+   If the user asks for a specific destination, use that path instead.
+
+3. **Submit.** For a YouTube URL, build the local output path first, then submit:
+
+   ```bash
+   mkdir -p ~/Downloads/voxcraft
+   title="$(~/personal/voxcraft/.venv/bin/python -m yt_dlp --print title --skip-download "<youtube-url>" 2>/dev/null | head -n 1 || true)"
+   slug="$(printf '%s' "$title" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g; s/-+/-/g' | cut -c1-120)"
+   if [ -n "$slug" ]; then
+     output="$HOME/Downloads/voxcraft/${slug}--<youtube_id>-final.md"
+   else
+     output="$HOME/Downloads/voxcraft/<youtube_id>-final.md"
+   fi
+   voxcraft-remote submit-job "<youtube-url>" --wait 300 --print-final --output "$output"
+   ```
+
+   Completion: either `final.md` prints and the command reports/saves the local file, or the status table includes a `job_id`.
+
+4. **Return.** If `final.md` printed, return the markdown and the local file path. If the job is still `queued` or `running`, report the `job_id`, status/message, and this check command using the same output path chosen above:
+
+   ```bash
+   voxcraft-remote check-job <job_id> --wait 300 --print-final --output "$output"
+   ```
+
+5. **Failure.** If the job failed, fetch logs before explaining:
 
    ```bash
    voxcraft-remote fetch-log <job_id>
@@ -43,10 +72,11 @@ User-invoked only. If this skill was not explicitly named by the user, stop.
 
 ## Existing jobs
 
-Specific job:
+Specific job, printing markdown and saving a local copy:
 
 ```bash
-voxcraft-remote check-job <job_id> --wait 300 --print-final
+mkdir -p ~/Downloads/voxcraft
+voxcraft-remote check-job <job_id> --wait 300 --print-final --output ~/Downloads/voxcraft/<job_id>-final.md
 ```
 
 Latest job:
@@ -61,7 +91,7 @@ Raw artifacts:
 
 ```bash
 voxcraft-remote fetch-final <job_id>
-voxcraft-remote fetch-final <job_id> --output ./final.md
+voxcraft-remote fetch-final <job_id> --output ~/Downloads/voxcraft/<human_readable_or_job_id>-final.md
 voxcraft-remote fetch-log <job_id>
 ```
 
@@ -77,7 +107,9 @@ Use options only when the user asks or the input requires them:
 
 ## Server facts
 
-- Use `--output ./final.md` when the user wants a local copy of the Mac mini `final.md`.
+- Default behavior is both: return markdown inline when available and save a local `final.md` copy.
+- Local filenames should be human-readable: prefer `<video_title_slug>--<youtube_id>-final.md`.
+- Always report the local saved path when a file is saved.
 - Wrapper owns `VOXCRAFT_SERVER_URL` and `VOXCRAFT_SERVER_TOKEN`; never print the token.
 - Voxcraft server: `http://ramtins-mac-mini.tailc817d3.ts.net:8766`
 - ScribeBase uses port `8765`; Voxcraft uses `8766`.
