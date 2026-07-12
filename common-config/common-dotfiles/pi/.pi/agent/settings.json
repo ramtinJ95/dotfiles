@@ -1,7 +1,7 @@
 {
-  "lastChangelogVersion": "0.80.3",
+  "lastChangelogVersion": "0.80.6",
   "defaultProvider": "openai-codex",
-  "defaultModel": "gpt-5.5",
+  "defaultModel": "gpt-5.6-sol",
   "hideThinkingBlock": false,
   "defaultThinkingLevel": "high",
   "skills": [
@@ -13,12 +13,16 @@
   "packages": [
     "npm:@howaboua/pi-codex-conversion",
     "npm:@howaboua/pi-auto-trees",
-    "npm:@howaboua/pi-explore-subagents",
+    {
+      "source": "npm:@howaboua/pi-explore-subagents",
+      "extensions": []
+    },
     "npm:@howaboua/pi-subagent-review",
     "npm:@howaboua/pi-skill-chrome-cdp",
     "npm:@howaboua/pi-markdown-workflows",
     "git:https://github.com/badlogic/pi-diff-review",
-    "npm:@bergetai/pi-provider"
+    "npm:@bergetai/pi-provider",
+    "npm:@howaboua/pi-dynamic-tools"
   ],
   "compaction": {
     "enabled": true

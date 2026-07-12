@@ -121,7 +121,7 @@ function currentSessionRef(): Record<string, unknown> | undefined {
   return undefined;
 }
 
-function reportSession(): Promise<void> {
+function reportSession(sessionStartSource?: string): Promise<void> {
   const sessionRef = currentSessionRef();
   if (!sessionRef) {
     return Promise.resolve();
@@ -135,6 +135,7 @@ function reportSession(): Promise<void> {
       source,
       agent: "pi",
       seq: nextReportSeq(),
+      ...(sessionStartSource ? { session_start_source: sessionStartSource } : {}),
       ...sessionRef,
     },
   });
@@ -168,14 +169,16 @@ function releaseAgent(): Promise<void> {
   });
 }
 
-function shouldReleaseOnSessionShutdown(event: any): boolean {
-  // Pi tears down and rebinds extension runtimes for internal lifecycle actions
-  // such as /reload, /new, /resume, and /fork. Those do not mean the pane's
-  // agent process has exited, and releasing hook authority there can suppress
-  // legitimate reports from the replacement runtime. Only a user/process quit
-  // should release Herdr's full-lifecycle authority.
-  const reason = event?.reason;
-  return reason === "quit";
+function clearAgentAuthority(): Promise<void> {
+  return sendRequest({
+    id: `${source}:clear:${Date.now()}:${Math.random().toString(36).slice(2)}`,
+    method: "pane.clear_agent_authority",
+    params: {
+      pane_id: paneId,
+      source,
+      agent: "pi",
+    },
+  });
 }
 
 let sendInFlight = false;
@@ -248,6 +251,17 @@ export default function (pi) {
   let idleTimer: ReturnType<typeof setTimeout> | undefined;
   let retryTimer: ReturnType<typeof setTimeout> | undefined;
   let rootSession = false;
+
+  function ensureRootSession(ctx: any): boolean {
+    if (rootSession) {
+      return true;
+    }
+    if (ctx?.hasUI !== true) {
+      return false;
+    }
+    rootSession = true;
+    return true;
+  }
 
   function clearTimer(timer: ReturnType<typeof setTimeout> | undefined) {
     if (timer) {
@@ -336,28 +350,41 @@ export default function (pi) {
     publishState();
   });
 
-  pi.on("session_start", (_event, ctx) => {
-    if (ctx?.hasUI !== true) {
+  pi.on("session_start", async (event, ctx) => {
+    if (!ensureRootSession(ctx)) {
       return;
     }
-    rootSession = true;
     updateSessionRef(ctx);
-    void reportSession();
     // A reload can replace this extension mid-run without emitting another agent_start.
     agentActive = ctx?.isIdle?.() === false;
+    await reportSession(event?.reason || "startup");
     publishState(true);
   });
 
-  pi.on("agent_start", (_event, ctx) => {
-    if (!rootSession) {
+  async function markAgentStarted(ctx: any) {
+    if (!ensureRootSession(ctx)) {
       return;
     }
     updateSessionRef(ctx);
-    void reportSession();
+    if (agentActive) {
+      return;
+    }
     clearPendingTimers();
     clearFailureState();
     agentActive = true;
+    await reportSession();
     publishState();
+  }
+
+  // Session replacement should emit session_start before work resumes. Recover
+  // here as well so a missed/reordered lifecycle event cannot leave Herdr with
+  // stale full-lifecycle authority and a permanently idle pane.
+  pi.on("before_agent_start", async (_event, ctx) => {
+    await markAgentStarted(ctx);
+  });
+
+  pi.on("agent_start", async (_event, ctx) => {
+    await markAgentStarted(ctx);
   });
 
   pi.on("agent_end", (event) => {
@@ -387,8 +414,12 @@ export default function (pi) {
       return;
     }
     clearPendingTimers();
-    if (shouldReleaseOnSessionShutdown(event)) {
+    if (event?.reason === "quit") {
       await releaseAgent();
+      return;
     }
+    // Session replacement keeps the process and detected agent alive. Clear
+    // only the old runtime's lifecycle authority so the replacement can claim it.
+    await clearAgentAuthority();
   });
 }

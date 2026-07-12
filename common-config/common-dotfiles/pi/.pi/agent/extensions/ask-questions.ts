@@ -409,7 +409,13 @@ export default function askQuestions(pi: ExtensionAPI) {
 				return { content: [textContent("No questions were provided.")] };
 			}
 
-			const answers = ctx.mode === "tui" ? await askInTui(ctx, questions) : await askWithPiUi(ctx, questions);
+			pi.events.emit("herdr:blocked", { active: true, label: "Waiting for answers" });
+			let answers: Answers | null;
+			try {
+				answers = ctx.mode === "tui" ? await askInTui(ctx, questions) : await askWithPiUi(ctx, questions);
+			} finally {
+				pi.events.emit("herdr:blocked", { active: false });
+			}
 			if (!answers) {
 				return { content: [textContent("Questions dismissed.")], isError: true };
 			}
