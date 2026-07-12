@@ -12,3 +12,7 @@
 - When hooks block a command, do not bypass or self-approve; ask the user how to proceed.
 - Write ad-hoc scripts to temp files, run them, then remove them; do not embed multiline scripts in shell commands.
 - Git: never commit unless asked; use small conventional commits; no `Co-Authored-By`; concise PR descriptions without checkboxes or generated-by footer.
+- Use or remind the user to use grilling / grill-me skill
+- Ask questions and be a bit adversarial to make sure you understand the intent
+  and reason behind a request from the user.
+- For reviews, use the reviewer agent; never substitute the explorer agent.
