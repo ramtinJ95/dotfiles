@@ -6,28 +6,25 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const EXAMPLE_DIR = dirname(fileURLToPath(import.meta.url));
-const DEEP_RESEARCH_EXTENSION = resolve(
+const CODEX_CONVERSION_PATH = resolve(
 	EXAMPLE_DIR,
-	"../../extensions/exa-deep-research.ts",
-);
-const CODEX_CONVERSION_EXTENSION = resolve(
-	EXAMPLE_DIR,
-	"../../npm/node_modules/@howaboua/pi-codex-conversion/dist/index.js",
+	"..",
+	"..",
+	"npm",
+	"node_modules",
+	"@howaboua",
+	"pi-codex-conversion",
 );
 const AGENT_CONFIG = {
 	explorer: {
-		model: "openai-codex/gpt-5.6-luna",
+		model: "openai-codex/gpt-5.6-sol",
 		thinking: "low",
 		promptPath: resolve(EXAMPLE_DIR, "explorer.prompt.md"),
-		extensions: [DEEP_RESEARCH_EXTENSION, CODEX_CONVERSION_EXTENSION],
-		tools: ["read", "bash", "grep", "find", "ls", "deep_research"],
 	},
 	reviewer: {
 		model: "openai-codex/gpt-5.6-sol",
 		thinking: "medium",
 		promptPath: resolve(EXAMPLE_DIR, "reviewer.prompt.md"),
-		extensions: [DEEP_RESEARCH_EXTENSION, CODEX_CONVERSION_EXTENSION],
-		tools: ["read", "bash", "grep", "find", "ls", "deep_research"],
 	},
 };
 const ALLOWED_KEYS = new Set(["agent_type", "message", "cwd"]);
@@ -274,11 +271,10 @@ export function buildPiArgs(request, message) {
 		"--print",
 		"--no-session",
 		"--no-extensions",
-		...config.extensions.flatMap((extension) => ["--extension", extension]),
 		"--no-skills",
 		"--no-prompt-templates",
-		"--tools",
-		config.tools.join(","),
+		"--extension",
+		CODEX_CONVERSION_PATH,
 		"--model",
 		config.model,
 		"--thinking",

@@ -103,7 +103,7 @@ prefix = "ctrl+f"
 # close_pane = "prefix+x"
 # zoom = "prefix+z"       # legacy alias: fullscreen
 # resize_mode = "prefix+r"
-# toggle_sidebar = "prefix+b"
+toggle_sidebar = "prefix+ctrl+e"
 
 # Navigate-mode movement. These local shortcuts win while navigate mode is open.
 # They are independent from focus_pane_*. Do not include prefix+, esc, enter, tab, or 1..9 here.

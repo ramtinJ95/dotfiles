@@ -17,6 +17,7 @@
     "statusLine": false,
     "toolRenaming": true,
     "compactTools": false,
+    "codeModeDetails": true,
     "backgroundShellWidget": true,
     "backgroundShellToggleShortcut": "alt+w",
     "backgroundShellPrevShortcut": "alt+q",
@@ -25,6 +26,9 @@
   },
   "compaction": {
     "responsesCompaction": false
+  },
+  "beta": {
+    "codeMode": true
   },
   "openai": {
     "fast": false,
