@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.80.6",
+  "lastChangelogVersion": "0.80.7",
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.6-sol",
   "hideThinkingBlock": false,
@@ -17,7 +17,8 @@
     "npm:@howaboua/pi-skill-chrome-cdp",
     "npm:@howaboua/pi-markdown-workflows",
     "git:https://github.com/badlogic/pi-diff-review",
-    "npm:@bergetai/pi-provider"
+    "npm:@bergetai/pi-provider",
+    "npm:@howaboua/pi-ask"
   ],
   "compaction": {
     "enabled": true

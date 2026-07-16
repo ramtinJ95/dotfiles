@@ -88,17 +88,3 @@ Closes #123
 
 **Multiple changes (prefer separate commits):**
 If you have unrelated changes, create separate commits for each logical unit of work.
-
-## Todo List Integration
-
-When working through implementation todos that modify code or files:
-
-1. **Each completed implementation todo = one conventional commit**
-2. After finishing an implementation task, stage and commit the changes
-3. Mark the todo as completed only AFTER the commit succeeds
-
-This does NOT apply to:
-- Research or exploration todos
-- Planning or design todos
-- Reading/reviewing code without changes
-- Gathering information

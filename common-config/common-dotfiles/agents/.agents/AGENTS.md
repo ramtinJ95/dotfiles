@@ -9,10 +9,15 @@
 - Ask when requirements are unclear. If choices materially affect the result, compare options and ask before implementing.
 - Use parallel tool calls for independent work.
 - Use ctx7 for current library/framework documentation.
-- When hooks block a command, do not bypass or self-approve; ask the user how to proceed.
+- When a hook blocks a command, do not bypass or self-approve. Follow the blocker's
+  explicit approval instructions; preserve an exact blocked command when required.
 - Write ad-hoc scripts to temp files, run them, then remove them; do not embed multiline scripts in shell commands.
 - Git: never commit unless asked; use small conventional commits; no `Co-Authored-By`; concise PR descriptions without checkboxes or generated-by footer.
-- Use or remind the user to use grilling / grill-me skill
-- Ask questions and be a bit adversarial to make sure you understand the intent
-  and reason behind a request from the user.
-- For reviews, use the reviewer agent; never substitute the explorer agent.
+- For plan stress-testing, choose deliberately: `/grill` batches decisions and keeps
+  a plan in `docs/`; `grilling` / `grill-me` asks one question at a time without an
+  automatic artifact.
+- Ask pointed or adversarial questions when a request is ambiguous or materially
+  depends on user judgment; do not interrogate routine requests.
+- When the user explicitly asks for a code review, use the reviewer agent through
+  `spawn_agent`; never substitute the explorer agent or invoke the reviewer for
+  other tasks.

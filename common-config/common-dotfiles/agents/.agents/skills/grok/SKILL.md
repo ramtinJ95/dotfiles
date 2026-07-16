@@ -64,7 +64,7 @@ Never teach from a guess. Build an accurate picture first, in this priority:
 
 1. **Start with the local project** — code, tests, config, dependency manifests, entry points, build/test/run commands, local docs. Claims about how this code works point to real files/lines you inspected.
 2. **`npx ctx7`** for external frameworks/libraries when version-correct behavior matters.
-3. **Web search or `explore_subagent`** for broader concepts, specs, design rationale, or history not available locally.
+3. **Web search or `spawn_agent` with `agent_type: "explorer"`** for broader concepts, specs, design rationale, or history not available locally.
 4. **`deep_research`** only for genuinely deep, ambiguous, multi-source, or explicitly requested research.
 
 Do this grounding quietly — the user wants the teaching, not a blow-by-blow of every file read. Flag assumptions explicitly: a plausible fiction is worse than an honest gap.
