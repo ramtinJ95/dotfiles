@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.80.7",
+  "lastChangelogVersion": "0.80.10",
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.6-sol",
   "hideThinkingBlock": false,
@@ -9,7 +9,7 @@
     "-skills/playwriter/SKILL.md"
   ],
   "transport": "auto",
-  "theme": "dark",
+  "theme": "catppuccin-mocha",
   "packages": [
     "npm:@howaboua/pi-codex-conversion",
     "npm:@howaboua/pi-auto-trees",
