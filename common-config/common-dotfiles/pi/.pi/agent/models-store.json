@@ -149,7 +149,7 @@
             }
           ]
         },
-        "contextWindow": 372000,
+        "contextWindow": 272000,
         "maxTokens": 128000,
         "thinkingLevelMap": {
           "xhigh": "xhigh",
@@ -186,7 +186,7 @@
             }
           ]
         },
-        "contextWindow": 372000,
+        "contextWindow": 272000,
         "maxTokens": 128000,
         "thinkingLevelMap": {
           "xhigh": "xhigh",
@@ -223,7 +223,7 @@
             }
           ]
         },
-        "contextWindow": 372000,
+        "contextWindow": 272000,
         "maxTokens": 128000,
         "thinkingLevelMap": {
           "xhigh": "xhigh",
@@ -235,6 +235,6 @@
         }
       }
     ],
-    "checkedAt": 1784356135065
+    "checkedAt": 1784572804891
   }
 }
