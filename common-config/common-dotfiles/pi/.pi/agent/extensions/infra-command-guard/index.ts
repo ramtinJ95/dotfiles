@@ -1,4 +1,6 @@
 import { spawn } from "node:child_process";
+import { randomUUID } from "node:crypto";
+import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ExtensionAPI, Theme } from "@earendil-works/pi-coding-agent";
 import { createBashTool } from "@earendil-works/pi-coding-agent";
@@ -6,7 +8,14 @@ import { Key, matchesKey, truncateToWidth, visibleWidth, wrapTextWithAnsi, type 
 import { Type } from "typebox";
 
 const INFRA_PATTERN_GLOBAL = /\b(?:kubectl|terraform)\b/i;
+const RM_PATTERN_GLOBAL = /\brm\b/i;
 const REQUEST_SOUND_PATH = fileURLToPath(new URL("./sounds/peon-something-need-doing.mp3", import.meta.url));
+const CODE_MODE_RUNTIME_KEY = Symbol.for("@howaboua/pi-codex-conversion.code-mode");
+const CODE_MODE_GUARD_BRIDGE_KEY = Symbol.for("infra-command-guard.code-mode-bridge.v1");
+const CODE_MODE_PROVIDER_WRAPPED = Symbol.for("infra-command-guard.code-mode-provider-wrapped.v1");
+const CODE_MODE_TOOL_WRAPPED = Symbol.for("infra-command-guard.code-mode-tool-wrapped.v1");
+const APPROVAL_TTL_MS = 10 * 60 * 1000;
+const CODE_MODE_PUBLIC_TOOL_NAMES = new Set(["exec", "wait", "functions.exec", "functions.wait"]);
 
 function playApprovalRequestSound(): void {
 	if (process.platform !== "darwin") return;
@@ -179,6 +188,7 @@ const SHELL_CONTROL_KEYWORDS = new Set([
 ]);
 
 const SHELL_EXECUTION_BUILTINS = new Set([".", "source", "eval", "exec"]);
+const INTERACTIVE_INTERPRETERS = new Set(["bash", "dash", "fish", "node", "perl", "ruby", "sh", "zsh"]);
 
 function stripPath(raw) {
 	const normalized = String(raw || "");
@@ -210,11 +220,19 @@ function containsInfraText(text) {
 	return INFRA_PATTERN_GLOBAL.test(normalizeForInfraScan(text));
 }
 
+function containsRmText(text) {
+	return RM_PATTERN_GLOBAL.test(normalizeForInfraScan(text));
+}
+
+function containsGuardedText(text) {
+	return containsInfraText(text) || containsRmText(text);
+}
+
 function isKubectlPortForwardOnlyCommand(command) {
 	const normalized = normalizeForInfraScan(command).toLowerCase();
 	const kubectlMentions = normalized.match(/\bkubectl\b(?=[\s;|&()<>]|$)/g) || [];
 	if (kubectlMentions.length === 0) return false;
-	if (/\bterraform\b/.test(normalized)) return false;
+	if (/\b(?:terraform|rm)\b/.test(normalized)) return false;
 	const kubectlPortForwardMentions =
 		normalized.match(/\bkubectl\b(?=[\s;|&()<>]|$)(?:(?!&&|\|\||[;&|\n]).)*\bport-forward\b/g) || [];
 	return kubectlPortForwardMentions.length === kubectlMentions.length;
@@ -677,7 +695,7 @@ function evaluateTerraform(invocation) {
 }
 
 function evaluateCommand(command) {
-	if (!containsInfraText(command)) return allow();
+	if (!containsGuardedText(command)) return allow();
 	if (isKubectlPortForwardOnlyCommand(command)) return allow();
 
 	const parsed = parseSimpleCommands(command);
@@ -702,9 +720,13 @@ function evaluateCommand(command) {
 		}
 
 		const segmentText = segment.words.join(" ");
-		const segmentMentionsInfra = containsInfraText(segmentText);
-		if (SHELL_RUNNERS.has(invocation.executable) && segmentMentionsInfra) {
-			return requireApproval(`This command delegates infra execution through ${invocation.executable}, which requires manual approval`);
+		const segmentMentionsGuardedTool = containsGuardedText(segmentText);
+		if (SHELL_RUNNERS.has(invocation.executable) && segmentMentionsGuardedTool) {
+			return requireApproval(`This command delegates guarded execution through ${invocation.executable}, which requires manual approval`);
+		}
+
+		if (invocation.executable === "rm") {
+			return requireApproval("rm command needs confirmation");
 		}
 
 		if (invocation.executable === "kubectl") {
@@ -719,9 +741,9 @@ function evaluateCommand(command) {
 			continue;
 		}
 
-		if (containsInfraText(segment.bare)) {
+		if (containsGuardedText(segment.bare)) {
 			return requireApproval(
-				`This command invokes infra tooling through ${invocation.executable}, which requires manual approval`,
+				`This command invokes guarded tooling through ${invocation.executable}, which requires manual approval`,
 			);
 		}
 	}
@@ -730,16 +752,25 @@ function evaluateCommand(command) {
 }
 
 function checkRm(command) {
-	if (/(^|[|;\n\r]|&&)\s*rm\s/.test(command)) {
-		return requireApproval("rm command needs confirmation");
-	}
-	return allow();
+	if (!containsRmText(command)) return allow();
+	const decision = evaluateCommand(command);
+	return decision.allow ? allow() : decision;
 }
 
 function evaluateCommandWithRm(command) {
-	const rmDecision = checkRm(command);
-	if (!rmDecision.allow) return rmDecision;
 	return evaluateCommand(command);
+}
+
+function isInteractiveInterpreterCommand(command: string): boolean {
+	const parsed = parseSimpleCommands(command);
+	if (parsed.error || parsed.segments.length !== 1) return false;
+	let invocation = extractInvocation(parsed.segments[0].words);
+	if (invocation.error || !invocation.executable) return false;
+	if (invocation.executable === "exec" && invocation.args.length > 0) {
+		invocation = extractInvocation(invocation.args);
+		if (invocation.error || !invocation.executable) return false;
+	}
+	return INTERACTIVE_INTERPRETERS.has(invocation.executable) || /^python(?:\d+(?:\.\d+)*)?$/.test(invocation.executable);
 }
 
 function wrapBlock(text: string, width: number): string[] {
@@ -957,10 +988,145 @@ class InfraApprovalOverlay {
 	}
 }
 
-function formatApprovalRequest(reason, command) {
+type GuardSource = "bash" | "exec-command" | "code-mode-exec-command";
+
+interface ExecutionIdentity {
+	source: GuardSource;
+	command: string;
+	cwd: string;
+	shell?: string | undefined;
+	tty: boolean;
+	login?: boolean | undefined;
+}
+
+interface PendingApproval {
+	id: string;
+	identity: ExecutionIdentity;
+	reason: string;
+	createdAt: number;
+}
+
+function executionFingerprint(identity: ExecutionIdentity): string {
+	return JSON.stringify([
+		identity.source,
+		identity.command,
+		identity.cwd,
+		identity.shell ?? null,
+		identity.tty,
+		identity.login ?? null,
+	]);
+}
+
+function executionIdentity(
+	source: GuardSource,
+	input: unknown,
+	baseCwd: string,
+): ExecutionIdentity | undefined {
+	if (!input || typeof input !== "object") return undefined;
+	const record = input as Record<string, unknown>;
+	const commandValue = source === "bash" ? record.command : (record.cmd ?? record.command);
+	if (typeof commandValue !== "string" || commandValue.length === 0) return undefined;
+	const workdirValue = record.workdir ?? record.cwd ?? record.working_directory;
+	const workdir = typeof workdirValue === "string" ? workdirValue : undefined;
+	return {
+		source,
+		command: commandValue,
+		cwd: workdir ? resolve(baseCwd, workdir) : resolve(baseCwd),
+		shell: typeof record.shell === "string" ? record.shell : undefined,
+		tty: record.tty === true,
+		login: typeof record.login === "boolean" ? record.login : undefined,
+	};
+}
+
+class ApprovalStore {
+	private readonly pending = new Map<string, PendingApproval>();
+	private readonly approved = new Map<string, { count: number; expiresAt: number }>();
+
+	constructor(
+		private readonly now: () => number = Date.now,
+		private readonly createId: () => string = randomUUID,
+	) {}
+
+	createPending(identity: ExecutionIdentity, reason: string): PendingApproval {
+		this.prune();
+		const pending = {
+			id: this.createId(),
+			identity: { ...identity },
+			reason,
+			createdAt: this.now(),
+		};
+		this.pending.set(pending.id, pending);
+		return pending;
+	}
+
+	validate(requestId: string | undefined, command: string, reason: string): { ok: true; pending: PendingApproval } | { ok: false; error: string } {
+		this.prune();
+		let pending = requestId ? this.pending.get(requestId) : undefined;
+		if (!requestId) {
+			const matches = [...this.pending.values()].filter(
+				(candidate) => candidate.identity.command === command && candidate.reason === reason,
+			);
+			if (matches.length > 1) {
+				return {
+					ok: false,
+					error: "Multiple pending approvals match this command. Retry the blocked shell call and pass its request_id.",
+				};
+			}
+			pending = matches[0];
+		}
+		if (!pending) return { ok: false, error: "Approval request is missing or expired. Retry the blocked shell call to create a new request." };
+		if (pending.identity.command !== command) {
+			return { ok: false, error: "Approval request does not match the exact blocked command. Do not retry the command." };
+		}
+		if (pending.reason !== reason) {
+			return { ok: false, error: "Approval request does not match the guard reason. Do not retry the command." };
+		}
+		return { ok: true, pending };
+	}
+
+	approve(requestId: string | undefined, command: string, reason: string): { ok: true } | { ok: false; error: string } {
+		const validation = this.validate(requestId, command, reason);
+		if (!validation.ok) return validation;
+		this.pending.delete(validation.pending.id);
+		const key = executionFingerprint(validation.pending.identity);
+		const current = this.approved.get(key);
+		this.approved.set(key, {
+			count: (current?.count ?? 0) + 1,
+			expiresAt: this.now() + APPROVAL_TTL_MS,
+		});
+		return { ok: true };
+	}
+
+	cancel(requestId: string): void {
+		this.pending.delete(requestId);
+	}
+
+	consume(identity: ExecutionIdentity): boolean {
+		this.prune();
+		const key = executionFingerprint(identity);
+		const approval = this.approved.get(key);
+		if (!approval || approval.count <= 0) return false;
+		if (approval.count === 1) this.approved.delete(key);
+		else this.approved.set(key, { ...approval, count: approval.count - 1 });
+		return true;
+	}
+
+	private prune(): void {
+		const now = this.now();
+		for (const [id, pending] of this.pending) {
+			if (pending.createdAt + APPROVAL_TTL_MS <= now) this.pending.delete(id);
+		}
+		for (const [key, approval] of this.approved) {
+			if (approval.expiresAt <= now) this.approved.delete(key);
+		}
+	}
+}
+
+function formatApprovalRequest(reason, command, requestId) {
 	return [
 		`BLOCKED — ${reason}`,
 		`Command: ${command}`,
+		`Approval request: ${requestId}`,
 		"",
 		"Before retrying, you MUST present this through the approve_infra_command tool",
 		"(NOT a plain chat message). Follow these steps exactly:",
@@ -971,6 +1137,7 @@ function formatApprovalRequest(reason, command) {
 		"       • blastRadius: what changes, what data is exposed, and worst-case impact",
 		"",
 		"  2. Call approve_infra_command with:",
+		"       • request_id: the approval request identifier above",
 		"       • command: the EXACT command byte-for-byte, no edits",
 		"       • reason: the guard reason above",
 		"       • summary, flags, and blastRadius as separate fields",
@@ -981,6 +1148,106 @@ function formatApprovalRequest(reason, command) {
 		"  5. Do NOT explain in chat first; the approval details must live inside",
 		"     the approval UI so the user can review and approve in one place.",
 	].join("\n");
+}
+
+function guardExecution(
+	store: ApprovalStore,
+	identity: ExecutionIdentity,
+	mode: string | undefined,
+): { allow: true } | { allow: false; reason: string; requestId?: string | undefined } {
+	if (identity.tty && isInteractiveInterpreterCommand(identity.command)) {
+		return {
+			allow: false,
+			reason:
+				"BLOCKED — interactive shell and interpreter sessions are not supported by infra-command-guard because later write_stdin input cannot be classified reliably. Run a complete non-interactive command instead.",
+		};
+	}
+	if (store.consume(identity)) return { allow: true };
+	const decision = evaluateCommandWithRm(identity.command);
+	if (decision.allow) return { allow: true };
+	if (mode !== "tui") {
+		return {
+			allow: false,
+			reason: [
+				`BLOCKED — ${decision.reason}`,
+				`Command: ${identity.command}`,
+				"",
+				"Approval is unavailable outside TUI mode. Do not retry the command.",
+			].join("\n"),
+		};
+	}
+	const pending = store.createPending(identity, decision.reason);
+	return {
+		allow: false,
+		requestId: pending.id,
+		reason: formatApprovalRequest(decision.reason, identity.command, pending.id),
+	};
+}
+
+type CodeModeGuardBridge = (input: unknown, context: any) => void | Promise<void>;
+
+function codeModeRuntime(events: any): any | undefined {
+	const state = events?.[CODE_MODE_RUNTIME_KEY];
+	if (!state || typeof state !== "object") return undefined;
+	return state.runtime && typeof state.runtime === "object" ? state.runtime : state;
+}
+
+function codeModeProviders(runtime: any): any[] | undefined {
+	if (Array.isArray(runtime?.providers)) return runtime.providers;
+	if (runtime?.providers instanceof Map) return [...runtime.providers.values()];
+	return undefined;
+}
+
+function ensureCodeModeGuardInstalled(events: any, context: any): { ok: true } | { ok: false; reason: string } {
+	const runtime = codeModeRuntime(events);
+	if (!runtime) return { ok: false, reason: "Code Mode runtime was not found" };
+	const providers = codeModeProviders(runtime);
+	if (!providers) return { ok: false, reason: "Code Mode provider registry has an unsupported shape" };
+
+	try {
+		for (const provider of providers) {
+			if (!provider || typeof provider.getTools !== "function" || provider[CODE_MODE_PROVIDER_WRAPPED]) continue;
+			const getTools = provider.getTools;
+			provider.getTools = function guardedGetTools(providerContext: any) {
+				const tools = getTools.call(this, providerContext);
+				if (!Array.isArray(tools)) return tools;
+				return tools.map((tool) => {
+					if (!tool || tool.name !== "exec_command" || typeof tool.invoke !== "function" || tool[CODE_MODE_TOOL_WRAPPED]) {
+						return tool;
+					}
+					const invoke = tool.invoke;
+					const guardedTool = {
+						...tool,
+						async invoke(input: unknown, toolContext: any, signal: AbortSignal) {
+							const bridge = events?.[CODE_MODE_GUARD_BRIDGE_KEY];
+							if (typeof bridge !== "function") {
+								throw new Error("BLOCKED — infra-command-guard Code Mode bridge is unavailable. Reload Pi before using Code Mode.");
+							}
+							await bridge(input, toolContext);
+							return invoke.call(tool, input, toolContext, signal);
+						},
+					};
+					Object.defineProperty(guardedTool, CODE_MODE_TOOL_WRAPPED, { value: true });
+					return guardedTool;
+				});
+			};
+			Object.defineProperty(provider, CODE_MODE_PROVIDER_WRAPPED, { value: true });
+		}
+
+		const hasGuardedExec = providers.some((provider) => {
+			if (!provider || typeof provider.getTools !== "function") return false;
+			const tools = provider.getTools(context);
+			return Array.isArray(tools) && tools.some((tool) => tool?.name === "exec_command" && tool[CODE_MODE_TOOL_WRAPPED]);
+		});
+		return hasGuardedExec
+			? { ok: true }
+			: { ok: false, reason: "Code Mode nested exec_command provider was not found" };
+	} catch (error) {
+		return {
+			ok: false,
+			reason: `Code Mode guard installation failed: ${error instanceof Error ? error.message : String(error)}`,
+		};
+	}
 }
 
 async function requestInfraApproval(
@@ -1004,15 +1271,8 @@ async function requestInfraApproval(
 	return approved === true;
 }
 
-function consumeApproval(approvals: Map<string, number>, command: string) {
-	const count = approvals.get(command) || 0;
-	if (count <= 0) return false;
-	if (count === 1) approvals.delete(command);
-	else approvals.set(command, count - 1);
-	return true;
-}
-
 const ApproveInfraCommandParams = Type.Object({
+	request_id: Type.Optional(Type.String({ description: "The approval request identifier from the blocked tool result." })),
 	command: Type.String({ description: "The exact blocked command, byte-for-byte. Do not edit or normalize." }),
 	reason: Type.String({ description: "The infra-command-guard block reason." }),
 	summary: Type.String({ description: "Plain-language summary of what the command does. Do not repeat the command text." }),
@@ -1028,7 +1288,37 @@ const ApproveInfraCommandParams = Type.Object({
 
 export default function createExtension(pi: ExtensionAPI) {
 	const bashTool = createBashTool(process.cwd());
-	const approvedCommands = new Map<string, number>();
+	const approvals = new ApprovalStore();
+	const events = pi.events as any;
+	const codeModeBridge: CodeModeGuardBridge = (input, context) => {
+		const nestedContext = context?.extensionContext ?? context;
+		const identity = executionIdentity(
+			"code-mode-exec-command",
+			input,
+			typeof context?.cwd === "string"
+				? context.cwd
+				: typeof nestedContext?.cwd === "string"
+					? nestedContext.cwd
+					: process.cwd(),
+		);
+		if (!identity) {
+			throw new Error("BLOCKED — infra-command-guard could not identify the nested exec_command request.");
+		}
+		const guarded = guardExecution(approvals, identity, nestedContext?.mode);
+		if (!guarded.allow) throw new Error(guarded.reason);
+	};
+	events[CODE_MODE_GUARD_BRIDGE_KEY] = codeModeBridge;
+	const prepareCodeModeGuard = (ctx: any) => {
+		if (!codeModeRuntime(events)) return undefined;
+		return ensureCodeModeGuardInstalled(events, ctx);
+	};
+
+	pi.on("session_start", (_event, ctx) => {
+		prepareCodeModeGuard(ctx);
+	});
+	pi.on("before_agent_start", (_event, ctx) => {
+		prepareCodeModeGuard(ctx);
+	});
 
 	pi.registerTool({
 		name: "approve_infra_command",
@@ -1038,15 +1328,24 @@ export default function createExtension(pi: ExtensionAPI) {
 		promptSnippet: "Ask the user to approve one exact blocked infra/rm command with structured risk details.",
 		promptGuidelines: [
 			"Use approve_infra_command only after infra-command-guard blocks a shell command and explicitly instructs you to use it.",
+			"Pass the approval request identifier from that blocked shell result as request_id.",
 			"When using approve_infra_command, pass the exact blocked command byte-for-byte; do not edit, normalize, quote, or simplify it.",
 			"When using approve_infra_command, keep summary, flags, and blastRadius non-overlapping; the approval UI renders command and reason separately.",
 		],
 		parameters: ApproveInfraCommandParams,
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
+			const validation = approvals.validate(params.request_id, params.command, params.reason);
+			if (!validation.ok) {
+				return {
+					content: [{ type: "text", text: validation.error }],
+					details: { approved: false, requestId: params.request_id, reason: params.reason, command: params.command },
+				};
+			}
+
 			if (ctx.mode !== "tui") {
 				return {
 					content: [{ type: "text", text: "Cannot approve: TUI approval UI is not available. Do not retry the command." }],
-					details: { approved: false, reason: params.reason, command: params.command },
+					details: { approved: false, requestId: validation.pending.id, reason: params.reason, command: params.command },
 				};
 			}
 
@@ -1058,58 +1357,63 @@ export default function createExtension(pi: ExtensionAPI) {
 				params.command,
 			);
 			if (!approved) {
+				approvals.cancel(validation.pending.id);
 				return {
 					content: [{ type: "text", text: "User cancelled. Do not retry the command." }],
-					details: { approved: false, reason: params.reason, command: params.command },
+					details: { approved: false, requestId: validation.pending.id, reason: params.reason, command: params.command },
 				};
 			}
 
-			approvedCommands.set(params.command, (approvedCommands.get(params.command) || 0) + 1);
+			const granted = approvals.approve(validation.pending.id, params.command, params.reason);
+			if (!granted.ok) {
+				return {
+					content: [{ type: "text", text: granted.error }],
+					details: { approved: false, requestId: params.request_id, reason: params.reason, command: params.command },
+				};
+			}
 			return {
-				content: [{ type: "text", text: "Approved once. Retry the exact same command byte-for-byte now." }],
-				details: { approved: true, reason: params.reason, command: params.command },
+				content: [{ type: "text", text: "Approved once. Retry the exact same command with the same execution context now." }],
+				details: { approved: true, requestId: validation.pending.id, reason: params.reason, command: params.command },
 			};
 		},
 	});
 
 	pi.on("tool_call", (event, ctx) => {
+		if (CODE_MODE_PUBLIC_TOOL_NAMES.has(event.toolName)) {
+			const installed = prepareCodeModeGuard(ctx) ?? {
+				ok: false as const,
+				reason: "Code Mode runtime was not found",
+			};
+			if (installed.ok) return undefined;
+			return {
+				block: true,
+				reason: `BLOCKED — infra-command-guard cannot safely intercept Code Mode: ${installed.reason}. Reload Pi or disable Code Mode before running commands.`,
+			};
+		}
+
 		if (event.toolName !== "exec_command" && event.toolName !== "functions.exec_command") return undefined;
 
-		const command = typeof (event.input as { cmd?: unknown })?.cmd === "string" ? (event.input as { cmd: string }).cmd : "";
-		if (!command) return undefined;
-		if (consumeApproval(approvedCommands, command)) return undefined;
-
-		const decision = evaluateCommandWithRm(command);
-		if (decision.allow) return undefined;
-
-		return {
-			block: true,
-			reason:
-				ctx.mode === "tui"
-					? formatApprovalRequest(decision.reason, command)
-					: `${formatApprovalRequest(decision.reason, command)}\n\nBlocked outside TUI mode.`,
-		};
+		const identity = executionIdentity("exec-command", event.input, ctx.cwd);
+		if (!identity) return undefined;
+		const guarded = guardExecution(approvals, identity, ctx.mode);
+		return guarded.allow ? undefined : { block: true, reason: guarded.reason };
 	});
 
 	pi.registerTool({
 		...bashTool,
 		execute: async (toolCallId, params, signal, onUpdate, ctx) => {
-			const command = typeof params?.command === "string" ? params.command : "";
-			if (consumeApproval(approvedCommands, command)) {
-				return bashTool.execute(toolCallId, params, signal, onUpdate);
-			}
-
-			const decision = evaluateCommandWithRm(command);
-			if (decision.allow) {
-				return bashTool.execute(toolCallId, params, signal, onUpdate);
-			}
-
-			if (ctx.mode !== "tui") {
-				throw new Error(`${formatApprovalRequest(decision.reason, command)}\n\nBlocked outside TUI mode.`);
-			}
-
-			throw new Error(formatApprovalRequest(decision.reason, command));
+			const identity = executionIdentity("bash", params, process.cwd());
+			if (!identity) return bashTool.execute(toolCallId, params, signal, onUpdate);
+			const guarded = guardExecution(approvals, identity, ctx.mode);
+			if (!guarded.allow) throw new Error(guarded.reason);
+			return bashTool.execute(toolCallId, params, signal, onUpdate);
 		},
+	});
+
+	pi.on("session_shutdown", () => {
+		if (events[CODE_MODE_GUARD_BRIDGE_KEY] === codeModeBridge) {
+			delete events[CODE_MODE_GUARD_BRIDGE_KEY];
+		}
 	});
 }
 
@@ -1123,4 +1427,15 @@ export const _test = {
 	evaluateTerraform,
 	checkRm,
 	evaluateCommandWithRm,
+	isInteractiveInterpreterCommand,
+	executionFingerprint,
+	executionIdentity,
+	ApprovalStore,
+	guardExecution,
+	ensureCodeModeGuardInstalled,
+	codeModeProviders,
+	CODE_MODE_RUNTIME_KEY,
+	CODE_MODE_GUARD_BRIDGE_KEY,
+	CODE_MODE_PROVIDER_WRAPPED,
+	CODE_MODE_TOOL_WRAPPED,
 };
