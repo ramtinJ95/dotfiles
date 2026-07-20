@@ -58,6 +58,8 @@ Low-risk planning and inspection commands, including:
 - Mutating infra commands such as `kubectl delete` and `terraform apply`
 - `rm` commands
 - Wrapped or path-qualified `rm` commands such as `sudo rm`, `env rm`, and `/bin/rm`
+- Executables resolved through shell variables, such as `$TOOL ...`
+- Assignment-based indirection such as `K=kubectl; $K ...`
 - Commands the guard cannot classify safely
 - Indirect shell-runner patterns such as `bash -lc "kubectl ..."` or `xargs kubectl ...`, except for commands whose kubectl usage is limited to `port-forward`
 - Some sensitive read paths, e.g. `kubectl get secret ...`
@@ -91,6 +93,7 @@ This adapter uses `pi-codex-conversion` internals until that package exposes a s
 - This guards the LLM `bash` tool override, not user `!command` shell usage.
 - Interactive shell/interpreter sessions requested with `tty=true` are denied rather than approvable because later `write_stdin` input cannot be classified reliably. Run complete non-interactive commands instead.
 - Code Mode TOML custom tools execute their configured programs directly and are trusted capabilities outside this `exec_command` guard.
+- This is an in-process policy guard, not an OS sandbox. It cannot know that an inherited alias, shell function, opaque script, or custom executable eventually invokes guarded tooling when the command contains no guarded name or dynamic executable position. Kubernetes RBAC, scoped Terraform credentials, and filesystem permissions remain the hard security boundary.
 - Interactive approval uses a custom scrollable overlay instead of pi's default confirm popup.
   - `↑` / `↓` scroll
   - `PgUp` / `PgDn` or `Ctrl+u` / `Ctrl+d` page

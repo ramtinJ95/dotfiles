@@ -38,10 +38,15 @@ test("rm classification covers executable paths and common wrappers", () => {
 test("kubectl and terraform retain their safe and approval-required behavior", () => {
 	for (const command of [
 		"kubectl get pods",
+		"/usr/local/bin/kubectl --context prod get pods",
+		"sudo -n kubectl -n production describe deployment/api",
 		"kubectl logs deployment/api",
 		"kubectl port-forward service/api 8080:80",
+		"nohup kubectl port-forward service/api 8080:80 >port-forward.log 2>&1 &",
 		"kubectl auth can-i get pods",
 		"terraform plan",
+		"terraform -chdir=infra plan",
+		"env TF_IN_AUTOMATION=1 terraform show plan.out",
 		"terraform state list",
 		"terraform workspace show",
 	]) {
@@ -50,14 +55,88 @@ test("kubectl and terraform retain their safe and approval-required behavior", (
 
 	for (const command of [
 		"kubectl delete pod api",
+		"/usr/local/bin/kubectl --context prod apply -f deployment.yaml",
+		"env KUBECONFIG=cluster.yaml kubectl patch deployment api -p {}",
 		"kubectl get secrets",
+		"kubectl describe secret/api-token",
+		"kubectl --raw=/api/v1/namespaces/default/secrets",
 		"kubectl rollout restart deployment/api",
 		"terraform apply",
+		"sudo terraform -chdir infra apply plan.out",
 		"terraform destroy",
 		"terraform output",
 		'bash -lc "kubectl get pods"',
+		'python -c "import os; os.system(\'terraform apply\')"',
 	]) {
 		assert.equal(evaluateCommandWithRm(command).allow, false, command);
+	}
+});
+
+test("guarded commands fail closed through shell composition and obfuscation", () => {
+	for (const command of [
+		"printf ready && kubectl delete pod api",
+		"printf ready || terraform apply",
+		"printf pod | xargs kubectl delete",
+		"kubectl get pods & kubectl delete pod api",
+		"$(kubectl delete pod api)",
+		"`terraform apply`",
+		"K=kubectl $K delete pod api",
+		"K=kubectl; $K delete pod api",
+		"kube\\ctl delete pod api",
+		'ter"ra"form apply',
+		"find . -exec /bin/rm -rf {} +",
+		"printf target | xargs -n1 /bin/rm",
+		"$TOOL delete pod api",
+		'sudo "$TOOL" apply plan.out',
+		'"${KUBECTL}" delete pod api',
+		"$'r''m' -rf target",
+	]) {
+		assert.equal(evaluateCommandWithRm(command).allow, false, command);
+	}
+
+	for (const command of [
+		'printf "%s\\n" "kubectl delete pod api"',
+		'printf "%s\\n" "terraform apply"',
+		'printf "%s\\n" "rm -rf target"',
+		'printf "%s\\n" "$TOOL"',
+		'echo "${HOME}"',
+	]) {
+		assert.equal(evaluateCommandWithRm(command).allow, true, command);
+	}
+});
+
+test("wrapper matrix cannot hide guarded executables", () => {
+	const riskyCommands = [
+		"kubectl delete pod api",
+		"terraform apply plan.out",
+		"rm -rf target",
+	];
+	const wrappers = [
+		(command: string) => command,
+		(command: string) => `sudo -n ${command}`,
+		(command: string) => `env TEST_GUARD=1 ${command}`,
+		(command: string) => `command ${command}`,
+		(command: string) => `nice -n 5 ${command}`,
+		(command: string) => `nohup ${command}`,
+		(command: string) => `time -p ${command}`,
+		(command: string) => `/usr/bin/env TEST_GUARD=1 ${command}`,
+	];
+	for (const risky of riskyCommands) {
+		for (const wrap of wrappers) {
+			const command = wrap(risky);
+			assert.equal(evaluateCommandWithRm(command).allow, false, command);
+		}
+	}
+
+	for (const command of [
+		"sudo -n kubectl get pods",
+		"env KUBECONFIG=test kubectl logs deployment/api",
+		"command kubectl describe pod/api",
+		"nice -n 5 terraform plan",
+		"time -p terraform validate",
+		"/usr/bin/env TF_IN_AUTOMATION=1 terraform state list",
+	]) {
+		assert.equal(evaluateCommandWithRm(command).allow, true, command);
 	}
 });
 
@@ -81,9 +160,42 @@ test("approval is bound to the blocked execution context and consumed once", () 
 	assert.deepEqual(store.approve("request-1", identity.command, "rm command needs confirmation"), { ok: true });
 	assert.equal(store.consume({ ...identity, cwd: "/tmp/other" }), false);
 	assert.equal(store.consume({ ...identity, shell: "bash" }), false);
+	assert.equal(store.consume({ ...identity, source: "exec-command" }), false);
+	assert.equal(store.consume({ ...identity, tty: true }), false);
+	assert.equal(store.consume({ ...identity, login: false }), false);
+	assert.equal(store.consume({ ...identity, command: `${identity.command} ` }), false);
 	assert.equal(store.consume(identity), true);
 	assert.equal(store.consume(identity), false);
 
+	now += 11 * 60 * 1000;
+	assert.equal(store.consume(identity), false);
+});
+
+test("approval validation rejects proactive, mismatched, cancelled, and expired grants", () => {
+	let now = 10_000;
+	let nextId = 0;
+	const store = new ApprovalStore(() => now, () => `strict-${++nextId}`);
+	const identity = executionIdentity("exec-command", { cmd: "kubectl delete pod api" }, "/tmp")!;
+	assert.deepEqual(store.approve("invented", identity.command, "invented"), {
+		ok: false,
+		error: "Approval request is missing or expired. Retry the blocked shell call to create a new request.",
+	});
+
+	const blocked = guardExecution(store, identity, "tui");
+	assert.equal(blocked.allow, false);
+	assert.deepEqual(store.approve(blocked.requestId, `${identity.command} `, "kubectl delete is not on the low-risk allowlist"), {
+		ok: false,
+		error: "Approval request does not match the exact blocked command. Do not retry the command.",
+	});
+	store.cancel(blocked.requestId!);
+	assert.deepEqual(store.approve(blocked.requestId, identity.command, "kubectl delete is not on the low-risk allowlist"), {
+		ok: false,
+		error: "Approval request is missing or expired. Retry the blocked shell call to create a new request.",
+	});
+
+	const expiring = guardExecution(store, identity, "tui");
+	assert.equal(expiring.allow, false);
+	assert.deepEqual(store.approve(expiring.requestId, identity.command, "kubectl delete is not on the low-risk allowlist"), { ok: true });
 	now += 11 * 60 * 1000;
 	assert.equal(store.consume(identity), false);
 });
@@ -175,6 +287,7 @@ test("Code Mode provider wrapper blocks before invoke and reads the current relo
 	};
 
 	assert.deepEqual(ensureCodeModeGuardInstalled(events, { cwd: "/tmp" }), { ok: true });
+	assert.deepEqual(ensureCodeModeGuardInstalled(events, { cwd: "/tmp" }), { ok: true });
 	const firstTool = provider.getTools()[0]!;
 	assert.equal(Boolean(firstTool[CODE_MODE_TOOL_WRAPPED]), true);
 	await assert.rejects(firstTool.invoke({ cmd: "rm target" }, { cwd: "/tmp" }), /blocked by test bridge/);
@@ -193,6 +306,45 @@ test("Code Mode provider wrapper blocks before invoke and reads the current relo
 	assert.equal(invokeCount, 1);
 });
 
+test("Code Mode adapter supports legacy arrays and providers added after startup", async () => {
+	const calls: string[] = [];
+	const createProvider = (name: string) => ({
+		getTools() {
+			return [
+				{
+					name: "exec_command",
+					async invoke() {
+						calls.push(name);
+						return name;
+					},
+				},
+			];
+		},
+	});
+	const first = createProvider("first");
+	const providers = new Map<object, ReturnType<typeof createProvider>>([[{}, first]]);
+	const events: Record<PropertyKey, unknown> = {
+		[CODE_MODE_RUNTIME_KEY]: { runtime: { providers } },
+		[CODE_MODE_GUARD_BRIDGE_KEY]: () => undefined,
+	};
+	assert.deepEqual(ensureCodeModeGuardInstalled(events, {}), { ok: true });
+	assert.equal(await first.getTools()[0]!.invoke({}, {}), "first");
+
+	const second = createProvider("second");
+	providers.set({}, second);
+	assert.deepEqual(ensureCodeModeGuardInstalled(events, {}), { ok: true });
+	assert.equal(await second.getTools()[0]!.invoke({}, {}), "second");
+	assert.deepEqual(calls, ["first", "second"]);
+
+	const legacy = createProvider("legacy");
+	const legacyEvents: Record<PropertyKey, unknown> = {
+		[CODE_MODE_RUNTIME_KEY]: { providers: [legacy] },
+		[CODE_MODE_GUARD_BRIDGE_KEY]: () => undefined,
+	};
+	assert.deepEqual(ensureCodeModeGuardInstalled(legacyEvents, {}), { ok: true });
+	assert.equal(await legacy.getTools()[0]!.invoke({}, {}), "legacy");
+});
+
 test("Code Mode integration fails closed when private runtime internals are unavailable", () => {
 	assert.deepEqual(ensureCodeModeGuardInstalled({}, { cwd: "/tmp" }), {
 		ok: false,
@@ -202,6 +354,48 @@ test("Code Mode integration fails closed when private runtime internals are unav
 		ensureCodeModeGuardInstalled({ [CODE_MODE_RUNTIME_KEY]: { runtime: {} } }, { cwd: "/tmp" }),
 		{ ok: false, reason: "Code Mode provider registry has an unsupported shape" },
 	);
+	assert.deepEqual(
+		ensureCodeModeGuardInstalled(
+			{ [CODE_MODE_RUNTIME_KEY]: { runtime: { providers: new Map([[{}, { getTools: () => [] }]]) } } },
+			{ cwd: "/tmp" },
+		),
+		{ ok: false, reason: "Code Mode nested exec_command provider was not found" },
+	);
+	assert.deepEqual(
+		ensureCodeModeGuardInstalled(
+			{
+				[CODE_MODE_RUNTIME_KEY]: {
+					runtime: {
+						providers: new Map([
+							[{}, { getTools: () => { throw new Error("provider failed"); } }],
+						]),
+					},
+				},
+			},
+			{ cwd: "/tmp" },
+		),
+		{ ok: false, reason: "Code Mode guard installation failed: provider failed" },
+	);
+});
+
+test("outer Code Mode calls fail closed when the private runtime is absent", async () => {
+	const handlers = new Map<string, Array<(event: any, context: any) => unknown>>();
+	const pi = {
+		events: {},
+		registerTool() {},
+		on(name: string, handler: (event: any, context: any) => unknown) {
+			handlers.set(name, [...(handlers.get(name) ?? []), handler]);
+		},
+	};
+	createExtension(pi as never);
+	const toolCall = handlers.get("tool_call")![0]!;
+	for (const toolName of ["exec", "wait", "functions.exec", "functions.wait"]) {
+		const decision = await toolCall({ toolName, input: {} }, { cwd: "/tmp", mode: "tui" });
+		assert.deepEqual(decision, {
+			block: true,
+			reason: "BLOCKED — infra-command-guard cannot safely intercept Code Mode: Code Mode runtime was not found. Reload Pi or disable Code Mode before running commands.",
+		});
+	}
 });
 
 test("extension outer exec hook installs the nested guard before Code Mode collects tools", async () => {
@@ -252,6 +446,61 @@ test("extension outer exec hook installs the nested guard before Code Mode colle
 			{ cmd: "rm guarded-target" },
 			{ cwd: "/tmp", extensionContext: context },
 		),
+		/Approval request:/,
+	);
+	assert.equal(invokeCount, 0);
+});
+
+test("Code Mode wrapper switches bridges safely across guard reloads", async () => {
+	let invokeCount = 0;
+	const provider = {
+		getTools() {
+			return [
+				{
+					name: "exec_command",
+					async invoke() {
+						invokeCount += 1;
+					},
+				},
+			];
+		},
+	};
+	const events: Record<PropertyKey, unknown> = {
+		[CODE_MODE_RUNTIME_KEY]: { runtime: { providers: new Map([[{}, provider]]) } },
+	};
+	const createPi = () => {
+		const handlers = new Map<string, Array<(event: any, context: any) => unknown>>();
+		return {
+			pi: {
+				events,
+				registerTool() {},
+				on(name: string, handler: (event: any, context: any) => unknown) {
+					handlers.set(name, [...(handlers.get(name) ?? []), handler]);
+				},
+			},
+			handlers,
+		};
+	};
+	const context = { cwd: "/tmp", mode: "tui" };
+	const first = createPi();
+	createExtension(first.pi as never);
+	for (const handler of first.handlers.get("before_agent_start") ?? []) await handler({}, context);
+	const wrappedBeforeReload = provider.getTools()[0]!;
+	await assert.rejects(
+		wrappedBeforeReload.invoke({ cmd: "rm first" }, { cwd: "/tmp", extensionContext: context }),
+		/Approval request:/,
+	);
+	for (const handler of first.handlers.get("session_shutdown") ?? []) await handler({}, context);
+	await assert.rejects(
+		wrappedBeforeReload.invoke({ cmd: "printf safe" }, { cwd: "/tmp", extensionContext: context }),
+		/bridge is unavailable/,
+	);
+
+	const second = createPi();
+	createExtension(second.pi as never);
+	for (const handler of second.handlers.get("before_agent_start") ?? []) await handler({}, context);
+	await assert.rejects(
+		wrappedBeforeReload.invoke({ cmd: "rm second" }, { cwd: "/tmp", extensionContext: context }),
 		/Approval request:/,
 	);
 	assert.equal(invokeCount, 0);

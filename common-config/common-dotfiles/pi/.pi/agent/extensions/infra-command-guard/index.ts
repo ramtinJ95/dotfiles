@@ -228,6 +228,17 @@ function containsGuardedText(text) {
 	return containsInfraText(text) || containsRmText(text);
 }
 
+function hasDynamicExecutable(command) {
+	if (!String(command || "").includes("$")) return false;
+	const parsed = parseSimpleCommands(command);
+	if (parsed.error) return false;
+	for (const segment of parsed.segments) {
+		const invocation = extractInvocation(segment.words);
+		if (!invocation.error && invocation.executable?.includes("$")) return true;
+	}
+	return false;
+}
+
 function isKubectlPortForwardOnlyCommand(command) {
 	const normalized = normalizeForInfraScan(command).toLowerCase();
 	const kubectlMentions = normalized.match(/\bkubectl\b(?=[\s;|&()<>]|$)/g) || [];
@@ -695,6 +706,9 @@ function evaluateTerraform(invocation) {
 }
 
 function evaluateCommand(command) {
+	if (hasDynamicExecutable(command)) {
+		return requireApproval("This command resolves its executable through a shell variable, which requires manual approval");
+	}
 	if (!containsGuardedText(command)) return allow();
 	if (isKubectlPortForwardOnlyCommand(command)) return allow();
 
@@ -709,7 +723,12 @@ function evaluateCommand(command) {
 			return requireApproval(`This command uses a wrapper the infra guard cannot classify safely (${invocation.error})`);
 		}
 
-		if (!invocation.executable) continue;
+		if (!invocation.executable) {
+			if (containsGuardedText(segment.words.join(" "))) {
+				return requireApproval("This command assigns guarded tooling for indirect shell execution, which requires manual approval");
+			}
+			continue;
+		}
 
 		if (SHELL_CONTROL_KEYWORDS.has(invocation.executable)) {
 			return requireApproval(`This command uses shell control flow (${invocation.executable}), which requires manual approval`);
@@ -1427,6 +1446,7 @@ export const _test = {
 	evaluateTerraform,
 	checkRm,
 	evaluateCommandWithRm,
+	hasDynamicExecutable,
 	isInteractiveInterpreterCommand,
 	executionFingerprint,
 	executionIdentity,
