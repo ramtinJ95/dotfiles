@@ -21,6 +21,7 @@ arch-config/arch-dotfiles/claude/.claude/usage-data/
 common-config/common-dotfiles/herdr/.config/herdr/*.log
 common-config/common-dotfiles/herdr/.config/herdr/*.sock
 common-config/common-dotfiles/herdr/.config/herdr/session*.json
+common-config/common-dotfiles/herdr/.config/herdr/.plugins.lock
 common-config/common-dotfiles/herdr/.config/herdr/*.pre-dotfiles-*
 mac-config/mac-dotfiles/claude/.claude/.last-cleanup
 mac-config/mac-dotfiles/claude/.claude/.last-update-result.json
@@ -29,6 +30,7 @@ mac-config/mac-dotfiles/claude/.claude/cache/
 mac-config/mac-dotfiles/claude/.claude/downloads/
 mac-config/mac-dotfiles/claude/.claude/file-history/
 mac-config/mac-dotfiles/claude/.claude/history.jsonl
+mac-config/mac-dotfiles/claude/.claude/image-cache/
 mac-config/mac-dotfiles/claude/.claude/mcp-needs-auth-cache.json
 mac-config/mac-dotfiles/claude/.claude/paste-cache/
 mac-config/mac-dotfiles/claude/.claude/plugins/
