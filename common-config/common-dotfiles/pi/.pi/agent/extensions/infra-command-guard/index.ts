@@ -7,7 +7,7 @@ import { createBashTool } from "@earendil-works/pi-coding-agent";
 import { Key, matchesKey, truncateToWidth, visibleWidth, wrapTextWithAnsi, type TUI } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 
-const INFRA_PATTERN_GLOBAL = /\b(?:kubectl|terraform)\b/i;
+const INFRA_PATTERN_GLOBAL = /\b(?:kubectl|terraform|helm|argocd)\b/i;
 const RM_PATTERN_GLOBAL = /\brm\b/i;
 const REQUEST_SOUND_PATH = fileURLToPath(new URL("./sounds/peon-something-need-doing.mp3", import.meta.url));
 const CODE_MODE_RUNTIME_KEY = Symbol.for("@howaboua/pi-codex-conversion.code-mode");
@@ -78,6 +78,38 @@ const SAFE_TERRAFORM_NESTED = {
 	workspace: new Set(["list", "select", "show"]),
 };
 
+const SAFE_HELM_TOP_LEVEL = new Set([
+	"completion",
+	"env",
+	"help",
+	"history",
+	"lint",
+	"list",
+	"search",
+	"show",
+	"status",
+	"template",
+	"verify",
+	"version",
+]);
+
+const SAFE_HELM_NESTED = {
+	dependency: new Set(["list"]),
+	plugin: new Set(["list"]),
+	repo: new Set(["list"]),
+};
+
+const SAFE_ARGOCD_TOP_LEVEL = new Set(["completion", "help", "version"]);
+const SAFE_ARGOCD_NESTED = {
+	account: new Set(["can-i", "get", "list"]),
+	app: new Set(["get", "history", "list", "logs", "resources", "wait"]),
+	cert: new Set(["list"]),
+	cluster: new Set(["get", "list"]),
+	gpg: new Set(["list"]),
+	proj: new Set(["get", "list"]),
+	repo: new Set(["get", "list"]),
+};
+
 const KUBECTL_LEADING_BOOLEAN_OPTIONS = new Set([
 	"-A",
 	"--all-namespaces",
@@ -114,6 +146,66 @@ const KUBECTL_LEADING_VALUE_OPTIONS = new Set([
 
 const TERRAFORM_LEADING_BOOLEAN_OPTIONS = new Set(["-help", "--help", "-version", "--version", "-no-color"]);
 const TERRAFORM_LEADING_VALUE_OPTIONS = new Set(["-chdir"]);
+
+const HELM_LEADING_BOOLEAN_OPTIONS = new Set([
+	"--debug",
+	"-h",
+	"--help",
+	"--kube-insecure-skip-tls-verify",
+]);
+const HELM_LEADING_VALUE_OPTIONS = new Set([
+	"--burst-limit",
+	"--color",
+	"--colour",
+	"--content-cache",
+	"--kube-apiserver",
+	"--kube-as-group",
+	"--kube-as-user",
+	"--kube-ca-file",
+	"--kube-context",
+	"--kube-tls-server-name",
+	"--kube-token",
+	"--kubeconfig",
+	"-n",
+	"--namespace",
+	"--qps",
+	"--registry-config",
+	"--repository-cache",
+	"--repository-config",
+]);
+
+const ARGOCD_LEADING_BOOLEAN_OPTIONS = new Set([
+	"--core",
+	"--grpc-web",
+	"-h",
+	"--help",
+	"--insecure",
+	"--plaintext",
+	"--port-forward",
+	"--prompts-enabled",
+	"--version",
+]);
+const ARGOCD_LEADING_VALUE_OPTIONS = new Set([
+	"--argocd-context",
+	"--auth-token",
+	"--client-crt",
+	"--client-crt-key",
+	"--config",
+	"--controller-name",
+	"--grpc-web-root-path",
+	"--header",
+	"--http-retry-max",
+	"--logformat",
+	"--loglevel",
+	"--port-forward-namespace",
+	"--redis-compress",
+	"--redis-haproxy-name",
+	"--redis-name",
+	"--repo-server-name",
+	"--server",
+	"--server-crt",
+	"--server-name",
+]);
 
 const ENV_BOOLEAN_OPTIONS = new Set(["-0", "-i", "--ignore-environment", "--null"]);
 const ENV_VALUE_OPTIONS = new Set(["-C", "-S", "-u", "--chdir", "--split-string", "--unset"]);
@@ -244,7 +336,7 @@ function isKubectlPortForwardOnlyCommand(command) {
 	const normalized = normalizeForInfraScan(command).toLowerCase();
 	const kubectlMentions = normalized.match(/\bkubectl\b(?=[\s;|&()<>]|$)/g) || [];
 	if (kubectlMentions.length === 0) return false;
-	if (/\b(?:terraform|rm)\b/.test(normalized)) return false;
+	if (/\b(?:terraform|helm|argocd|rm)\b/.test(normalized)) return false;
 	const kubectlPortForwardMentions =
 		normalized.match(/\bkubectl\b(?=[\s;|&()<>]|$)(?:(?!&&|\|\||[;&|\n]).)*\bport-forward\b/g) || [];
 	return kubectlPortForwardMentions.length === kubectlMentions.length;
@@ -706,6 +798,77 @@ function evaluateTerraform(invocation) {
 	return requireApproval(`terraform ${topLevel} is not on the low-risk allowlist`);
 }
 
+function evaluateHelm(invocation) {
+	if (invocation.args.some((arg) => arg === "--post-renderer" || arg.startsWith("--post-renderer="))) {
+		return requireApproval("helm --post-renderer can execute an external program");
+	}
+
+	const collected = collectPositionals(invocation.args, {
+		maxPositionals: 2,
+		leadingBooleanOptions: HELM_LEADING_BOOLEAN_OPTIONS,
+		leadingValueOptions: HELM_LEADING_VALUE_OPTIONS,
+	});
+	if (collected.error) {
+		return requireApproval(`helm uses an unsupported flag layout (${collected.error})`);
+	}
+
+	const topLevel = (collected.positionals[0] || "").toLowerCase();
+	const nested = (collected.positionals[1] || "").toLowerCase();
+	if (!topLevel) {
+		if (invocation.args.some((arg) => arg === "-h" || arg === "--help")) return allow();
+		return requireApproval("helm command could not be classified safely");
+	}
+
+	if (topLevel === "get") {
+		return requireApproval("helm get may expose stored release values or rendered secrets");
+	}
+
+	const nestedAllowlist = SAFE_HELM_NESTED[topLevel as keyof typeof SAFE_HELM_NESTED];
+	if (nestedAllowlist) {
+		if (nestedAllowlist.has(nested)) return allow();
+		return requireApproval(`helm ${topLevel} ${nested || "<unknown>"} is not on the low-risk allowlist`);
+	}
+
+	if (SAFE_HELM_TOP_LEVEL.has(topLevel)) return allow();
+	return requireApproval(`helm ${topLevel} is not on the low-risk allowlist`);
+}
+
+function evaluateArgocd(invocation) {
+	const collected = collectPositionals(invocation.args, {
+		maxPositionals: 3,
+		leadingBooleanOptions: ARGOCD_LEADING_BOOLEAN_OPTIONS,
+		leadingValueOptions: ARGOCD_LEADING_VALUE_OPTIONS,
+	});
+	if (collected.error) {
+		return requireApproval(`argocd uses an unsupported flag layout (${collected.error})`);
+	}
+
+	const topLevel = (collected.positionals[0] || "").toLowerCase();
+	const nested = (collected.positionals[1] || "").toLowerCase();
+	const action = (collected.positionals[2] || "").toLowerCase();
+	if (!topLevel) {
+		if (invocation.args.some((arg) => arg === "-h" || arg === "--help" || arg === "--version")) return allow();
+		return requireApproval("argocd command could not be classified safely");
+	}
+
+	if (topLevel === "app" && (nested === "diff" || nested === "manifests")) {
+		return requireApproval(`argocd app ${nested} may expose rendered secret material`);
+	}
+	if (topLevel === "app" && nested === "actions") {
+		if (action === "list") return allow();
+		return requireApproval(`argocd app actions ${action || "<unknown>"} may execute a resource action`);
+	}
+
+	const nestedAllowlist = SAFE_ARGOCD_NESTED[topLevel as keyof typeof SAFE_ARGOCD_NESTED];
+	if (nestedAllowlist) {
+		if (nestedAllowlist.has(nested)) return allow();
+		return requireApproval(`argocd ${topLevel} ${nested || "<unknown>"} is not on the low-risk allowlist`);
+	}
+
+	if (SAFE_ARGOCD_TOP_LEVEL.has(topLevel)) return allow();
+	return requireApproval(`argocd ${topLevel} is not on the low-risk allowlist`);
+}
+
 function evaluateCommand(command) {
 	if (hasDynamicExecutable(command)) {
 		return requireApproval("This command resolves its executable through a shell variable, which requires manual approval");
@@ -757,6 +920,18 @@ function evaluateCommand(command) {
 
 		if (invocation.executable === "terraform") {
 			const decision = evaluateTerraform(invocation);
+			if (!decision.allow) return decision;
+			continue;
+		}
+
+		if (invocation.executable === "helm") {
+			const decision = evaluateHelm(invocation);
+			if (!decision.allow) return decision;
+			continue;
+		}
+
+		if (invocation.executable === "argocd") {
+			const decision = evaluateArgocd(invocation);
 			if (!decision.allow) return decision;
 			continue;
 		}
@@ -1436,6 +1611,8 @@ export const _test = {
 	evaluateCommand,
 	evaluateKubectl,
 	evaluateTerraform,
+	evaluateHelm,
+	evaluateArgocd,
 	checkRm,
 	evaluateCommandWithRm,
 	hasDynamicExecutable,

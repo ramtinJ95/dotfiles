@@ -73,6 +73,90 @@ test("kubectl and terraform retain their safe and approval-required behavior", (
 	}
 });
 
+test("helm allows explicit reads and guards mutations or sensitive output", () => {
+	for (const command of [
+		"helm version --short",
+		"helm --kube-context prod list --all-namespaces",
+		"helm -n production status api",
+		"helm history api",
+		"helm search repo ingress",
+		"helm show values ./chart",
+		"helm template api ./chart",
+		"helm lint ./chart",
+		"helm repo list",
+		"helm plugin list",
+		"helm dependency list ./chart",
+		"helm help uninstall",
+	]) {
+		assert.equal(evaluateCommandWithRm(command).allow, true, command);
+	}
+
+	for (const command of [
+		"helm install api ./chart",
+		"helm upgrade api ./chart",
+		"helm uninstall api",
+		"helm rollback api 2",
+		"helm test api",
+		"helm get values api",
+		"helm repo add internal https://charts.example.com",
+		"helm repo update",
+		"helm plugin install https://example.com/plugin.git",
+		"helm registry login registry.example.com",
+		"helm push chart.tgz oci://registry.example.com/charts",
+		"helm template api ./chart --post-renderer ./renderer",
+		"helm diff upgrade api ./chart",
+		"sudo /opt/homebrew/bin/helm upgrade api ./chart",
+	]) {
+		assert.equal(evaluateCommandWithRm(command).allow, false, command);
+	}
+});
+
+test("argocd allows explicit reads and guards application or control-plane mutations", () => {
+	for (const command of [
+		"argocd version --client",
+		"argocd --server argocd.example.com app list",
+		"argocd app get api",
+		"argocd app history api",
+		"argocd app logs api",
+		"argocd app resources api",
+		"argocd app wait api --health",
+		"argocd app actions list api",
+		"argocd cluster list",
+		"argocd cluster get production",
+		"argocd repo list",
+		"argocd repo get https://github.com/example/repo.git",
+		"argocd proj list",
+		"argocd account can-i sync applications '*'",
+		"argocd cert list --cert-type https",
+		"argocd gpg list",
+	]) {
+		assert.equal(evaluateCommandWithRm(command).allow, true, command);
+	}
+
+	for (const command of [
+		"argocd app create api --repo https://github.com/example/repo.git",
+		"argocd app sync api",
+		"argocd app rollback api 2",
+		"argocd app delete api",
+		"argocd app set api --revision main",
+		"argocd app terminate-op api",
+		"argocd app patch-resource api --kind Deployment",
+		"argocd app actions run restart --kind Deployment api",
+		"argocd app diff api",
+		"argocd app manifests api",
+		"argocd cluster add production",
+		"argocd cluster rm production",
+		"argocd repo add https://github.com/example/repo.git",
+		"argocd proj create production",
+		"argocd account generate-token",
+		"argocd admin cluster kubeconfig production",
+		"argocd login argocd.example.com",
+		"env ARGOCD_OPTS=--grpc-web /usr/local/bin/argocd app sync api",
+	]) {
+		assert.equal(evaluateCommandWithRm(command).allow, false, command);
+	}
+});
+
 test("guarded commands fail closed through shell composition and obfuscation", () => {
 	for (const command of [
 		"printf ready && kubectl delete pod api",
@@ -87,6 +171,9 @@ test("guarded commands fail closed through shell composition and obfuscation", (
 		'ter"ra"form apply',
 		"find . -exec /bin/rm -rf {} +",
 		"printf target | xargs -n1 /bin/rm",
+		'bash -lc "helm uninstall api"',
+		'python -c "import os; os.system(\'argocd app sync api\')"',
+		"kubectl port-forward service/api 8080:80 & helm uninstall api",
 		"$TOOL delete pod api",
 		'sudo "$TOOL" apply plan.out',
 		'"${KUBECTL}" delete pod api',
@@ -101,6 +188,8 @@ test("guarded commands fail closed through shell composition and obfuscation", (
 		'printf "%s\\n" "rm -rf target"',
 		'printf "%s\\n" "$TOOL"',
 		'echo "${HOME}"',
+		'printf "%s\\n" "helm uninstall api"',
+		'printf "%s\\n" "argocd app sync api"',
 	]) {
 		assert.equal(evaluateCommandWithRm(command).allow, true, command);
 	}
@@ -110,6 +199,8 @@ test("wrapper matrix cannot hide guarded executables", () => {
 	const riskyCommands = [
 		"kubectl delete pod api",
 		"terraform apply plan.out",
+		"helm upgrade api ./chart",
+		"argocd app sync api",
 		"rm -rf target",
 	];
 	const wrappers = [

@@ -1,6 +1,6 @@
 # infra-command-guard
 
-Global pi extension that wraps the built-in `bash` tool and intercepts direct and GPT-5.6 Code Mode `exec_command` calls, asking for approval before running higher-risk `kubectl`, `terraform`, and `rm` commands.
+Global pi extension that wraps the built-in `bash` tool and intercepts direct and GPT-5.6 Code Mode `exec_command` calls, asking for approval before running higher-risk `kubectl`, `terraform`, `helm`, `argocd`, and `rm` commands.
 
 ## Goals
 
@@ -53,9 +53,35 @@ Low-risk planning and inspection commands, including:
 - `workspace show`
 - `workspace select`
 
+### helm
+
+Explicitly low-risk operations including:
+
+- `version`, `env`, and `help`
+- `list`, `status`, and `history`
+- `search`, `show`, `template`, `lint`, and `verify`
+- `repo list`, `plugin list`, and `dependency list`
+
+`helm get` remains guarded because stored release values and manifests can expose secrets. Commands using `--post-renderer` remain guarded because they execute an external program.
+
+### argocd
+
+Explicitly low-risk operations including:
+
+- `version`, `help`, and `completion`
+- `app list`, `get`, `history`, `logs`, `resources`, and `wait`
+- `app actions list`
+- `cluster list|get`
+- `repo list|get`
+- `proj list|get`
+- `account list|get|can-i`
+- `cert list` and `gpg list`
+
+`argocd app diff` and `app manifests` remain guarded because rendered output can expose secret material.
+
 ## What requires approval
 
-- Mutating infra commands such as `kubectl delete` and `terraform apply`
+- Mutating infra commands such as `kubectl delete`, `terraform apply`, `helm upgrade`, and `argocd app sync`
 - `rm` commands
 - Wrapped or path-qualified `rm` commands such as `sudo rm`, `env rm`, and `/bin/rm`
 - Executables resolved through shell variables, such as `$TOOL ...`
