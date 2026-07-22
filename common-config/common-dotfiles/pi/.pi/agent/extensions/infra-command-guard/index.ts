@@ -12,6 +12,7 @@ const RM_PATTERN_GLOBAL = /\brm\b/i;
 const REQUEST_SOUND_PATH = fileURLToPath(new URL("./sounds/peon-something-need-doing.mp3", import.meta.url));
 const CODE_MODE_RUNTIME_KEY = Symbol.for("@howaboua/pi-codex-conversion.code-mode");
 const CODE_MODE_GUARD_BRIDGE_KEY = Symbol.for("infra-command-guard.code-mode-bridge.v1");
+const APPROVAL_STORE_KEY = Symbol.for("infra-command-guard.approval-store.v1");
 const CODE_MODE_PROVIDER_WRAPPED = Symbol.for("infra-command-guard.code-mode-provider-wrapped.v1");
 const CODE_MODE_TOOL_WRAPPED = Symbol.for("infra-command-guard.code-mode-tool-wrapped.v1");
 const APPROVAL_TTL_MS = 10 * 60 * 1000;
@@ -1291,7 +1292,7 @@ async function requestInfraApproval(
 }
 
 const ApproveInfraCommandParams = Type.Object({
-	request_id: Type.Optional(Type.String({ description: "The approval request identifier from the blocked tool result." })),
+	request_id: Type.String({ description: "The approval request identifier from the blocked tool result." }),
 	command: Type.String({ description: "The exact blocked command, byte-for-byte. Do not edit or normalize." }),
 	reason: Type.String({ description: "The infra-command-guard block reason." }),
 	summary: Type.String({ description: "Plain-language summary of what the command does. Do not repeat the command text." }),
@@ -1309,6 +1310,8 @@ export default function createExtension(pi: ExtensionAPI) {
 	const bashTool = createBashTool(process.cwd());
 	const approvals = new ApprovalStore();
 	const events = pi.events as any;
+	events[APPROVAL_STORE_KEY] = approvals;
+	const currentApprovals = (): ApprovalStore => events[APPROVAL_STORE_KEY] as ApprovalStore;
 	const codeModeBridge: CodeModeGuardBridge = (input, context) => {
 		const nestedContext = context?.extensionContext ?? context;
 		const identity = executionIdentity(
@@ -1323,7 +1326,7 @@ export default function createExtension(pi: ExtensionAPI) {
 		if (!identity) {
 			throw new Error("BLOCKED — infra-command-guard could not identify the nested exec_command request.");
 		}
-		const guarded = guardExecution(approvals, identity, nestedContext?.mode);
+		const guarded = guardExecution(currentApprovals(), identity, nestedContext?.mode);
 		if (!guarded.allow) throw new Error(guarded.reason);
 	};
 	events[CODE_MODE_GUARD_BRIDGE_KEY] = codeModeBridge;
@@ -1352,8 +1355,17 @@ export default function createExtension(pi: ExtensionAPI) {
 			"When using approve_infra_command, keep summary, flags, and blastRadius non-overlapping; the approval UI renders command and reason separately.",
 		],
 		parameters: ApproveInfraCommandParams,
+		prepareArguments(args) {
+			if (!args || typeof args !== "object") return args;
+			const record = args as Record<string, unknown>;
+			if (typeof record.request_id === "string") return args;
+			if (typeof record.command !== "string" || typeof record.reason !== "string") return args;
+			const validation = currentApprovals().validate(undefined, record.command, record.reason);
+			return validation.ok ? { ...record, request_id: validation.pending.id } : args;
+		},
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-			const validation = approvals.validate(params.request_id, params.command, params.reason);
+			const approvalStore = currentApprovals();
+			const validation = approvalStore.validate(params.request_id, params.command, params.reason);
 			if (!validation.ok) {
 				return {
 					content: [{ type: "text", text: validation.error }],
@@ -1376,14 +1388,14 @@ export default function createExtension(pi: ExtensionAPI) {
 				params.command,
 			);
 			if (!approved) {
-				approvals.cancel(validation.pending.id);
+				approvalStore.cancel(validation.pending.id);
 				return {
 					content: [{ type: "text", text: "User cancelled. Do not retry the command." }],
 					details: { approved: false, requestId: validation.pending.id, reason: params.reason, command: params.command },
 				};
 			}
 
-			const granted = approvals.approve(validation.pending.id, params.command, params.reason);
+			const granted = approvalStore.approve(validation.pending.id, params.command, params.reason);
 			if (!granted.ok) {
 				return {
 					content: [{ type: "text", text: granted.error }],
@@ -1414,7 +1426,7 @@ export default function createExtension(pi: ExtensionAPI) {
 
 		const identity = executionIdentity("exec-command", event.input, ctx.cwd);
 		if (!identity) return undefined;
-		const guarded = guardExecution(approvals, identity, ctx.mode);
+		const guarded = guardExecution(currentApprovals(), identity, ctx.mode);
 		return guarded.allow ? undefined : { block: true, reason: guarded.reason };
 	});
 
@@ -1423,7 +1435,7 @@ export default function createExtension(pi: ExtensionAPI) {
 		execute: async (toolCallId, params, signal, onUpdate, ctx) => {
 			const identity = executionIdentity("bash", params, process.cwd());
 			if (!identity) return bashTool.execute(toolCallId, params, signal, onUpdate);
-			const guarded = guardExecution(approvals, identity, ctx.mode);
+			const guarded = guardExecution(currentApprovals(), identity, ctx.mode);
 			if (!guarded.allow) throw new Error(guarded.reason);
 			return bashTool.execute(toolCallId, params, signal, onUpdate);
 		},
@@ -1433,6 +1445,7 @@ export default function createExtension(pi: ExtensionAPI) {
 		if (events[CODE_MODE_GUARD_BRIDGE_KEY] === codeModeBridge) {
 			delete events[CODE_MODE_GUARD_BRIDGE_KEY];
 		}
+		if (events[APPROVAL_STORE_KEY] === approvals) delete events[APPROVAL_STORE_KEY];
 	});
 }
 
@@ -1456,6 +1469,7 @@ export const _test = {
 	codeModeProviders,
 	CODE_MODE_RUNTIME_KEY,
 	CODE_MODE_GUARD_BRIDGE_KEY,
+	APPROVAL_STORE_KEY,
 	CODE_MODE_PROVIDER_WRAPPED,
 	CODE_MODE_TOOL_WRAPPED,
 };

@@ -15,6 +15,7 @@ const {
 	ensureCodeModeGuardInstalled,
 	CODE_MODE_RUNTIME_KEY,
 	CODE_MODE_GUARD_BRIDGE_KEY,
+	APPROVAL_STORE_KEY,
 	CODE_MODE_TOOL_WRAPPED,
 } = _test;
 
@@ -504,6 +505,61 @@ test("Code Mode wrapper switches bridges safely across guard reloads", async () 
 		/Approval request:/,
 	);
 	assert.equal(invokeCount, 0);
+});
+
+test("stale approval tool closures follow the current reload store", async () => {
+	const events: Record<PropertyKey, unknown> = {};
+	const createPi = () => {
+		const tools: any[] = [];
+		return {
+			pi: {
+				events,
+				registerTool(tool: any) {
+					tools.push(tool);
+				},
+				on() {},
+			},
+			tools,
+		};
+	};
+	const first = createPi();
+	createExtension(first.pi as never);
+	const firstStore = events[APPROVAL_STORE_KEY];
+	const staleApprovalTool = first.tools.find((tool) => tool.name === "approve_infra_command")!;
+	assert.ok(staleApprovalTool.parameters.required.includes("request_id"));
+
+	const second = createPi();
+	createExtension(second.pi as never);
+	assert.notEqual(events[APPROVAL_STORE_KEY], firstStore);
+	const bridge = events[CODE_MODE_GUARD_BRIDGE_KEY] as (input: unknown, context: unknown) => void;
+	let blocked = "";
+	try {
+		bridge({ cmd: "rm stale-reload-test" }, { cwd: "/tmp", extensionContext: { mode: "tui" } });
+	} catch (error) {
+		blocked = error instanceof Error ? error.message : String(error);
+	}
+	const requestId = blocked.match(/Approval request: ([0-9a-f-]+)/)?.[1];
+	assert.ok(requestId);
+	const prepared = staleApprovalTool.prepareArguments({
+		command: "rm stale-reload-test",
+		reason: "rm command needs confirmation",
+	});
+	assert.equal(prepared.request_id, requestId);
+	const result = await staleApprovalTool.execute(
+		"approval-test",
+		{
+			request_id: requestId,
+			command: "rm stale-reload-test",
+			reason: "rm command needs confirmation",
+			summary: "test",
+			flags: [],
+			blastRadius: "test",
+		},
+		undefined,
+		undefined,
+		{ mode: "rpc" },
+	);
+	assert.match(result.content[0].text, /TUI approval UI is not available/);
 });
 
 let failures = 0;
