@@ -18,7 +18,8 @@
     "npm:@howaboua/pi-markdown-workflows",
     "git:https://github.com/badlogic/pi-diff-review",
     "npm:@bergetai/pi-provider",
-    "npm:@howaboua/pi-ask"
+    "npm:@howaboua/pi-ask",
+    "npm:@ramtinj95/pi-infra-command-guard"
   ],
   "compaction": {
     "enabled": true
