@@ -22,7 +22,9 @@ from typing import Iterable
 
 APPROVAL_FILE = os.path.expanduser("~/.claude/approval-cmd")
 
-INFRA_PATTERN_GLOBAL = re.compile(r"\b(?:kubectl|terraform)\b", re.IGNORECASE)
+INFRA_PATTERN_GLOBAL = re.compile(r"\b(?:kubectl|terraform|helm|argocd)\b", re.IGNORECASE)
+
+PORT_FORWARD_SEGMENT_START = re.compile(r"^(?:[a-z_][a-z0-9_]*=\S*\s+)*kubectl(?=\s|$)")
 
 SHELL_RUNNERS = {
     "sh", "bash", "zsh", "dash", "fish",
@@ -51,6 +53,32 @@ SAFE_TERRAFORM_NESTED = {
     "workspace": {"list", "select", "show"},
 }
 
+SAFE_HELM_TOP_LEVEL = {
+    "env", "history", "inspect", "lint", "list", "ls", "search",
+    "show", "status", "template", "verify", "version",
+}
+
+SAFE_HELM_NESTED = {
+    "dependency": {"list"},
+    "get": {"hooks", "manifest", "metadata", "notes"},
+    "repo": {"list"},
+}
+
+SAFE_ARGOCD_TOP_LEVEL = {"context", "version"}
+
+SAFE_ARGOCD_NESTED = {
+    "account": {"can-i", "get", "get-user-info", "list"},
+    "app": {"diff", "get", "history", "list", "logs", "manifests", "resources", "wait"},
+    "applicationset": {"get", "list"},
+    "appset": {"get", "list"},
+    "cert": {"list"},
+    "cluster": {"get", "list"},
+    "gpg": {"get", "list"},
+    "proj": {"get", "list"},
+    "repo": {"get", "list"},
+    "repocreds": {"list"},
+}
+
 KUBECTL_LEADING_BOOLEAN_OPTIONS = {
     "-A", "--all-namespaces", "--disable-compression",
     "--insecure-skip-tls-verify", "--match-server-version",
@@ -69,6 +97,28 @@ TERRAFORM_LEADING_BOOLEAN_OPTIONS = {
     "-help", "--help", "-version", "--version", "-no-color",
 }
 TERRAFORM_LEADING_VALUE_OPTIONS = {"-chdir"}
+
+HELM_LEADING_BOOLEAN_OPTIONS = {
+    "-h", "--help", "--debug", "--kube-insecure-skip-tls-verify",
+}
+HELM_LEADING_VALUE_OPTIONS = {
+    "-n", "--namespace", "--burst-limit", "--kube-apiserver", "--kube-as-group",
+    "--kube-as-user", "--kube-ca-file", "--kube-context", "--kube-tls-server-name",
+    "--kube-token", "--kubeconfig", "--registry-config", "--repository-cache",
+    "--repository-config",
+}
+
+ARGOCD_LEADING_BOOLEAN_OPTIONS = {
+    "-h", "--help", "--core", "--grpc-web", "--insecure", "--plaintext",
+    "--port-forward",
+}
+ARGOCD_LEADING_VALUE_OPTIONS = {
+    "--auth-token", "--client-crt", "--client-crt-key", "--config",
+    "--controller-name", "--grpc-web-root-path", "--http-retry-max",
+    "--kube-context", "--logformat", "--loglevel", "--port-forward-namespace",
+    "--redis-compress", "--redis-haproxy-name", "--redis-name",
+    "--repo-server-name", "--server", "--server-crt", "--server-name",
+}
 
 ENV_BOOLEAN_OPTIONS = {"-0", "-i", "--ignore-environment", "--null"}
 ENV_VALUE_OPTIONS = {"-C", "-S", "-u", "--chdir", "--split-string", "--unset"}
@@ -140,18 +190,43 @@ def contains_infra_text(text: str) -> bool:
     return bool(INFRA_PATTERN_GLOBAL.search(normalize_for_infra_scan(text)))
 
 
+INFRA_TOOL_NAMES = {"kubectl", "terraform", "helm", "argocd"}
+
+
+def contains_infra_token(text: str) -> bool:
+    """True only when an infra tool name appears as a standalone word (or the
+    final path component of one, e.g. ./bin/helm) — not as a substring of a
+    path, URL, or resource name like helm/values.yaml or argocd.example.com."""
+    normalized = normalize_for_infra_scan(text).lower()
+    return any(strip_path(token) in INFRA_TOOL_NAMES for token in normalized.split())
+
+
 def is_kubectl_port_forward_only_command(command: str) -> bool:
+    """Fast path for kubectl port-forward, which is commonly backgrounded with `&`
+    (syntax parse_simple_commands rejects).
+
+    Allows only when at least one segment is a plain `kubectl ... port-forward`
+    invocation and no other segment names an infra tool as a standalone word,
+    so a port-forward cannot smuggle a helm/argocd/terraform invocation
+    alongside it. Infra words inside arguments (e.g. `svc/argocd-server`,
+    `-n argocd`) stay allowed.
+    """
     normalized = normalize_for_infra_scan(command).lower()
-    kubectl_mentions = re.findall(r"\bkubectl\b(?=[\s;|&()<>]|$)", normalized)
-    if not kubectl_mentions:
+    if "$(" in normalized or "`" in normalized or "<(" in normalized or ">(" in normalized:
         return False
-    if re.search(r"\bterraform\b", normalized):
-        return False
-    pf_pattern = re.compile(
-        r"\bkubectl\b(?=[\s;|&()<>]|$)(?:(?!&&|\|\||[;&|\n]).)*\bport-forward\b"
-    )
-    pf_mentions = pf_pattern.findall(normalized)
-    return len(pf_mentions) == len(kubectl_mentions)
+    saw_port_forward = False
+    for segment in re.split(r"[;&|\n]+", normalized):
+        segment = segment.strip()
+        if not segment:
+            continue
+        if PORT_FORWARD_SEGMENT_START.match(segment):
+            if "port-forward" not in segment:
+                return False
+            saw_port_forward = True
+            continue
+        if contains_infra_token(segment):
+            return False
+    return saw_port_forward
 
 
 def matches_leading_option(option: str, known: set[str]) -> bool:
@@ -611,6 +686,73 @@ def evaluate_terraform(inv: Invocation) -> Decision:
     return _block(f"terraform {top_level} is not on the low-risk allowlist")
 
 
+def evaluate_helm(inv: Invocation) -> Decision:
+    try:
+        positionals = collect_positionals(
+            inv.args,
+            max_positionals=2,
+            leading_boolean_options=HELM_LEADING_BOOLEAN_OPTIONS,
+            leading_value_options=HELM_LEADING_VALUE_OPTIONS,
+        )
+    except ParseError as exc:
+        return _block(f"helm uses an unsupported flag layout ({exc})")
+
+    top_level = (positionals[0] if len(positionals) > 0 else "").lower()
+    nested = (positionals[1] if len(positionals) > 1 else "").lower()
+
+    if not top_level:
+        if any(a in ("-h", "--help") for a in inv.args):
+            return _allow()
+        return _block("helm command could not be classified safely")
+
+    if top_level == "get":
+        if nested in ("all", "values"):
+            return _block(f"helm get {nested} can expose sensitive release values")
+        if nested in SAFE_HELM_NESTED["get"]:
+            return _allow()
+        return _block(f"helm get {nested or '<unknown>'} is not on the low-risk allowlist")
+
+    if top_level in SAFE_HELM_NESTED:
+        if nested in SAFE_HELM_NESTED[top_level]:
+            return _allow()
+        return _block(f"helm {top_level} {nested or '<unknown>'} is not on the low-risk allowlist")
+
+    if top_level in SAFE_HELM_TOP_LEVEL:
+        return _allow()
+
+    return _block(f"helm {top_level} is not on the low-risk allowlist")
+
+
+def evaluate_argocd(inv: Invocation) -> Decision:
+    try:
+        positionals = collect_positionals(
+            inv.args,
+            max_positionals=2,
+            leading_boolean_options=ARGOCD_LEADING_BOOLEAN_OPTIONS,
+            leading_value_options=ARGOCD_LEADING_VALUE_OPTIONS,
+        )
+    except ParseError as exc:
+        return _block(f"argocd uses an unsupported flag layout ({exc})")
+
+    top_level = (positionals[0] if len(positionals) > 0 else "").lower()
+    nested = (positionals[1] if len(positionals) > 1 else "").lower()
+
+    if not top_level:
+        if any(a in ("-h", "--help") for a in inv.args):
+            return _allow()
+        return _block("argocd command could not be classified safely")
+
+    if top_level in SAFE_ARGOCD_NESTED:
+        if nested in SAFE_ARGOCD_NESTED[top_level]:
+            return _allow()
+        return _block(f"argocd {top_level} {nested or '<unknown>'} is not on the low-risk allowlist")
+
+    if top_level in SAFE_ARGOCD_TOP_LEVEL:
+        return _allow()
+
+    return _block(f"argocd {top_level} is not on the low-risk allowlist")
+
+
 def evaluate_command(command: str) -> Decision:
     if not contains_infra_text(command):
         return _allow()
@@ -665,7 +807,19 @@ def evaluate_command(command: str) -> Decision:
                 return decision
             continue
 
-        if contains_infra_text(segment_bare):
+        if inv.executable == "helm":
+            decision = evaluate_helm(inv)
+            if not decision.allow:
+                return decision
+            continue
+
+        if inv.executable == "argocd":
+            decision = evaluate_argocd(inv)
+            if not decision.allow:
+                return decision
+            continue
+
+        if contains_infra_token(segment_bare):
             return _block(
                 f"This command invokes infra tooling through {inv.executable}, which requires manual approval"
             )
