@@ -80,7 +80,7 @@ Low-risk planning and inspection commands, including:
 
 Approvals expire after ten minutes. If the command, working directory, requested shell, TTY mode, login mode, or tool path changes, the retry is blocked again.
 
-The request identifier is required in the public tool schema. Pi's argument-preparation compatibility path can infer it for a call resumed from the older schema only when exactly one pending request matches the exact command and reason; ambiguous calls are rejected.
+The request identifier is required. Missing, expired, or mismatched request identifiers are rejected; the blocked command must be rerun to create a fresh request.
 
 ## Code Mode integration
 

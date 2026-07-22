@@ -213,23 +213,6 @@ test("one approval cannot authorize two concurrent identical retries", () => {
 	assert.deepEqual([store.consume(identity), store.consume(identity)].sort(), [false, true]);
 });
 
-test("legacy approval calls infer only one unambiguous pending request", () => {
-	let nextId = 0;
-	const store = new ApprovalStore(() => 1_000, () => `request-${++nextId}`);
-	const first = executionIdentity("exec-command", { cmd: "rm target" }, "/tmp/one")!;
-	guardExecution(store, first, "tui");
-	assert.deepEqual(store.approve(undefined, first.command, "rm command needs confirmation"), { ok: true });
-	assert.equal(store.consume(first), true);
-
-	guardExecution(store, first, "tui");
-	const second = { ...first, cwd: "/tmp/two" };
-	guardExecution(store, second, "tui");
-	assert.deepEqual(store.validate(undefined, first.command, "rm command needs confirmation"), {
-		ok: false,
-		error: "Multiple pending approvals match this command. Retry the blocked shell call and pass its request_id.",
-	});
-});
-
 test("approval requests expire", () => {
 	let now = 5_000;
 	const store = new ApprovalStore(() => now, () => "expiring-request");
@@ -307,7 +290,7 @@ test("Code Mode provider wrapper blocks before invoke and reads the current relo
 	assert.equal(invokeCount, 1);
 });
 
-test("Code Mode adapter supports legacy arrays and providers added after startup", async () => {
+test("Code Mode adapter guards providers added after startup", async () => {
 	const calls: string[] = [];
 	const createProvider = (name: string) => ({
 		getTools() {
@@ -337,13 +320,6 @@ test("Code Mode adapter supports legacy arrays and providers added after startup
 	assert.equal(await second.getTools()[0]!.invoke({}, {}), "second");
 	assert.deepEqual(calls, ["first", "second"]);
 
-	const legacy = createProvider("legacy");
-	const legacyEvents: Record<PropertyKey, unknown> = {
-		[CODE_MODE_RUNTIME_KEY]: { providers: [legacy] },
-		[CODE_MODE_GUARD_BRIDGE_KEY]: () => undefined,
-	};
-	assert.deepEqual(ensureCodeModeGuardInstalled(legacyEvents, {}), { ok: true });
-	assert.equal(await legacy.getTools()[0]!.invoke({}, {}), "legacy");
 });
 
 test("Code Mode integration fails closed when private runtime internals are unavailable", () => {
@@ -354,6 +330,10 @@ test("Code Mode integration fails closed when private runtime internals are unav
 	assert.deepEqual(
 		ensureCodeModeGuardInstalled({ [CODE_MODE_RUNTIME_KEY]: { runtime: {} } }, { cwd: "/tmp" }),
 		{ ok: false, reason: "Code Mode provider registry has an unsupported shape" },
+	);
+	assert.deepEqual(
+		ensureCodeModeGuardInstalled({ [CODE_MODE_RUNTIME_KEY]: { providers: [] } }, { cwd: "/tmp" }),
+		{ ok: false, reason: "Code Mode runtime was not found" },
 	);
 	assert.deepEqual(
 		ensureCodeModeGuardInstalled(
@@ -540,11 +520,6 @@ test("stale approval tool closures follow the current reload store", async () =>
 	}
 	const requestId = blocked.match(/Approval request: ([0-9a-f-]+)/)?.[1];
 	assert.ok(requestId);
-	const prepared = staleApprovalTool.prepareArguments({
-		command: "rm stale-reload-test",
-		reason: "rm command needs confirmation",
-	});
-	assert.equal(prepared.request_id, requestId);
 	const result = await staleApprovalTool.execute(
 		"approval-test",
 		{

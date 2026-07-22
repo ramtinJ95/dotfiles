@@ -1079,21 +1079,9 @@ class ApprovalStore {
 		return pending;
 	}
 
-	validate(requestId: string | undefined, command: string, reason: string): { ok: true; pending: PendingApproval } | { ok: false; error: string } {
+	validate(requestId: string, command: string, reason: string): { ok: true; pending: PendingApproval } | { ok: false; error: string } {
 		this.prune();
-		let pending = requestId ? this.pending.get(requestId) : undefined;
-		if (!requestId) {
-			const matches = [...this.pending.values()].filter(
-				(candidate) => candidate.identity.command === command && candidate.reason === reason,
-			);
-			if (matches.length > 1) {
-				return {
-					ok: false,
-					error: "Multiple pending approvals match this command. Retry the blocked shell call and pass its request_id.",
-				};
-			}
-			pending = matches[0];
-		}
+		const pending = this.pending.get(requestId);
 		if (!pending) return { ok: false, error: "Approval request is missing or expired. Retry the blocked shell call to create a new request." };
 		if (pending.identity.command !== command) {
 			return { ok: false, error: "Approval request does not match the exact blocked command. Do not retry the command." };
@@ -1104,7 +1092,7 @@ class ApprovalStore {
 		return { ok: true, pending };
 	}
 
-	approve(requestId: string | undefined, command: string, reason: string): { ok: true } | { ok: false; error: string } {
+	approve(requestId: string, command: string, reason: string): { ok: true } | { ok: false; error: string } {
 		const validation = this.validate(requestId, command, reason);
 		if (!validation.ok) return validation;
 		this.pending.delete(validation.pending.id);
@@ -1209,11 +1197,10 @@ type CodeModeGuardBridge = (input: unknown, context: any) => void | Promise<void
 function codeModeRuntime(events: any): any | undefined {
 	const state = events?.[CODE_MODE_RUNTIME_KEY];
 	if (!state || typeof state !== "object") return undefined;
-	return state.runtime && typeof state.runtime === "object" ? state.runtime : state;
+	return state.runtime && typeof state.runtime === "object" ? state.runtime : undefined;
 }
 
 function codeModeProviders(runtime: any): any[] | undefined {
-	if (Array.isArray(runtime?.providers)) return runtime.providers;
 	if (runtime?.providers instanceof Map) return [...runtime.providers.values()];
 	return undefined;
 }
@@ -1355,14 +1342,6 @@ export default function createExtension(pi: ExtensionAPI) {
 			"When using approve_infra_command, keep summary, flags, and blastRadius non-overlapping; the approval UI renders command and reason separately.",
 		],
 		parameters: ApproveInfraCommandParams,
-		prepareArguments(args) {
-			if (!args || typeof args !== "object") return args;
-			const record = args as Record<string, unknown>;
-			if (typeof record.request_id === "string") return args;
-			if (typeof record.command !== "string" || typeof record.reason !== "string") return args;
-			const validation = currentApprovals().validate(undefined, record.command, record.reason);
-			return validation.ok ? { ...record, request_id: validation.pending.id } : args;
-		},
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
 			const approvalStore = currentApprovals();
 			const validation = approvalStore.validate(params.request_id, params.command, params.reason);
