@@ -58,7 +58,7 @@ When you install new packages or change settings:
 
 ```bash
 # Update Brewfile with new packages
-brew bundle dump --describe --file=mac-config/mac-install/Brewfile --force
+brew bundle dump --file=mac-config/mac-install/Brewfile --force
 
 # Update macOS defaults (edit set-defaults.sh manually)
 ```

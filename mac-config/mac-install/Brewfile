@@ -7,6 +7,8 @@ tap "malpern/tap"
 tap "osx-cross/arm"
 tap "osx-cross/avr"
 tap "qmk/qmk"
+tap "ramtinj95/tap", "https://github.com/ramtinJ95/homebrew-tap"
+tap "rjyo/moshi"
 tap "shaunsingh/sfmono-nerd-font-ligaturized"
 tap "sst/tap"
 
@@ -20,10 +22,12 @@ brew "fzf"
 brew "gh"
 brew "git"
 brew "herdr"
+brew "helm"
 brew "ifstat"
 brew "jq"
 brew "lazydocker"
 brew "lazygit"
+brew "mosh"
 brew "neovim"
 brew "poppler"
 brew "ripgrep"
@@ -32,6 +36,7 @@ brew "starship"
 brew "stow"
 brew "switchaudio-osx"
 brew "tmux"
+brew "unar"
 brew "uv"
 brew "wget"
 brew "yazi"
@@ -54,7 +59,9 @@ brew "lua"
 brew "node"
 brew "pkgconf"
 brew "rustup"
+brew "tree-sitter"
 brew "tree-sitter-cli"
+brew "zig"
 
 # Local AI
 brew "llama.cpp", args: ["HEAD"]
@@ -65,7 +72,7 @@ brew "cbonsai"
 brew "nowplaying-cli"
 brew "qmk/qmk/qmk"
 brew "raylib"
-brew "sdl2"
+brew "sdl2-compat"
 brew "sdl2_image"
 brew "sdl2_ttf"
 brew "spicetify-cli"
@@ -76,9 +83,14 @@ brew "koekeishiya/formulae/skhd"
 brew "koekeishiya/formulae/yabai"
 # Coordinates sketchybar with the native auto-hidden menu bar (hover-to-reveal).
 # Autostarted from sketchybar's init.lua via sbar.exec.
-brew "malpern/tap/sketchybar-toggle"
+brew "malpern/tap/sketchybar-toggle", trusted: true
+
+# Personal and agent tooling
+brew "ramtinj95/tap/archivist", trusted: true
+brew "rjyo/moshi/moshi-hook", trusted: true
 
 # GUI apps
+cask "anki"
 cask "blackhole-2ch"
 cask "cursor"
 cask "docker"
@@ -102,3 +114,14 @@ cask "sf-symbols"
 
 # Go tools
 go "github.com/ramtinj/colosseum/cmd/colosseum"
+
+# Editor extensions
+vscode "anysphere.remote-containers"
+vscode "anysphere.remote-ssh"
+
+# Language-specific CLI tools
+cargo "hygg"
+npm "@earendil-works/pi-coding-agent"
+npm "@openai/codex"
+npm "@playwright/cli"
+npm "@ramtinj95/opencode-tokenscope"

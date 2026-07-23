@@ -1,0 +1,234 @@
+#!/bin/zsh
+
+set -u
+
+readonly SSHD_CONFIG="$HOME/.config/user-sshd/sshd_config"
+readonly SSHD_PID_FILE="$HOME/.config/user-sshd/sshd.pid"
+readonly SSHD_LOG="$HOME/Library/Logs/user-sshd.log"
+readonly CAFFEINATE_LABEL="io.ramtin.remote-access-caffeinate"
+readonly BATTERY_WATCH_LABEL="io.ramtin.remote-access-battery-watch"
+readonly BATTERY_STATE_FILE="$HOME/.config/user-sshd/battery-keep-awake.state"
+readonly TAILSCALE="/usr/local/bin/tailscale"
+readonly MOSH_SERVER="$HOME/.local/bin/mosh-server"
+readonly PUBLIC_PORT=2222
+readonly LOCAL_PORT=22222
+readonly SCRIPT_PATH="${0:A}"
+
+read_live_pid() {
+    local pid_file="$1"
+    local expected_command="$2"
+    local pid command
+
+    [[ -s "$pid_file" ]] || return 1
+    pid="$(<"$pid_file")"
+    [[ "$pid" == <-> ]] || return 1
+    /bin/kill -0 "$pid" 2>/dev/null || return 1
+    command="$(/bin/ps -p "$pid" -o command= 2>/dev/null)"
+    [[ "$command" == *"$expected_command"* ]] || return 1
+    print -r -- "$pid"
+}
+
+sshd_pid() {
+    read_live_pid "$SSHD_PID_FILE" "/usr/sbin/sshd"
+}
+
+caffeinate_is_on() {
+    /bin/launchctl print "gui/$UID/$CAFFEINATE_LABEL" >/dev/null 2>&1
+}
+
+battery_watch_is_on() {
+    /bin/launchctl print "gui/$UID/$BATTERY_WATCH_LABEL" 2>/dev/null |
+        /usr/bin/grep -q "state = running"
+}
+
+on_ac_power() {
+    /usr/bin/pmset -g batt 2>/dev/null | /usr/bin/grep -q "AC Power"
+}
+
+on_battery_power() {
+    /usr/bin/pmset -g batt 2>/dev/null | /usr/bin/grep -q "Battery Power"
+}
+
+serve_is_on() {
+    "$TAILSCALE" serve status --json 2>/dev/null |
+        /usr/bin/grep -q '"2222"'
+}
+
+battery_watch() {
+    local duration="$1"
+    local battery_caffeinate_pid=""
+    local deadline
+
+    cleanup_battery_watch() {
+        if [[ -n "$battery_caffeinate_pid" ]]; then
+            /bin/kill "$battery_caffeinate_pid" 2>/dev/null || true
+            wait "$battery_caffeinate_pid" 2>/dev/null || true
+        fi
+        /bin/rm -f "$BATTERY_STATE_FILE"
+    }
+    trap cleanup_battery_watch EXIT
+    trap 'exit 0' HUP INT TERM
+
+    print -r -- "armed $duration" >| "$BATTERY_STATE_FILE"
+    # Do not treat an unreadable/unknown power source as an unplug event.
+    while ! on_battery_power; do
+        /bin/sleep 2
+    done
+
+    deadline=$(( $(/bin/date +%s) + duration ))
+    print -r -- "active $duration $deadline" >| "$BATTERY_STATE_FILE"
+    /usr/bin/caffeinate -i -t "$duration" &
+    battery_caffeinate_pid=$!
+
+    while /bin/kill -0 "$battery_caffeinate_pid" 2>/dev/null; do
+        # Reconnecting AC consumes the one-shot battery session.
+        on_ac_power && return 0
+        /bin/sleep 2
+    done
+
+    wait "$battery_caffeinate_pid" 2>/dev/null || true
+    battery_caffeinate_pid=""
+}
+
+arm_battery_keep_awake() {
+    local duration="$1"
+
+    /bin/launchctl bootout "gui/$UID/$BATTERY_WATCH_LABEL" 2>/dev/null || true
+    /bin/rm -f "$BATTERY_STATE_FILE"
+
+    if ! /bin/launchctl submit -l "$BATTERY_WATCH_LABEL" -- \
+        "$SCRIPT_PATH" _battery-watch "$duration"; then
+        print -u2 -- "Failed to arm battery keep-awake mode."
+        return 1
+    fi
+
+    print -- "Battery keep-awake: ARMED for $duration seconds after AC is disconnected"
+    print -- "Reconnecting AC or running 'remote-access stop' consumes/cancels this one-shot session."
+}
+
+start_access() {
+    local started_sshd=0
+    local started_caffeinate=0
+
+    /usr/sbin/sshd -t -f "$SSHD_CONFIG" || return 1
+    if [[ ! -x "$MOSH_SERVER" ]]; then
+        print -u2 -- "Mosh server is missing or not executable: $MOSH_SERVER"
+        return 1
+    fi
+
+    if ! sshd_pid >/dev/null; then
+        /usr/sbin/sshd -f "$SSHD_CONFIG" -E "$SSHD_LOG" || return 1
+        started_sshd=1
+    fi
+
+    if ! caffeinate_is_on; then
+        /bin/launchctl submit -l "$CAFFEINATE_LABEL" -- \
+            /usr/bin/caffeinate -s || return 1
+        started_caffeinate=1
+    fi
+
+    if ! "$TAILSCALE" serve --bg --tcp="$PUBLIC_PORT" \
+        "tcp://127.0.0.1:$LOCAL_PORT" >/dev/null; then
+        (( started_caffeinate )) && \
+            /bin/launchctl bootout "gui/$UID/$CAFFEINATE_LABEL" 2>/dev/null
+        (( started_sshd )) && /bin/kill "$(sshd_pid)" 2>/dev/null
+        print -u2 -- "Failed to expose SSH through Tailscale; startup was rolled back."
+        return 1
+    fi
+
+    print -- "Remote access: ON"
+    print -- "SSH: ramtin@ramtins-macbook-pro.tailc817d3.ts.net:$PUBLIC_PORT"
+    print -- "Mosh server: ready at $MOSH_SERVER"
+    print -- "Keep-awake: ON while connected to AC power (lid must remain open)"
+}
+
+stop_access() {
+    local pid
+
+    /bin/launchctl bootout "gui/$UID/$BATTERY_WATCH_LABEL" 2>/dev/null || true
+    /bin/rm -f "$BATTERY_STATE_FILE"
+
+    "$TAILSCALE" serve --tcp="$PUBLIC_PORT" off >/dev/null 2>&1 || true
+
+    /bin/launchctl bootout "gui/$UID/$CAFFEINATE_LABEL" 2>/dev/null || true
+
+    if pid="$(sshd_pid)"; then
+        /bin/kill "$pid" 2>/dev/null || true
+    fi
+
+    print -- "Remote access: OFF"
+    /usr/bin/pkill -u "$UID" -x mosh-server 2>/dev/null || true
+}
+
+show_status() {
+    local ssh_state="OFF"
+    local awake_state="OFF"
+    local serve_state="OFF"
+    local mosh_sessions
+    local battery_mode=""
+    local battery_duration=""
+    local battery_deadline=""
+    local battery_remaining
+
+    sshd_pid >/dev/null && ssh_state="ON"
+    caffeinate_is_on && awake_state="ON"
+    serve_is_on && serve_state="ON"
+    mosh_sessions="$(/usr/bin/pgrep -P 1 -u "$UID" -x mosh-server 2>/dev/null |
+        /usr/bin/wc -l | /usr/bin/tr -d ' ')"
+
+    print -- "SSH server:  $ssh_state"
+    print -- "Tailscale:   $serve_state (port $PUBLIC_PORT)"
+    print -- "Mosh:        $mosh_sessions active session(s)"
+    if battery_watch_is_on; then
+        if [[ -r "$BATTERY_STATE_FILE" ]]; then
+            read -r battery_mode battery_duration battery_deadline < "$BATTERY_STATE_FILE"
+        fi
+        if [[ "$battery_mode" == "active" && "$battery_deadline" == <-> ]]; then
+            battery_remaining=$(( battery_deadline - $(/bin/date +%s) ))
+            (( battery_remaining < 0 )) && battery_remaining=0
+            print -- "Keep-awake: ON (battery one-shot, ${battery_remaining}s remaining)"
+        elif [[ "$battery_duration" == <-> ]]; then
+            print -- "Keep-awake: ON (AC; battery one-shot armed for ${battery_duration}s)"
+        else
+            print -- "Keep-awake: ON (battery one-shot armed)"
+        fi
+    else
+        print -- "Keep-awake: $awake_state (AC power only)"
+    fi
+}
+
+case "${1:-toggle}" in
+    start|on)
+        start_access
+        ;;
+    stop|off)
+        stop_access
+        ;;
+    status)
+        show_status
+        ;;
+    battery)
+        if [[ "${2:-}" != <-> ]] || (( $2 <= 0 )) || (( $# != 2 )); then
+            print -u2 -- "Usage: $0 battery <seconds>"
+            exit 2
+        fi
+        start_access && arm_battery_keep_awake "$2"
+        ;;
+    _battery-watch)
+        if [[ "${2:-}" != <-> ]] || (( $2 <= 0 )) || (( $# != 2 )); then
+            exit 2
+        fi
+        battery_watch "$2"
+        ;;
+    toggle)
+        if sshd_pid >/dev/null; then
+            stop_access
+        else
+            start_access
+        fi
+        ;;
+    *)
+        print -u2 -- "Usage: $0 [start|stop|status|toggle|battery <seconds>]"
+        exit 2
+        ;;
+esac
