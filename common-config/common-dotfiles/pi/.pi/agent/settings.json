@@ -18,7 +18,8 @@
     "npm:@howaboua/pi-markdown-workflows",
     "npm:@bergetai/pi-provider",
     "npm:@howaboua/pi-ask",
-    "npm:@ramtinj95/pi-infra-command-guard"
+    "npm:@ramtinj95/pi-infra-command-guard",
+    "npm:@ramtinj95/pi-comment-editor"
   ],
   "compaction": {
     "enabled": true
