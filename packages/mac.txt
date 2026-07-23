@@ -6,6 +6,7 @@ eza
 git
 kitty
 nvim
+remote-access
 sketchybar
 skhd
 spicetify
