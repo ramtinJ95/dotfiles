@@ -147,13 +147,16 @@ trust_level = "trusted"
 [projects."/Users/ramtin/Documents/Codex/2026-07-23/so"]
 trust_level = "trusted"
 
+[projects."/Users/ramtin/Documents/Codex/2026-07-24/realtime-voice-chat"]
+trust_level = "trusted"
+
 [marketplaces.openai-bundled]
-last_updated = "2026-07-23T20:28:14Z"
+last_updated = "2026-07-24T07:55:50Z"
 source_type = "local"
 source = "/Users/ramtin/.codex/.tmp/bundled-marketplaces/openai-bundled"
 
 [marketplaces.openai-primary-runtime]
-last_updated = "2026-07-23T20:23:47Z"
+last_updated = "2026-07-24T08:23:59Z"
 source_type = "local"
 source = "/Users/ramtin/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
 
@@ -198,13 +201,13 @@ NODE_REPL_NODE_MODULE_DIRS = "/Applications/ChatGPT.app/Contents/Resources/cua_n
 NODE_REPL_NODE_PATH = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node"
 NODE_REPL_TRUSTED_CODE_PATHS = "/Users/ramtin/.codex"
 CODEX_HOME = "/Users/ramtin/.codex"
-NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "41e1151f1e50f096c7561da32bb01123e74b6ecdd38f081e34da30091fc4f193,6d25aa7656feac858f3a3bdaea5bcbab0dbfd426c9de8e6931ce90c399ee8e4f"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "3fdfe9a7ad39456da69c5e8fa7bbf7229ec2fe9de5f4cf2e476166bf30a08a7e,6d25aa7656feac858f3a3bdaea5bcbab0dbfd426c9de8e6931ce90c399ee8e4f"
 BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
 NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
 NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
 NODE_REPL_INSTRUCTIONS_USE_CASE_COMPUTER_USE = "Control desktop apps on macOS through Computer Use."
 BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
-BROWSER_USE_CODEX_APP_VERSION = "26.721.30844"
+BROWSER_USE_CODEX_APP_VERSION = "26.721.31836"
 SKY_CUA_SERVICE_PATH = "/Users/ramtin/.codex/computer-use/Codex Computer Use.app"
 CODEX_CLI_PATH = "/Applications/ChatGPT.app/Contents/Resources/codex"
 
@@ -215,7 +218,7 @@ cwd = "."
 enabled = false
 
 [desktop]
-conversationDetailMode = "STEPS_COMMANDS"
+conversationDetailMode = "STEPS_PROSE"
 ambient-suggestions-enabled = true
 followUpQueueMode = "steer"
 dock-icon-preference = "codex-system"
@@ -227,6 +230,7 @@ keepRemoteControlAwakeWhilePluggedIn = true
 git-pull-request-merge-method = "squash"
 git-branch-prefix = ""
 preventSleepWhileRunning = false
+realtimeVoiceScreenContextEnabled = true
 
 [desktop.appearanceLightChromeTheme]
 accent = "#8839ef"
@@ -267,5 +271,5 @@ enabled = true
 
 [shell_environment_policy.set]
 BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
-NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "41e1151f1e50f096c7561da32bb01123e74b6ecdd38f081e34da30091fc4f193,6d25aa7656feac858f3a3bdaea5bcbab0dbfd426c9de8e6931ce90c399ee8e4f"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "3fdfe9a7ad39456da69c5e8fa7bbf7229ec2fe9de5f4cf2e476166bf30a08a7e,6d25aa7656feac858f3a3bdaea5bcbab0dbfd426c9de8e6931ce90c399ee8e4f"
 NODE_REPL_TRUSTED_CODE_PATHS = "/Users/ramtin/.codex"

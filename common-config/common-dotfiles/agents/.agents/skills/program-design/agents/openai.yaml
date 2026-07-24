@@ -1,7 +1,0 @@
-interface:
-  display_name: "Program Design"
-  short_description: "Design core features from architecture to code"
-  default_prompt: "Use $program-design to turn this feature plan into an evidence-backed architecture and detailed program design."
-
-policy:
-  allow_implicit_invocation: false
