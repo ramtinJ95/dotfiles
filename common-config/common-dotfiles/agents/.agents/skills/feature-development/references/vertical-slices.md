@@ -59,4 +59,4 @@ Behavior | Architectural owner and contract | Concrete types and calls | Slice |
 
 Present the sequence and ask the user to approve it or change the slicing. Do not begin implementation as part of slice approval.
 
-**Complete when:** every approved behavior and program-design element belongs to a slice; every slice produces an observable result with automated and hands-on validation; the order respects dependencies and coordination constraints; batches are reviewable; and the user has explicitly approved the slices.
+**Ready for review when:** the artifact contains every output listed above, every approved behavior and program-design element maps to a slice, every slice has an observable result plus automated and hands-on validation, and the ordered batches are dependency-safe and reviewable.

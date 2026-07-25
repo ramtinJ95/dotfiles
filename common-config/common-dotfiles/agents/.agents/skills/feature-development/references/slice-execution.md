@@ -1,8 +1,8 @@
 # Slice Execution
 
-Implement only the explicitly approved direct change or slice batch, validate it, and return control for human code review. Do not treat an approved overall design as permission to implement every slice.
+Implement only the explicitly approved direct change or slice batch, validate it, and return control for human code review.
 
-## Confirm the batch
+## Confirm the implementation unit
 
 Before editing:
 
@@ -15,17 +15,18 @@ Before editing:
 
 If the implementation unit is ambiguous or its prerequisites are incomplete, present the concrete blocker. Do not choose a materially different change or batch.
 
+Then mark the direct change or selected batch `implementing`. For a slice batch, also record its stable identifier as the active batch.
+
 ## Implement the approved behavior
 
 Trace the current path before editing. Reuse the approved owners, boundaries, types, signatures, and call paths. Keep temporary behavior explicit and tied to its removal slice.
 
-Implement only what the approved implementation unit needs. Do not:
+Do not:
 
 - Pull later slices forward for convenience.
 - Redesign an approved contract silently.
 - Add speculative extension points.
 - Hide contradictions with adapters, fallbacks, casts, broad exception handling, or duplicated state.
-- Commit, open a pull request, deploy, or mutate external production state without separate authorization.
 
 When implementation evidence contradicts the approved design:
 
@@ -52,7 +53,7 @@ Verify:
 - Tests that would fail without the new behavior
 - Formatting, static analysis, and generated artifacts
 
-Report any validation that could not run and why. Do not translate an unrun check into a pass.
+Record completed validation as `Observed` with its command and relevant output or its hands-on inspection steps. Record checks that could not run and why as `Open`, never as passes.
 
 ## Prepare the human review
 
@@ -69,14 +70,14 @@ Update the working artifact with an implementation review containing:
 - Focus areas for code review
 - Suggested next batch, without starting it
 
-Compare the implementation to the approved traceability rows and update them with validation evidence. Mark the direct change or batch `implemented`, not `human-reviewed`.
+Compare the implementation to the approved traceability rows and update them with validation evidence. Mark the direct change or batch `awaiting_review`, not `human_reviewed`.
 
 Present the review packet and stop. The user must review the code and record one outcome:
 
-- **Approved:** mark the direct change or batch `human-reviewed`.
-- **Rework requested:** keep the implementation unit active and address only that feedback.
-- **Design reopened:** return to the earliest affected phase.
+- **Approved:** mark the direct change or batch `human_reviewed` and clear the active batch when applicable.
+- **Rework requested:** mark the implementation unit `rework_requested` and address only that feedback.
+- **Design reopened:** mark the implementation unit `design_reopened` and return to the earliest affected phase.
 
-Do not begin another batch in the same turn unless the user explicitly reviews the current implementation and asks to continue.
+Code approval does not accept an `Open` validation risk. Present each such risk separately with its consequence before asking the user whether to accept it.
 
-**Complete when:** the approved direct change or selected slices meet their observable behavior and validation criteria; the patch matches the approved contract or design, or deviations are explicit; the artifact contains a usable review packet; and control has returned to the user for human code review.
+**Ready for human review when:** the implementation review contains every item listed above, every approved behavior and validation criterion has passing evidence or a recorded `Open` unavailable check with its consequence, deviations are explicit, the unit is `awaiting_review`, and control has returned to the user.

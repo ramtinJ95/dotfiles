@@ -78,4 +78,4 @@ Update the working artifact with:
 
 Present unresolved decisions with options, consequences, and a recommendation. Ask the user to approve the product review or decide the remaining blockers.
 
-**Complete when:** every requested behavior is represented by an agreed scenario and acceptance criterion; success and non-goals are explicit; the experience is tangible where useful; every material product uncertainty is decided or blocking; and the user has explicitly approved the product review.
+**Ready for review when:** the artifact contains every output listed above, every requested behavior maps to an acceptance criterion and a success signal or necessary constraint, and every material product uncertainty is decided. If uncertainty prevents agreement, mark the phase `blocked`.

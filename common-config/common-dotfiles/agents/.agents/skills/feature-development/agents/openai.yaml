@@ -1,6 +1,6 @@
 interface:
   display_name: "Feature Development"
-  short_description: "Guide core features from intent to reviewed code"
+  short_description: "Guide features from intent to reviewed code"
   default_prompt: "Use $feature-development to guide this feature through the appropriate design gates, vertical slices, and human-reviewed implementation."
 
 policy:

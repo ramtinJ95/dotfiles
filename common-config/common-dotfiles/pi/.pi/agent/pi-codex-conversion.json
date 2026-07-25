@@ -1,5 +1,6 @@
 {
   "mode": "path",
+  "voiceFeaturesOnly": false,
   "scope": {
     "allProviders": "off",
     "additionalProviders": []
@@ -25,17 +26,29 @@
     "backgroundShellCloseShortcut": "alt+r"
   },
   "compaction": {
-    "responsesCompaction": false
+    "responsesCompaction": false,
+    "version": "v1"
   },
   "beta": {
-    "codeMode": true
+    "codeMode": true,
+    "responsesLite": false,
+    "v2UserMessageRetention": 64
+  },
+  "voice": {
+    "protocol": "v3",
+    "mode": "conversational",
+    "v2Voice": "marin",
+    "v3Voice": "ember",
+    "dictationShortcut": "ctrl+alt+d",
+    "realtimeShortcut": "ctrl+alt+v",
+    "dictationShortcutMode": "push",
+    "inputDevice": "coreaudio:BuiltInMicrophoneDevice",
+    "outputDevice": "coreaudio:BuiltInSpeakerDevice"
   },
   "openai": {
     "fast": false,
     "verbosity": "low",
     "forceCachedWebSockets": true,
-    "webSearchModel": "gpt-5.4-mini",
-    "compactionModel": "gpt-5.5",
-    "compactionReasoning": "current"
+    "webSearchModel": "gpt-5.6-luna"
   }
 }

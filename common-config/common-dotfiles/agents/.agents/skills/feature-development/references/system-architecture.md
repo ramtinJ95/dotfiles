@@ -2,19 +2,22 @@
 
 Decide which parts of the system participate, what each part owns, and how they may interact. Stay at component, boundary, contract, and logical-data level; defer concrete functions, files, and internal types to program design.
 
+## Cover the architecture dimensions
+
+For both the current and proposed architecture, account for every implicated dimension:
+
+- Components, responsibilities, dependency direction, and cross-repository coordination
+- Data ownership, stores, caches, transformations, invariants, and sources of truth
+- Endpoints, commands, events, queues, jobs, external systems, and boundary contracts
+- Data flow, transaction boundaries, consistency, concurrency, ordering, and idempotency
+- Success, failure, retry, timeout, cancellation, and partial-success behavior
+- Authorization, validation, trust, privacy, and security boundaries
+- Observability, operational constraints, rollout, migration, and compatibility
+- Tests and documents that express or must update contracts
+
 ## Recover the current architecture
 
-Investigate every system surface implicated by the approved behavior:
-
-- Components, services, responsibilities, and allowed dependencies
-- Data ownership, persistence, caches, and sources of truth
-- Endpoints, commands, events, queues, jobs, and external systems
-- Existing success, failure, retry, and asynchronous flows
-- Authorization and security boundaries
-- Consistency, transaction, concurrency, ordering, and idempotency guarantees
-- Operational constraints, observability, rollout, and compatibility
-- Cross-repository dependencies
-- Tests and documents that express current contracts
+Investigate the current state across every architecture dimension implicated by the product behavior under review.
 
 Synthesize one current-state model. Reconcile conflicting terminology, code, tests, and documentation; preserve uncertainty when evidence does not settle it.
 
@@ -36,23 +39,7 @@ Show:
 - Alternate, retry, timeout, cancellation, and partial-success paths
 - Parallel work, ordering constraints, and idempotency points
 
-Use separate diagrams for materially different flows when one diagram becomes hard to read. Prefer Mermaid `alt`, `opt`, `loop`, and `par` blocks for compact variations:
-
-```mermaid
-sequenceDiagram
-  participant Client
-  participant API
-  participant Owner
-  participant Store
-  Client->>API: command
-  API->>Owner: validated intent
-  Owner->>Store: state change
-  alt success
-    Owner-->>Client: result
-  else rejected
-    Owner-->>Client: domain error
-  end
-```
+Use separate diagrams for materially different flows rather than crowding one diagram.
 
 Keep participants and messages architectural. Do not introduce proposed internal function names here; program design maps these messages onto concrete calls.
 
@@ -68,21 +55,9 @@ Explain the classification with repository evidence.
 
 ## Propose the feature architecture
 
-Specify:
+Specify the participating components and deliberate changes across the same architecture dimensions.
 
-- Participating components
-- Responsibility and data ownership
-- Boundaries and semantic contracts
-- Logical data model, transformations, and invariants
-- Dependency direction and data flow
-- Consistency and transaction boundaries
-- Concurrency, ordering, and idempotency semantics
-- Failure, retry, timeout, cancellation, and partial-success semantics
-- Authorization, validation, trust, and privacy boundaries
-- Observability, rollout, migration, and compatibility
-- Cross-repository coordination
-
-Map every approved behavior and acceptance criterion to an architectural owner and path.
+Map every in-scope behavior and acceptance criterion to an architectural owner and path.
 
 Compare viable architectures when ownership and constraints do not determine one answer. Present evidence, tradeoffs, reversibility, and a recommendation. Record rejected alternatives and why they lost.
 
@@ -105,4 +80,4 @@ Resolve the pressure with the user, deliberately change the architecture, reduce
 
 Update the working artifact with the current-state model, current and proposed sequence diagrams where applicable, proposed architecture, other diagrams or contracts, behavior-to-owner mapping, rejected alternatives, and open risks. Keep concrete method names and file layouts out unless they are existing evidence.
 
-**Complete when:** every approved behavior has an agreed owner and architectural path; every boundary, source of truth, side effect, and system guarantee is explicit; the user has reviewed sequence diagrams for every material cross-boundary or time-ordered flow; all architectural pressure is resolved or blocking; and the user has explicitly approved the architecture.
+**Ready for review when:** the artifact contains every output listed above, the current-state criterion is met, every behavior and acceptance criterion maps to an owner and path, required sequence diagrams are complete, and all architectural pressure is resolved. Remain `in_progress` while further legwork can meet the criterion; mark `blocked` only when progress requires user judgment or unavailable evidence.
