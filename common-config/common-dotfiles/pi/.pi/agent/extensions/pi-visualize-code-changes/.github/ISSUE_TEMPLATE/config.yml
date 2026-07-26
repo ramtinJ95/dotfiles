@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Pi packages docs
+    url: https://pi.dev/packages
+    about: How Pi packages, skills, and gallery metadata work
+  - name: Package page
+    url: https://pi.dev/packages/pi-visualize-code-changes
+    about: Gallery listing and install command for this package

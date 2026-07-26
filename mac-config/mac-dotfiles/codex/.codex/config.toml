@@ -156,6 +156,9 @@ trust_level = "trusted"
 [projects."/Users/ramtin/Documents/Codex/2026-07-24/please-fix-the-execution-permissions-for"]
 trust_level = "trusted"
 
+[projects."/Users/ramtin/Documents/Codex/2026-07-26/if"]
+trust_level = "trusted"
+
 [marketplaces.openai-bundled]
 last_updated = "2026-07-24T07:55:50Z"
 source_type = "local"

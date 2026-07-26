@@ -1,0 +1,42 @@
+{
+  "name": "pi-visualize-code-changes",
+  "version": "1.0.0",
+  "description": "Pi skill: Mermaid before/after/diff diagrams that explain what a code change actually does",
+  "keywords": [
+    "pi-package",
+    "pi-skill",
+    "pi",
+    "mermaid",
+    "diagrams",
+    "code-review",
+    "refactor",
+    "diff",
+    "visualization"
+  ],
+  "license": "MIT",
+  "author": "BlockedPath",
+  "type": "module",
+  "files": [
+    "skills",
+    "README.md",
+    "LICENSE",
+    "preview.png"
+  ],
+  "pi": {
+    "skills": [
+      "./skills"
+    ],
+    "image": "https://raw.githubusercontent.com/BlockedPath/pi-visualize-code-changes/main/preview.png"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BlockedPath/pi-visualize-code-changes.git"
+  },
+  "bugs": {
+    "url": "https://github.com/BlockedPath/pi-visualize-code-changes/issues"
+  },
+  "homepage": "https://github.com/BlockedPath/pi-visualize-code-changes#readme"
+}

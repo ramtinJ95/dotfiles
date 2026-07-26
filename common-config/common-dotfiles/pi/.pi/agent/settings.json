@@ -19,7 +19,9 @@
     "npm:@bergetai/pi-provider",
     "npm:@howaboua/pi-ask",
     "npm:@ramtinj95/pi-infra-command-guard",
-    "npm:@ramtinj95/pi-comment-editor"
+    "npm:@ramtinj95/pi-comment-editor",
+    "extensions/pi-visualize-code-changes",
+    "git:github.com/ramtinJ95/pi-review-loop@9207713b96a42d7a0334325916c1cdd0e5a8521b"
   ],
   "compaction": {
     "enabled": true

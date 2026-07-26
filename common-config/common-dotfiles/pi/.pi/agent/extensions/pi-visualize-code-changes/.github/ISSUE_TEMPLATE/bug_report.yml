@@ -1,0 +1,83 @@
+name: Bug report
+description: Something is wrong with the skill, validator, or docs
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Include enough detail to reproduce — especially
+        validator output and a minimal Mermaid/Markdown sample when relevant.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong in one or two sentences?
+      placeholder: validate_mermaid.py marks a valid sequenceDiagram as FAIL…
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Exact commands, skill invocation, or file paths.
+      placeholder: |
+        1. pi install npm:pi-visualize-code-changes
+        2. /skill:visualize-code-changes uncommitted
+        3. …
+      render: bash
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: >
+        Paste logs, validator output, or screenshots of red Mermaid blocks.
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: Minimal sample (optional)
+      description: Diagram Markdown or skill output that triggers the bug.
+      render: markdown
+  - type: input
+    id: pi-version
+    attributes:
+      label: Pi / host version
+      placeholder: pi 0.x.x / Claude Code / other
+  - type: dropdown
+    id: mmdc
+    attributes:
+      label: mermaid-cli (mmdc) available?
+      options:
+        - "Yes — validation used mmdc"
+        - "No — heuristic lint only"
+        - Unknown
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python version, Node version if relevant.
+      placeholder: |
+        macOS 15, Python 3.12, Node 24, Chrome installed
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues for duplicates
+          required: true
+        - label: >
+            I re-ran validate_mermaid.py on the file when this is a
+            diagram or validator bug
+          required: false
