@@ -1,0 +1,125 @@
+/*
+ * Catppuccin Mocha for Highlight.js 1.0.1
+ * https://github.com/catppuccin/highlightjs
+ * SPDX-License-Identifier: MIT
+ *
+ * Adapted for markdown-preview.nvim's <pre class="hljs"><code> markup.
+ */
+
+pre.hljs {
+  color: #cdd6f4;
+  background: #1e1e2e;
+}
+
+code .hljs-keyword {
+  color: #cba6f7;
+}
+
+code .hljs-built_in,
+code .hljs-doctag {
+  color: #f38ba8;
+}
+
+code .hljs-type,
+code .hljs-title.class_,
+code .hljs-selector-tag {
+  color: #f9e2af;
+}
+
+code .hljs-literal,
+code .hljs-number,
+code .hljs-variable.constant_,
+code .hljs-meta {
+  color: #fab387;
+}
+
+code .hljs-operator {
+  color: #89dceb;
+}
+
+code .hljs-punctuation {
+  color: #bac2de;
+}
+
+code .hljs-property,
+code .hljs-tag,
+code .hljs-bullet,
+code .hljs-formula,
+code .hljs-selector-class,
+code .hljs-selector-pseudo {
+  color: #94e2d5;
+}
+
+code .hljs-regexp {
+  color: #f5c2e7;
+}
+
+code .hljs-string,
+code .hljs-char.escape_,
+code .hljs-attribute,
+code .hljs-code {
+  color: #a6e3a1;
+}
+
+code .hljs-subst {
+  color: #a6adc8;
+}
+
+code .hljs-symbol,
+code .hljs-template-tag,
+code .hljs-template-variable {
+  color: #f2cdcd;
+}
+
+code .hljs-variable,
+code .hljs-variable.language_,
+code .hljs-name,
+code .hljs-selector-attr {
+  color: #cba6f7;
+}
+
+code .hljs-title,
+code .hljs-title.function_,
+code .hljs-section,
+code .hljs-selector-id,
+code .hljs-attr {
+  color: #89b4fa;
+}
+
+code .hljs-params {
+  color: #cdd6f4;
+}
+
+code .hljs-comment {
+  color: #9399b2;
+}
+
+code .hljs-emphasis {
+  color: #f38ba8;
+  font-style: italic;
+}
+
+code .hljs-strong {
+  color: #f38ba8;
+  font-weight: bold;
+}
+
+code .hljs-link {
+  color: #74c7ec;
+  font-style: italic;
+}
+
+code .hljs-quote {
+  color: #a6e3a1;
+  font-style: italic;
+}
+
+code .hljs-addition {
+  color: #a6e3a1;
+  background: rgba(166, 227, 161, 0.15);
+}
+
+code .hljs-deletion {
+  color: #f38ba8;
+  background: rgba(243, 139, 168, 0.15);
+}

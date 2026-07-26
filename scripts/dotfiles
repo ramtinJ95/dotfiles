@@ -239,6 +239,40 @@ check_broken_symlinks() {
     done
 }
 
+check_shared_claude_skill_bridges() {
+    local shared_skills="$COMMON_DIR/agents/.agents/skills"
+    local claude_skills
+    local skill
+    local skill_name
+    local bridge
+    local target
+    local expected_target="../../../../../common-config/common-dotfiles/agents/.agents/skills"
+
+    for claude_skills in \
+        "$MAC_DIR/claude/.claude/skills" \
+        "$ARCH_DIR/claude/.claude/skills"
+    do
+        while IFS= read -r skill; do
+            skill_name="$(basename "$skill")"
+            bridge="$claude_skills/$skill_name"
+
+            if [[ ! -L "$bridge" ]]; then
+                if [[ -e "$bridge" ]]; then
+                    fail "shared Claude skill must be a symlink: ${bridge#"$REPO_ROOT/"}"
+                else
+                    fail "missing shared Claude skill bridge: ${bridge#"$REPO_ROOT/"}"
+                fi
+                continue
+            fi
+
+            target="$(readlink "$bridge")"
+            if [[ "$target" != "$expected_target/$skill_name" ]]; then
+                fail "incorrect shared Claude skill bridge: ${bridge#"$REPO_ROOT/"} -> $target"
+            fi
+        done < <(find "$shared_skills" -mindepth 1 -maxdepth 1 -type d -print)
+    done
+}
+
 is_optional_claude_bridge() {
     local link="$1"
     local target="$2"
@@ -296,6 +330,7 @@ doctor() {
 
     info "Checking symlinks"
     check_broken_symlinks
+    check_shared_claude_skill_bridges
 
     info "Checking shell syntax"
     check_shell_syntax

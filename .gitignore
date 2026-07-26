@@ -23,6 +23,7 @@ common-config/common-dotfiles/herdr/.config/herdr/*.sock
 common-config/common-dotfiles/herdr/.config/herdr/session*.json
 common-config/common-dotfiles/herdr/.config/herdr/.plugins.lock
 common-config/common-dotfiles/herdr/.config/herdr/*.pre-dotfiles-*
+common-config/common-dotfiles/pi/.pi/openai-codex-images/
 mac-config/mac-dotfiles/claude/.claude/.last-cleanup
 mac-config/mac-dotfiles/claude/.claude/.last-update-result.json
 mac-config/mac-dotfiles/claude/.claude/backups/

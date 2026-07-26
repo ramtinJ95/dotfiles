@@ -150,6 +150,12 @@ trust_level = "trusted"
 [projects."/Users/ramtin/Documents/Codex/2026-07-24/realtime-voice-chat"]
 trust_level = "trusted"
 
+[projects."/Users/ramtin/Documents/Codex/2026-07-24/realtime-voice-chat-2"]
+trust_level = "trusted"
+
+[projects."/Users/ramtin/Documents/Codex/2026-07-24/please-fix-the-execution-permissions-for"]
+trust_level = "trusted"
+
 [marketplaces.openai-bundled]
 last_updated = "2026-07-24T07:55:50Z"
 source_type = "local"
@@ -218,7 +224,7 @@ cwd = "."
 enabled = false
 
 [desktop]
-conversationDetailMode = "STEPS_PROSE"
+conversationDetailMode = "STEPS_COMMANDS"
 ambient-suggestions-enabled = true
 followUpQueueMode = "steer"
 dock-icon-preference = "codex-system"

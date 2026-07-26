@@ -1,5 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/ramtinJ95/pi-infra-command-guard/main/infra-command-guard.schema.json",
+  "guardUnclassifiedCommands": false,
   "notifications": {
     "enabled": true,
     "backend": "auto"
