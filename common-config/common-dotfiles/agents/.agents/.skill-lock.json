@@ -30,6 +30,15 @@
       "pluginName": "mattpocock-skills",
       "installedAt": "2026-06-19T07:55:22.867Z",
       "updatedAt": "2026-06-19T07:55:22.867Z"
+    },
+    "lavish": {
+      "source": "kunchenguid/lavish-axi",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/kunchenguid/lavish-axi.git",
+      "skillPath": "skills/lavish/SKILL.md",
+      "skillFolderHash": "b7eaa632866ba1f7d0b40b08da6ee72c13577841",
+      "installedAt": "2026-07-27T20:23:44.710Z",
+      "updatedAt": "2026-07-27T20:23:44.710Z"
     }
   },
   "dismissed": {
@@ -49,7 +58,6 @@
     "opencode",
     "warp",
     "zed",
-    "pi",
     "claude-code"
   ]
 }

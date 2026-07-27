@@ -1,11 +1,15 @@
 {
   "mode": "path",
   "voiceFeaturesOnly": false,
+  "prompt": {
+    "heavySystemPromptOverwrite": true
+  },
   "scope": {
     "allProviders": "off",
     "additionalProviders": []
   },
   "tools": {
+    "customRustBinariesDir": "",
     "webRun": true,
     "imageGeneration": true,
     "viewImageFallback": false,
