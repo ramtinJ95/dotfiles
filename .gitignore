@@ -32,6 +32,8 @@ mac-config/mac-dotfiles/claude/.claude/downloads/
 mac-config/mac-dotfiles/claude/.claude/file-history/
 mac-config/mac-dotfiles/claude/.claude/history.jsonl
 mac-config/mac-dotfiles/claude/.claude/image-cache/
+mac-config/mac-dotfiles/claude/.claude/infra-guard-approval
+mac-config/mac-dotfiles/claude/.claude/infra-guard-pending.json
 mac-config/mac-dotfiles/claude/.claude/mcp-needs-auth-cache.json
 mac-config/mac-dotfiles/claude/.claude/paste-cache/
 mac-config/mac-dotfiles/claude/.claude/plugins/

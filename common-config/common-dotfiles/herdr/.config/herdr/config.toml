@@ -212,8 +212,8 @@ show_agent_labels_on_pane_borders = false
 enabled = true
 # Optional custom mp3 sound files. Relative paths are resolved from this config file's directory.
 # path = "sounds/notification.mp3"   # one mp3 file for all sound notifications
-done_path = "sounds/peon-ready-to-work.mp3"      # overrides only finished notifications
-request_path = "sounds/peon-something-need-doing.mp3" # overrides only needs-attention notifications
+# done_path override removed — finished now uses Herdr's default sound
+# request_path override removed — needs-attention now uses Herdr's default sound
 
 # Per-agent overrides: default | on | off
 # By default, droid is muted.

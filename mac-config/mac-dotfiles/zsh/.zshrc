@@ -53,6 +53,8 @@ alias py='python3'
 alias decompress='tar -xvf'
 alias compress='tar -cvf'
 
+alias claude='claude --disallowedTools=ScheduleWakeup,ShareOnboardingGuide'
+
 function control() {
 	local target="$1" host
 

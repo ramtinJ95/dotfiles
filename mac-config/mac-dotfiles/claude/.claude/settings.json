@@ -4,9 +4,36 @@
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
   "permissions": {
-    "defaultMode": "bypassPermissions"
+    "defaultMode": "bypassPermissions",
+    "deny": [
+      "ScheduleWakeup",
+      "ShareOnboardingGuide"
+    ]
+  },
+  "sandbox": {
+    "network": {
+      "allowedDomains": [
+        "context7.com",
+        "*.context7.com"
+      ]
+    }
   },
   "disableClaudeAiConnectors": true,
+  "disableWorkflows": true,
+  "disableArtifact": true,
+  "includeGitInstructions": false,
+  "skillOverrides": {
+    "claude-api": "user-invocable-only",
+    "update-config": "user-invocable-only",
+    "claude-in-chrome": "off",
+    "dataviz": "user-invocable-only",
+    "keybindings-help": "user-invocable-only",
+    "fewer-permission-prompts": "user-invocable-only",
+    "loop": "off",
+    "schedule": "off",
+    "run": "user-invocable-only",
+    "simplify": "user-invocable-only"
+  },
   "hooks": {
     "PreToolUse": [
       {
