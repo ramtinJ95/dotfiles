@@ -247,6 +247,7 @@ check_shared_claude_skill_bridges() {
     local bridge
     local target
     local expected_target="../../../../../common-config/common-dotfiles/agents/.agents/skills"
+    local pi_visualize_target="../../../../../common-config/common-dotfiles/pi/.pi/agent/extensions/pi-visualize-code-changes/skills/visualize-code-changes"
 
     for claude_skills in \
         "$MAC_DIR/claude/.claude/skills" \
@@ -270,6 +271,16 @@ check_shared_claude_skill_bridges() {
                 fail "incorrect shared Claude skill bridge: ${bridge#"$REPO_ROOT/"} -> $target"
             fi
         done < <(find "$shared_skills" -mindepth 1 -maxdepth 1 -type d -print)
+
+        bridge="$claude_skills/visualize-code-changes"
+        if [[ ! -L "$bridge" ]]; then
+            fail "missing Pi-to-Claude skill bridge: ${bridge#"$REPO_ROOT/"}"
+        else
+            target="$(readlink "$bridge")"
+            if [[ "$target" != "$pi_visualize_target" ]]; then
+                fail "incorrect Pi-to-Claude skill bridge: ${bridge#"$REPO_ROOT/"} -> $target"
+            fi
+        fi
     done
 }
 

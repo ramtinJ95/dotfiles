@@ -26,6 +26,9 @@ Codex load that global skill directory directly through `~/.agents/skills`; do
 not add duplicate shared-skill links under `.pi/agent/skills` or `.codex/skills`.
 Claude does not read `~/.agents/skills`, so the macOS and Arch Claude packages
 bridge every shared skill with repo-relative symlinks from `.claude/skills`.
+The Pi-packaged `visualize-code-changes` skill is also bridged directly into
+both Claude packages. `scripts/dotfiles doctor` checks these bridges so a new
+shared skill cannot silently remain unavailable in Claude.
 
 ## Usage
 
