@@ -9,12 +9,13 @@ non-flowchart types, and the answers differ.
 
 1. [Control flow — flowchart](#control-flow--flowchart)
 2. [Module & dependency graphs](#module--dependency-graphs)
-3. [Sequence diagrams](#sequence-diagrams)
-4. [State machines](#state-machines)
-5. [Data flow](#data-flow)
-6. [Class & schema diagrams](#class--schema-diagrams)
-7. [Complementary perspectives](#complementary-perspectives)
-8. [When the merged diff view stops working](#when-the-merged-diff-view-stops-working)
+3. [C4-style dependency views](#c4-style-dependency-views)
+4. [Sequence diagrams](#sequence-diagrams)
+5. [State machines](#state-machines)
+6. [Data flow](#data-flow)
+7. [Class & schema diagrams](#class--schema-diagrams)
+8. [Complementary perspectives](#complementary-perspectives)
+9. [When the merged diff view stops working](#when-the-merged-diff-view-stops-working)
 
 ---
 
@@ -127,6 +128,56 @@ diff /tmp/before.txt /tmp/after.txt && echo "identical -- moved, not rewritten"
 
 Pairing the fate map with a small table — file, what happened, review effort —
 turns the diagram into something a reviewer can act on immediately.
+
+---
+
+## C4-style dependency views
+
+C4 is a **representation within the dependency lens**, not another `--lens`
+value. Use it when inspected source establishes a meaningful boundary:
+
+| View | Use only when evidence shows… | Typical evidence |
+|---|---|---|
+| Context | An actor/system interaction or external-system boundary changed | routes, public API handlers, auth/trust policy, integration clients |
+| Container | A call or data flow changed between deployable units | service entry points, manifests, Dockerfiles, queue/database configuration |
+| Component | A runtime/module responsibility changed inside one deployable unit | imports, call sites, module APIs, registration/wiring code |
+
+Directory names are hints, not proof. For every element and relationship, add a
+compact evidence table in Notes with a source path and symbol, or a stable line
+when no symbol exists. Fall back to the ordinary module graph when evidence does
+not support the boundary.
+
+Use a flat ordinary flowchart so the artifact works in GitHub Mermaid and
+terminal renderers. Encode ownership in node text instead of subgraphs, keep
+labels concise, use exactly one global direction, and label every relationship
+by intent, protocol, or data shape:
+
+```mermaid
+flowchart TB
+  Reviewer["Person: Reviewer"]
+  API["Container: API — System: Product"]:::changed
+  Queue["External: Queue"]
+  Worker["Component: Worker — Container: API — System: Product"]:::added
+
+  Reviewer -->|reviews behavior| API
+  API -->|publishes Job — changed| Queue
+  Queue -->|delivers Job — added| Worker
+
+  classDef added fill:#d4f8d4,stroke:#2ea043,color:#1f2328
+  classDef changed fill:#fff5cc,stroke:#bf8700,color:#1f2328
+```
+
+The exact role prefixes are `Person:`, `System:`, `Container:`, `Component:`,
+and `External:`. In change views, use `:::added`, `:::removed`, `:::changed`, and
+`:::same` as progressive enhancement, but also put `— added`, `— removed`, or
+`— changed` in relationship or element text wherever fate would otherwise be
+ambiguous. Meaning must survive monochrome output.
+
+Do not emit native Mermaid C4 forms such as `C4Context`, `C4Container`,
+`C4Component`, `C4Dynamic`, or `C4Deployment`. Do not use subgraphs as C4
+boundaries: some terminal renderers attach cross-boundary relationships to the
+frame instead of the named endpoint. Ordinary dependency graphs and fate maps
+may still use subgraphs.
 
 ---
 

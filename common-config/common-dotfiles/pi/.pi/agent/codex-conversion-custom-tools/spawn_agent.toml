@@ -1,5 +1,6 @@
-usage = '''await tools.spawn_agent(JSON.stringify({ agent_type: "explorer" | "reviewer", message: string, cwd?: string }))'''
-description = "Relative cwd resolves from Pi's working directory."
+usage = '''await tools.spawn_agent(JSON.stringify({ agent_type: "explorer" | "reviewer", message: string, cwd?: string, label?: string, interactive?: boolean }))'''
+description = "Defaults to a visible, steerable Herdr tab when Herdr is available. Set interactive=false only when the user explicitly requests no interactivity, pane, or tab. Outside Herdr it uses an isolated headless Pi. Supply a concise task label. Relative cwd resolves from Pi's working directory."
+output = "Inside Herdr: JSON with tab, pane, label, status, and assistant text. Outside Herdr: assistant text."
 command = "./spawn-agent/spawn-agent.mjs"
 input = "stdin"
 defer_loading = false

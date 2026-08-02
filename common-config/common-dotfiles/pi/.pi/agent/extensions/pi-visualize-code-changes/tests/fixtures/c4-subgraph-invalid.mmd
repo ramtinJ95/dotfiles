@@ -1,0 +1,6 @@
+flowchart TB
+  Reviewer["Person: Reviewer"]
+  subgraph Product["System: Product"]
+    API["Container: API"]
+  end
+  Reviewer -->|reviews behavior| API

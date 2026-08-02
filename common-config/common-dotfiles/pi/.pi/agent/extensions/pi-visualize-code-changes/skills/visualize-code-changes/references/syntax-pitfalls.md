@@ -12,9 +12,10 @@ scan — several of these render *silently wrong* rather than erroring.
 4. [Style classes](#4-style-classes)
 5. [Edge styling by index](#5-edge-styling-by-index)
 6. [Subgraphs](#6-subgraphs)
-7. [Comments](#7-comments)
-8. [Sequence-diagram specifics](#8-sequence-diagram-specifics)
-9. [Node ids](#9-node-ids)
+7. [Terminal-safe C4 profile](#7-terminal-safe-c4-profile)
+8. [Comments](#8-comments)
+9. [Sequence-diagram specifics](#9-sequence-diagram-specifics)
+10. [Node ids](#10-node-ids)
 
 ---
 
@@ -135,7 +136,30 @@ end
 Every `subgraph` needs its own `end`. Edges may cross subgraph boundaries freely,
 but declare them *outside* the subgraph blocks to keep layout predictable.
 
-## 7. Comments
+For C4-style views, do not use subgraphs at all; see the next section.
+
+## 7. Terminal-safe C4 profile
+
+Native Mermaid C4 syntax is not part of the portable profile. Use an ordinary,
+flat flowchart with exact textual role prefixes:
+
+```
+flowchart TB
+  API["Container: API — System: Product"]
+  Queue["External: Queue"]
+  API -->|publishes Job| Queue
+```
+
+The allowed prefixes are `Person:`, `System:`, `Container:`, `Component:`, and
+`External:`. Keep labels concise, encode ownership in the label, label every
+relationship, and use one global `TB`, `TD`, `BT`, `LR`, or `RL` direction.
+
+Do not use `C4Context`, `C4Container`, `C4Component`, `C4Dynamic`, or
+`C4Deployment`. Do not wrap C4 nodes in subgraphs: cross-subgraph edges can end
+at a terminal-rendered boundary frame rather than the named node, silently
+misstating the architecture.
+
+## 8. Comments
 
 `%%` must start the line. A trailing comment after content is unreliable:
 
@@ -145,7 +169,7 @@ but declare them *outside* the subgraph blocks to keep layout predictable.
   A --> B                      ✓
 ```
 
-## 8. Sequence-diagram specifics
+## 9. Sequence-diagram specifics
 
 Messages use a different arrow vocabulary from flowcharts — flowchart arrows are
 invalid here:
@@ -168,7 +192,7 @@ sequenceDiagram
 Colons separate the message from its text, so a colon *inside* message text needs
 escaping or rewording. `alt`/`else`/`opt`/`loop` blocks each close with `end`.
 
-## 9. Node ids
+## 10. Node ids
 
 Ids must start with a letter or underscore, and cannot contain spaces or hyphens.
 The label carries the human-readable name:

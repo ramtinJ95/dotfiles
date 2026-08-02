@@ -88,6 +88,22 @@ Otherwise, choose a recommended primary lens from the inspected change:
 | How was data reshaped or passed? | data flow |
 | Which type or schema shape changed? | structure |
 
+The **dependency** lens can use a C4-style Context, Container, or Component
+representation, but C4 is not another lens. Choose it only after inspected
+source establishes a real architectural boundary:
+
+- Context for a changed actor-to-system interaction or external system boundary.
+- Container for a change crossing deployable services, applications, workers,
+  or data stores.
+- Component for a change crossing meaningful runtime/module boundaries inside
+  one deployable container.
+
+If manifests, entry points, imports/calls, configuration, or deployment files do
+not establish the claimed boundary, use the ordinary module dependency graph.
+Record source evidence for every C4 element and relationship in Notes; directory
+names alone are not evidence. Follow the terminal-safe C4 profile in
+`references/diagram-types.md`.
+
 Consider at most one second lens. Propose it only when all three tests pass:
 
 1. it answers a question distinct from the primary lens;

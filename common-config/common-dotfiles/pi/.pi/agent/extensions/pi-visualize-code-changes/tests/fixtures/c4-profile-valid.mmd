@@ -1,0 +1,12 @@
+flowchart TB
+  Reviewer["Person: Reviewer"]
+  API["Container: API — System: Product"]:::changed
+  Queue["External: Queue"]
+  Worker["Component: Worker — Container: API — System: Product"]:::added
+
+  Reviewer -->|reviews behavior| API
+  API -->|publishes Job — changed| Queue
+  Queue -->|delivers Job — added| Worker
+
+  classDef added fill:#d4f8d4,stroke:#2ea043,color:#1f2328
+  classDef changed fill:#fff5cc,stroke:#bf8700,color:#1f2328

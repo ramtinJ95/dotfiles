@@ -30,7 +30,7 @@
     "backgroundShellCloseShortcut": "alt+r"
   },
   "compaction": {
-    "responsesCompaction": false,
+    "responsesCompaction": true,
     "version": "v1"
   },
   "beta": {
@@ -47,12 +47,14 @@
     "realtimeShortcut": "ctrl+alt+v",
     "dictationShortcutMode": "push",
     "inputDevice": "coreaudio:BuiltInMicrophoneDevice",
-    "outputDevice": "coreaudio:BuiltInSpeakerDevice"
+    "outputDevice": "coreaudio:BuiltInSpeakerDevice",
+    "serverShortcut": "ctrl+alt+g"
   },
   "openai": {
     "fast": false,
     "verbosity": "low",
     "forceCachedWebSockets": true,
-    "webSearchModel": "gpt-5.6-luna"
+    "webSearchModel": "gpt-5.6-luna",
+    "harnessIdentifierHeader": false
   }
 }

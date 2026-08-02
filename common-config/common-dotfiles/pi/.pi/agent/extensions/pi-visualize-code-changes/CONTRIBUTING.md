@@ -66,6 +66,12 @@ validator (stdlib only).
    python3 skills/visualize-code-changes/scripts/validate_mermaid.py --lint-only path/to/file.md
    ```
 
+   Run the validator regression tests when changing its rules:
+
+   ```bash
+   npm test
+   ```
+
 5. Dogfood the skill when the change affects the workflow:
 
    ```text

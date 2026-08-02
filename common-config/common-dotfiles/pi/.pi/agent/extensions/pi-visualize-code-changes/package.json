@@ -16,6 +16,9 @@
   "license": "MIT",
   "author": "BlockedPath",
   "type": "module",
+  "scripts": {
+    "test": "python3 -m unittest discover -s tests"
+  },
   "files": [
     "skills",
     "README.md",

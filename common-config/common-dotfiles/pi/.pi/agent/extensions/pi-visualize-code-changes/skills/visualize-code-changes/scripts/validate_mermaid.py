@@ -285,6 +285,13 @@ VALID_HEADERS = (
     "treemap-beta", "flowchart-elk",
 )
 
+NATIVE_C4_HEADERS = {
+    "c4context", "c4container", "c4component", "c4dynamic",
+    "c4deployment",
+}
+C4_PREFIX_RE = re.compile(r"\b(?:Person|System|Container|Component|External):")
+FLOWCHART_DIRECTIONS = {"tb", "td", "bt", "lr", "rl"}
+
 # Characters that terminate a label early unless the label is quoted.
 RISKY_IN_LABEL = set("()[]{}<>|;")
 
@@ -356,6 +363,47 @@ def lint_block(block: Block) -> list[str]:
         )
 
     is_flowchart = head in ("flowchart", "graph", "flowchart-elk")
+
+    if head in NATIVE_C4_HEADERS:
+        problems.append(
+            f"line {at(first_no)}: native Mermaid C4 syntax is outside the portable "
+            "C4 profile -- use an ordinary flat flowchart"
+        )
+
+    is_c4_profile = is_flowchart and any(C4_PREFIX_RE.search(ln) for _, ln in content)
+
+    if is_c4_profile:
+        header_parts = first.strip().split()
+        if len(header_parts) < 2 or header_parts[1].lower() not in FLOWCHART_DIRECTIONS:
+            problems.append(
+                f"line {at(first_no)}: the C4 profile requires one global flowchart "
+                "direction (TB, TD, BT, LR, or RL)"
+            )
+
+        for n, ln in content[1:]:
+            low = ln.strip().lower()
+            if low.startswith("subgraph"):
+                problems.append(
+                    f"line {at(n)}: the C4 profile uses flat flowcharts, not subgraph "
+                    "boundaries -- encode ownership in node labels"
+                )
+                break
+            if low.startswith("direction "):
+                problems.append(
+                    f"line {at(n)}: the C4 profile allows only the global direction "
+                    "from the flowchart header"
+                )
+                break
+
+        for n, ln in content[1:]:
+            low = ln.strip().lower()
+            if low.startswith(("classdef", "class ", "style ", "linkstyle", "click")):
+                continue
+            if ARROW_RE.search(_strip_quoted(ln)) and not re.search(r"\|[^|]*\S[^|]*\|", ln):
+                problems.append(
+                    f"line {at(n)}: every C4 profile relationship needs a non-empty "
+                    "intent, protocol, or data-flow label"
+                )
 
     # 2. subgraph / end must balance.
     depth = 0
@@ -463,6 +511,16 @@ def lint_block(block: Block) -> list[str]:
     return problems
 
 
+def semantic_lint_block(block: Block) -> list[str]:
+    """Checks a successful Mermaid render cannot prove on its own."""
+    return [
+        problem for problem in lint_block(block)
+        if "style class" in problem
+        or "linkStyle" in problem
+        or "C4 profile" in problem
+    ]
+
+
 # ---------------------------------------------------------------------------
 # Driver
 # ---------------------------------------------------------------------------
@@ -543,9 +601,9 @@ def main() -> int:
                 ok, err = render_block(mmdc, b, pptr_cfg_file, dest)
                 b.errors = [err] if err else []
                 # A clean render still benefits from the semantic checks
-                # (undefined classDef renders fine but silently loses colour).
+                # (undefined classes and unsupported C4 profiles still render).
                 if ok:
-                    b.errors = [p for p in lint_block(b) if "style class" in p or "linkStyle" in p]
+                    b.errors = semantic_lint_block(b)
                     ok = not b.errors
             else:
                 b.errors = lint_block(b)

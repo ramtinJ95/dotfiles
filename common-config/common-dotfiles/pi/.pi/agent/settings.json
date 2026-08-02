@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.82.1",
+  "lastChangelogVersion": "0.83.0",
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.6-sol",
   "hideThinkingBlock": false,
@@ -14,14 +14,14 @@
     "npm:@howaboua/pi-codex-conversion",
     "npm:@howaboua/pi-auto-trees",
     "npm:@howaboua/pi-subagent-review",
-    "npm:@howaboua/pi-skill-chrome-cdp",
     "npm:@howaboua/pi-markdown-workflows",
     "npm:@bergetai/pi-provider",
     "npm:@howaboua/pi-ask",
     "npm:@ramtinj95/pi-infra-command-guard",
     "npm:@ramtinj95/pi-comment-editor",
     "extensions/pi-visualize-code-changes",
-    "git:github.com/ramtinJ95/pi-review-loop@9207713b96a42d7a0334325916c1cdd0e5a8521b"
+    "git:github.com/ramtinJ95/pi-review-loop@5c718468d3d7f635f796670d1d9d9dba9c6dc48f",
+    "npm:@ramtinj95/pi-mermaid-tui"
   ],
   "compaction": {
     "enabled": true

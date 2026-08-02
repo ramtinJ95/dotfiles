@@ -1,0 +1,30 @@
+:root,
+[data-theme="catppuccin-mocha"] {
+  color-scheme: dark;
+  --color-base-100: #1e1e2e;
+  --color-base-200: #181825;
+  --color-base-300: #11111b;
+  --color-base-content: #cdd6f4;
+  --color-primary: #cba6f7;
+  --color-primary-content: #11111b;
+  --color-secondary: #89b4fa;
+  --color-secondary-content: #11111b;
+  --color-accent: #94e2d5;
+  --color-accent-content: #11111b;
+  --color-neutral: #313244;
+  --color-neutral-content: #cdd6f4;
+  --color-info: #89dceb;
+  --color-info-content: #11111b;
+  --color-success: #a6e3a1;
+  --color-success-content: #11111b;
+  --color-warning: #f9e2af;
+  --color-warning-content: #11111b;
+  --color-error: #f38ba8;
+  --color-error-content: #11111b;
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
