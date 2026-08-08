@@ -3,25 +3,15 @@
     "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
+  "includeGitInstructions": false,
   "permissions": {
-    "defaultMode": "bypassPermissions",
     "deny": [
       "ScheduleWakeup",
       "ShareOnboardingGuide"
-    ]
-  },
-  "sandbox": {
-    "network": {
-      "allowedDomains": [
-        "context7.com",
-        "*.context7.com"
-      ]
-    }
+    ],
+    "defaultMode": "bypassPermissions"
   },
   "disableClaudeAiConnectors": true,
-  "disableWorkflows": true,
-  "disableArtifact": true,
-  "includeGitInstructions": false,
   "skillOverrides": {
     "claude-api": "user-invocable-only",
     "update-config": "user-invocable-only",
@@ -59,15 +49,31 @@
       }
     ]
   },
+  "disableWorkflows": true,
+  "disableArtifact": true,
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline.sh"
   },
+  "sandbox": {
+    "network": {
+      "allowedDomains": [
+        "context7.com",
+        "*.context7.com"
+      ]
+    }
+  },
   "effortLevel": "high",
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  },
   "autoMemoryEnabled": true,
   "autoDreamEnabled": true,
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark",
   "editorMode": "vim",
-  "switchModelsOnFlag": false
+  "switchModelsOnFlag": false,
+  "voiceEnabled": true,
+  "model": "claude-fable-5[1m]"
 }
