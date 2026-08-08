@@ -1,7 +1,0 @@
-interface:
-  display_name: "Feature Development"
-  short_description: "Guide features from intent to reviewed code"
-  default_prompt: "Use $feature-development to guide this feature through the appropriate design gates, vertical slices, and human-reviewed implementation."
-
-policy:
-  allow_implicit_invocation: false
