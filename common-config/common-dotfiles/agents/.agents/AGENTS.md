@@ -23,3 +23,7 @@
 - When the user explicitly asks for a code review, use the reviewer agent through
   `spawn_agent`; never substitute the explorer agent or invoke the reviewer for
   other tasks.
+- The worker agent is strictly user-invoked. Use `agent_type: "worker"` only when
+  the user explicitly asks to delegate work to a subagent (for example, to keep
+  the main conversation context clean), and set `user_requested: true`. Never
+  choose the worker proactively, even when delegation would save context or time.

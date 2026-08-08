@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.83.0",
+  "lastChangelogVersion": "0.84.1",
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.6-sol",
   "hideThinkingBlock": false,
@@ -11,7 +11,7 @@
   "transport": "auto",
   "theme": "catppuccin-mocha",
   "packages": [
-    "npm:@howaboua/pi-codex-conversion",
+    "/Users/ramtin/workspace/howaboua-pi-stuff-pi084-fix/packages/pi-codex-conversion",
     "npm:@howaboua/pi-auto-trees",
     "npm:@howaboua/pi-subagent-review",
     "npm:@howaboua/pi-markdown-workflows",

@@ -47,6 +47,51 @@ Use lavish-axi when the user asks for a visual artifact, HTML explainer, interac
 6. Run `npx -y lavish-axi end <html-file>` when the review is finished.
 7. `Send & End` ends the session. Its final feedback is still delivered once. After that response, polling stops, and the agent must not reopen the session uninvited. Deliver any remaining updates directly in this conversation.
 
+## Review-surface safety
+
+- Treat the Lavish session URL as the only human review surface. Never open or
+  navigate the user's shared browser to the internal `/artifact/...` URL: the
+  raw artifact has no Annotate controls and Mermaid converted to whiteboards may
+  be hidden. Inspect with a separate headless browser or isolated profile.
+- Test the final page inside Lavish's sandboxed session, not only as a direct
+  file or raw artifact. Confirm the Editor chrome, diagrams, code surfaces, and
+  core prose all remain visible after a source revision.
+- The artifact iframe has a sandboxed opaque origin. Do not make essential
+  content depend on relative local ES-module imports. Inline essential data, or
+  load a sibling data file as a classic script that assigns a `window.*` value.
+- Keep prose, explanations, navigation, and fallback states independent from
+  optional remote or asynchronous renderers. A failed Mermaid or code-renderer
+  import must produce a visible fallback, never a blank section.
+- Updating Mermaid source can leave a saved Excalidraw scene active. Tell the
+  reviewer to choose the updated Mermaid source when prompted. Fullscreen
+  whiteboard mode hides the document; use Close whiteboard to return.
+- A revision can reset scroll position. Give long artifacts stable anchors and
+  a visible shortcut back to dense sections such as a line guide.
+- Do not start a second poll while one is live. Keep or resume the existing
+  foreground/tracked poll so feedback has one unambiguous delivery path.
+
+## Source walkthrough shape
+
+For detailed source-code walkthroughs, prefer this reviewable structure:
+
+1. Start with the smallest useful mental model and execution-path diagram.
+2. Give each changed file its own card with path, purpose, and provenance:
+   where the shape came from and why it belongs in this change.
+3. Render the real file or diff with `@pierre/diffs`.
+4. Follow it with an expandable line guide using four columns: exact line or
+   range, code, what it does, and why it is there.
+5. Cover every changed nonblank line. Group braces and purely structural
+   boilerplate into explicit ranges; call out replacements and deletions.
+6. Add a separate "unchanged but load-bearing" section for configuration or
+   symbols required to understand the changed path.
+7. End with rollout behavior, invariants, accepted trade-offs, runtime-dependent
+   claims, and follow-ups. Distinguish verified code facts from expected runtime
+   results.
+
+The line guide is essential content and must render without `@pierre/diffs`.
+Treat the visual diff as progressive enhancement so a renderer failure leaves
+the complete what/why explanation readable.
+
 ## Visual guidance
 
 - Use visual hierarchy to make the most important decisions, risks, tradeoffs, and next actions obvious at a glance

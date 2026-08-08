@@ -14,20 +14,16 @@ import {
 } from "../herdr-agent/herdr-agent.mjs";
 
 const EXAMPLE_DIR = dirname(fileURLToPath(import.meta.url));
+const AGENT_DIR = resolve(EXAMPLE_DIR, "..", "..");
+const NPM_MODULES_DIR = resolve(AGENT_DIR, "npm", "node_modules");
+const EXTENSIONS_DIR = resolve(AGENT_DIR, "extensions");
 const CODEX_CONVERSION_PATH = resolve(
-	EXAMPLE_DIR,
-	"..",
-	"..",
-	"npm",
-	"node_modules",
+	NPM_MODULES_DIR,
 	"@howaboua",
 	"pi-codex-conversion",
 );
 const HERDR_STATE_EXTENSION_PATH = resolve(
-	EXAMPLE_DIR,
-	"..",
-	"..",
-	"extensions",
+	EXTENSIONS_DIR,
 	"herdr-agent-state.ts",
 );
 const COORDINATION_PROMPT_PATH = resolve(
@@ -45,13 +41,28 @@ const AGENT_CONFIG = {
 		thinking: "medium",
 		promptPath: resolve(EXAMPLE_DIR, "reviewer.prompt.md"),
 	},
+	worker: {
+		model: "openai-codex/gpt-5.6-sol",
+		thinking: "high",
+		promptPath: resolve(EXAMPLE_DIR, "worker.prompt.md"),
+	},
 };
+const AGENT_LABELS = {
+	explorer: "Explore",
+	reviewer: "Review",
+	worker: "Work",
+};
+const WORKER_INTERACTIVE_PROFILE_PATH = resolve(
+	EXAMPLE_DIR,
+	"worker-profile",
+);
 const ALLOWED_KEYS = new Set([
 	"agent_type",
 	"message",
 	"cwd",
 	"label",
 	"interactive",
+	"user_requested",
 ]);
 const GIT_TIMEOUT_MS = 10_000;
 const HERDR_START_TIMEOUT_MS = 30_000;
@@ -75,8 +86,15 @@ export function parseSpawnAgentRequest(text) {
 		throw new Error(
 			`unknown field${unknown.length === 1 ? "" : "s"}: ${unknown.join(", ")}`,
 		);
-	if (value.agent_type !== "explorer" && value.agent_type !== "reviewer")
-		throw new Error('agent_type must be "explorer" or "reviewer"');
+	if (!Object.hasOwn(AGENT_CONFIG, value.agent_type))
+		throw new Error('agent_type must be "explorer", "reviewer", or "worker"');
+	if (value.agent_type === "worker" && value.user_requested !== true) {
+		throw new Error(
+			"worker requires user_requested=true and may only be used after an explicit user request for subagent delegation",
+		);
+	}
+	if (value.agent_type !== "worker" && value.user_requested !== undefined)
+		throw new Error("user_requested is only valid for the worker agent");
 	if (typeof value.message !== "string" || !value.message.trim())
 		throw new Error("message must be a non-empty string");
 	if (
@@ -97,6 +115,7 @@ export function parseSpawnAgentRequest(text) {
 		cwd: value.cwd?.trim(),
 		label: value.label?.replace(/\s+/g, " ").trim(),
 		interactive: value.interactive ?? true,
+		user_requested: value.user_requested,
 	};
 }
 
@@ -304,7 +323,7 @@ export function prepareSpawn(request, parentCwd = process.cwd()) {
 }
 
 export function buildSpawnLabel(request, cwd) {
-	const role = request.agent_type === "explorer" ? "Explore" : "Review";
+	const role = AGENT_LABELS[request.agent_type];
 	const requested = request.label || basename(cwd) || request.agent_type;
 	const task =
 		requested.length <= MAX_LABEL_LENGTH
@@ -320,7 +339,7 @@ export function buildAgentName(request, paneId) {
 
 export function buildPiArgs(request, message) {
 	const config = AGENT_CONFIG[request.agent_type];
-	return [
+	const args = [
 		"--print",
 		"--no-session",
 		"--no-extensions",
@@ -328,6 +347,10 @@ export function buildPiArgs(request, message) {
 		"--no-prompt-templates",
 		"--extension",
 		CODEX_CONVERSION_PATH,
+	];
+	if (request.agent_type === "worker")
+		args.push("--exclude-tools", "spawn_agent");
+	args.push(
 		"--model",
 		config.model,
 		"--thinking",
@@ -335,19 +358,26 @@ export function buildPiArgs(request, message) {
 		"--append-system-prompt",
 		config.promptPath,
 		message,
-	];
+	);
+	return args;
 }
 
 export function buildInteractivePiArgs(request) {
 	const config = AGENT_CONFIG[request.agent_type];
-	return [
+	const extensions =
+		request.agent_type === "worker"
+			? [WORKER_INTERACTIVE_PROFILE_PATH]
+			: [CODEX_CONVERSION_PATH, HERDR_STATE_EXTENSION_PATH];
+	const args = [
 		"--no-extensions",
 		"--no-skills",
 		"--no-prompt-templates",
-		"--extension",
-		CODEX_CONVERSION_PATH,
-		"--extension",
-		HERDR_STATE_EXTENSION_PATH,
+		"--no-approve",
+	];
+	for (const extension of extensions) args.push("--extension", extension);
+	if (request.agent_type === "worker")
+		args.push("--exclude-tools", "spawn_agent");
+	args.push(
 		"--model",
 		config.model,
 		"--thinking",
@@ -356,7 +386,8 @@ export function buildInteractivePiArgs(request) {
 		config.promptPath,
 		"--append-system-prompt",
 		COORDINATION_PROMPT_PATH,
-	];
+	);
+	return args;
 }
 
 export function resolveHerdrContext(env = process.env) {

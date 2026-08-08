@@ -3,6 +3,7 @@
 ## Style
 
 * For technical work, use concise technical prose.
+* Never include implementation plans in pull requests. Keep plans local and out of the repository.
 
 ## Codebase understanding
 

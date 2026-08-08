@@ -244,8 +244,279 @@
         }
       }
     ],
-    "checkedAt": 1785697513523,
+    "checkedAt": 1786142466252,
     "lastModified": 1785495292000,
     "etag": "W/\"400cac2d73673d9fff4c7d0ed22691b0\""
+  },
+  "berget": {
+    "models": [
+      {
+        "api": "openai-completions",
+        "baseUrl": "https://api.berget.ai/v1",
+        "compat": {
+          "supportsDeveloperRole": false
+        },
+        "contextWindow": 128000,
+        "cost": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 1,
+          "output": 2
+        },
+        "id": "openai/gpt-oss-120b",
+        "input": [
+          "text"
+        ],
+        "maxTokens": 16384,
+        "name": "openai/gpt-oss-120b",
+        "provider": "berget",
+        "reasoning": true,
+        "thinkingLevelMap": {
+          "high": "high",
+          "low": null,
+          "max": null,
+          "medium": "medium",
+          "minimal": null,
+          "off": "none",
+          "xhigh": "xhigh"
+        }
+      },
+      {
+        "api": "openai-completions",
+        "baseUrl": "https://api.berget.ai/v1",
+        "compat": {
+          "supportsDeveloperRole": false
+        },
+        "contextWindow": 262144,
+        "cost": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 1,
+          "output": 2
+        },
+        "id": "mistralai/Mistral-Medium-3.5-128B",
+        "input": [
+          "text",
+          "image"
+        ],
+        "maxTokens": 16384,
+        "name": "mistralai/Mistral-Medium-3.5-128B",
+        "provider": "berget",
+        "reasoning": true,
+        "thinkingLevelMap": {
+          "high": "high",
+          "low": null,
+          "max": null,
+          "medium": "medium",
+          "minimal": null,
+          "off": "none",
+          "xhigh": null
+        }
+      },
+      {
+        "api": "openai-completions",
+        "baseUrl": "https://api.berget.ai/v1",
+        "compat": {
+          "supportsDeveloperRole": false
+        },
+        "contextWindow": 32768,
+        "cost": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 1,
+          "output": 2
+        },
+        "id": "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
+        "input": [
+          "text",
+          "image"
+        ],
+        "maxTokens": 16384,
+        "name": "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
+        "provider": "berget",
+        "reasoning": false
+      },
+      {
+        "api": "openai-completions",
+        "baseUrl": "https://api.berget.ai/v1",
+        "compat": {
+          "supportsDeveloperRole": false
+        },
+        "contextWindow": 131072,
+        "cost": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 1,
+          "output": 2
+        },
+        "id": "zai-org/GLM-4.7-FP8",
+        "input": [
+          "text"
+        ],
+        "maxTokens": 16384,
+        "name": "zai-org/GLM-4.7-FP8",
+        "provider": "berget",
+        "reasoning": true,
+        "thinkingLevelMap": {
+          "high": "high",
+          "low": null,
+          "max": null,
+          "medium": null,
+          "minimal": null,
+          "off": "none",
+          "xhigh": null
+        }
+      },
+      {
+        "api": "openai-completions",
+        "baseUrl": "https://api.berget.ai/v1",
+        "compat": {
+          "supportsDeveloperRole": false
+        },
+        "contextWindow": 327680,
+        "cost": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 1,
+          "output": 2
+        },
+        "id": "zai-org/GLM-5.2",
+        "input": [
+          "text"
+        ],
+        "maxTokens": 32768,
+        "name": "zai-org/GLM-5.2",
+        "provider": "berget",
+        "reasoning": true,
+        "thinkingLevelMap": {
+          "high": "high",
+          "low": null,
+          "max": "max",
+          "medium": null,
+          "minimal": null,
+          "off": "none",
+          "xhigh": null
+        }
+      },
+      {
+        "api": "openai-completions",
+        "baseUrl": "https://api.berget.ai/v1",
+        "compat": {
+          "supportsDeveloperRole": false
+        },
+        "contextWindow": 262144,
+        "cost": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 1,
+          "output": 2
+        },
+        "id": "moonshotai/Kimi-K2.6",
+        "input": [
+          "text",
+          "image"
+        ],
+        "maxTokens": 16384,
+        "name": "moonshotai/Kimi-K2.6",
+        "provider": "berget",
+        "reasoning": true,
+        "thinkingLevelMap": {
+          "high": "high",
+          "low": null,
+          "max": null,
+          "medium": null,
+          "minimal": null,
+          "off": "none",
+          "xhigh": null
+        }
+      },
+      {
+        "api": "openai-completions",
+        "baseUrl": "https://api.berget.ai/v1",
+        "compat": {
+          "supportsDeveloperRole": false
+        },
+        "contextWindow": 327680,
+        "cost": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 1,
+          "output": 2
+        },
+        "id": "moonshotai/Kimi-K3",
+        "input": [
+          "text",
+          "image"
+        ],
+        "maxTokens": 16384,
+        "name": "moonshotai/Kimi-K3",
+        "provider": "berget",
+        "reasoning": true,
+        "thinkingLevelMap": {
+          "high": "high",
+          "low": null,
+          "max": null,
+          "medium": null,
+          "minimal": null,
+          "off": "none",
+          "xhigh": null
+        }
+      },
+      {
+        "api": "openai-completions",
+        "baseUrl": "https://api.berget.ai/v1",
+        "compat": {
+          "supportsDeveloperRole": false
+        },
+        "contextWindow": 262144,
+        "cost": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 1,
+          "output": 2
+        },
+        "id": "google/gemma-4-31B-it",
+        "input": [
+          "text",
+          "image"
+        ],
+        "maxTokens": 16384,
+        "name": "google/gemma-4-31B-it",
+        "provider": "berget",
+        "reasoning": true,
+        "thinkingLevelMap": {
+          "high": "high",
+          "low": null,
+          "max": null,
+          "medium": null,
+          "minimal": null,
+          "off": "none",
+          "xhigh": null
+        }
+      },
+      {
+        "api": "openai-completions",
+        "baseUrl": "https://api.berget.ai/v1",
+        "compat": {
+          "supportsDeveloperRole": false
+        },
+        "contextWindow": 32768,
+        "cost": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 1,
+          "output": 2
+        },
+        "id": "meta-llama/Llama-3.3-70B-Instruct",
+        "input": [
+          "text"
+        ],
+        "maxTokens": 16384,
+        "name": "meta-llama/Llama-3.3-70B-Instruct",
+        "provider": "berget",
+        "reasoning": false
+      }
+    ],
+    "checkedAt": 1786142466182
   }
 }

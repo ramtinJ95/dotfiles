@@ -190,7 +190,7 @@ navigate_pane_up = "ctrl+k"
 # accent = "cyan"
 
 # Background notification popup delivery
-agent_panel_sort = "spaces"
+agent_panel_sort = "priority"
 show_agent_labels_on_pane_borders = false
 [ui.toast]
 # off = disable pop-up notifications
@@ -217,8 +217,8 @@ enabled = true
 
 # Per-agent overrides: default | on | off
 # By default, droid is muted.
-# [ui.sound.agents]
-# droid = "off"
+[ui.sound.agents]
+claude = "off"
 
 [session]
 # Resume supported AI-agent panes into their native conversation sessions after

@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import test from "node:test";
 
 import { resolveTargetAlias } from "../herdr-agent/herdr-agent.mjs";
 import {
 	buildAgentName,
 	buildInteractivePiArgs,
+	buildPiArgs,
 	buildSpawnLabel,
 	parseSpawnAgentRequest,
 	resolveHerdrContext,
@@ -48,11 +51,93 @@ test("accepts an explicit headless request", () => {
 	);
 });
 
+test("requires explicit user-request declaration for worker agents", () => {
+	assert.throws(
+		() =>
+			parseSpawnAgentRequest(
+				JSON.stringify({ agent_type: "worker", message: "Implement it" }),
+			),
+		/worker requires user_requested=true/,
+	);
+	const request = parseSpawnAgentRequest(
+		JSON.stringify({
+			agent_type: "worker",
+			message: "Implement it",
+			user_requested: true,
+		}),
+	);
+	assert.equal(request.user_requested, true);
+	assert.equal(buildSpawnLabel(request, "/tmp/project"), "Work · project");
+	assert.throws(
+		() =>
+			parseSpawnAgentRequest(
+				JSON.stringify({
+					agent_type: "explorer",
+					message: "Inspect it",
+					user_requested: true,
+				}),
+			),
+		/user_requested is only valid for the worker agent/,
+	);
+});
+
+test("builds a worker Pi with the general-purpose worker prompt", () => {
+	const args = buildInteractivePiArgs({ agent_type: "worker" });
+	assert.equal(args.includes("--no-approve"), true);
+	assert.equal(args.includes("--approve"), false);
+	const extensions = args
+		.map((arg, index) => (args[index - 1] === "--extension" ? arg : undefined))
+		.filter(Boolean);
+	assert.equal(extensions.length, 1);
+	assert.equal(extensions[0].endsWith("/worker-profile"), true);
+	assert.equal(args.includes("--skill"), false);
+	const profile = JSON.parse(
+		readFileSync(resolve(extensions[0], "package.json"), "utf8"),
+	);
+	assert.equal(profile.pi.extensions.length, 8);
+	assert.deepEqual(
+		profile.pi.skills.map((path) => path.split("/").at(-2)),
+		["grok", "grilling", "lavish"],
+	);
+	for (const resource of [...profile.pi.extensions, ...profile.pi.skills])
+		assert.equal(existsSync(resolve(extensions[0], resource)), true, resource);
+	assert.equal(args.join(" ").length < 1_000, true);
+	assert.deepEqual(
+		args.slice(
+			args.indexOf("--exclude-tools"),
+			args.indexOf("--exclude-tools") + 2,
+		),
+		["--exclude-tools", "spawn_agent"],
+	);
+	assert.deepEqual(args.slice(args.indexOf("--model"), args.indexOf("--model") + 4), [
+		"--model",
+		"openai-codex/gpt-5.6-sol",
+		"--thinking",
+		"high",
+	]);
+	assert.match(args.at(-3), /worker\.prompt\.md$/);
+	assert.match(args.at(-1), /coordination\.prompt\.md$/);
+});
+
+test("keeps the headless worker lean", () => {
+	const args = buildPiArgs({ agent_type: "worker" }, "Implement it");
+	assert.equal(args.filter((arg) => arg === "--extension").length, 1);
+	assert.equal(args.includes("--skill"), false);
+	assert.deepEqual(
+		args.slice(
+			args.indexOf("--exclude-tools"),
+			args.indexOf("--exclude-tools") + 2,
+		),
+		["--exclude-tools", "spawn_agent"],
+	);
+});
+
 test("builds an interactive isolated Pi with Herdr reporting", () => {
 	const args = buildInteractivePiArgs({ agent_type: "reviewer" });
 	assert.equal(args.includes("--print"), false);
 	assert.equal(args.includes("--no-session"), false);
 	assert.equal(args.includes("--no-extensions"), true);
+	assert.equal(args.includes("--no-approve"), true);
 	assert.equal(args.filter((arg) => arg === "--extension").length, 2);
 	assert.match(args.at(-1), /coordination\.prompt\.md$/);
 });
