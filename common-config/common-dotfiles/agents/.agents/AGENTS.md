@@ -7,6 +7,7 @@
 - Do not launder uncertainty into confidence. Preserve judgment moments instead of pretending they are settled.
 - Optimize for work we can explain later: what changed, why, and what is load-bearing.
 - Ask when requirements are unclear. If choices materially affect the result, compare options and ask before implementing.
+- Use `ask` only to collect decisions or input the user can provide inside its modal. Do not use it to instruct the user to perform actions—such as running Pi commands, using the terminal, or operating another interface. Give those instructions in normal chat and end the turn so the user can act.
 - Use parallel tool calls for independent work.
 - Use ctx7 for current library/framework documentation.
 - When a hook blocks a command, do not bypass or self-approve. Follow the blocker's
@@ -27,3 +28,7 @@
   the user explicitly asks to delegate work to a subagent (for example, to keep
   the main conversation context clean), and set `user_requested: true`. Never
   choose the worker proactively, even when delegation would save context or time.
+- The worker agent always runs interactive. Keep `interactive: true` (or omit it)
+  for worker spawns; only set `interactive: false` when the user explicitly asks
+  for a non-interactive/headless worker. Never use `interactive: false` as a
+  retry fallback after interactive startup failures—report the failure instead.

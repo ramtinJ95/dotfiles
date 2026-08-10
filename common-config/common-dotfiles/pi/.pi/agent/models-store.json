@@ -164,6 +164,7 @@
         },
         "compat": {
           "supportsOpenAIGrammarTools": true,
+          "supportsAdditionalTools": true,
           "supportsToolSearch": true
         }
       },
@@ -202,6 +203,7 @@
         },
         "compat": {
           "supportsOpenAIGrammarTools": true,
+          "supportsAdditionalTools": true,
           "supportsToolSearch": true
         }
       },
@@ -240,13 +242,14 @@
         },
         "compat": {
           "supportsOpenAIGrammarTools": true,
+          "supportsAdditionalTools": true,
           "supportsToolSearch": true
         }
       }
     ],
-    "checkedAt": 1786142466252,
-    "lastModified": 1785495292000,
-    "etag": "W/\"400cac2d73673d9fff4c7d0ed22691b0\""
+    "checkedAt": 1786361642483,
+    "lastModified": 1786351890000,
+    "etag": "W/\"7572a78e60b78526600ed2a9b74b579d\""
   },
   "berget": {
     "models": [
@@ -517,6 +520,6 @@
         "reasoning": false
       }
     ],
-    "checkedAt": 1786142466182
+    "checkedAt": 1786364488021
   }
 }
