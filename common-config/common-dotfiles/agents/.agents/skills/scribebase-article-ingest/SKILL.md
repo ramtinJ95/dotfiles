@@ -124,6 +124,11 @@ curl -s "$SCRIBEBASE_URL/jobs/JOB_ID" \
   -H "Authorization: Bearer $SCRIBEBASE_API_TOKEN"
 ```
 
+Submissions are deduplicated by external ID/origin, canonical URL, then body
+SHA-256. HTTP `409` means the source already exists; report the `source_id` from
+the response instead of retrying. Use `duplicate_policy: "create"` only when the
+user explicitly wants a separate copy.
+
 ## Status meanings
 
 - `queued`: submission succeeded; ingestion has not started.

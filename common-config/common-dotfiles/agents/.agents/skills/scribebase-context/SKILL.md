@@ -44,6 +44,31 @@ Pass any provided filter through in the request body:
 - `page_start`
 - `page_end`
 - `language`
+- `tags`
+- `origin`
+- `publisher`
+- `author`
+- `url`
+- `canonical_url`
+- `external_id`
+- `collection`
+- `created_at_source_after`
+- `created_at_source_before`
+- `updated_at_source_after`
+- `updated_at_source_before`
+- `retrieved_at_after`
+- `retrieved_at_before`
+
+Common article filters:
+
+```json
+{
+  "source_type": "article",
+  "tags": ["kubernetes", "gitops"],
+  "origin": "company_blog",
+  "collection": "infra-reading"
+}
+```
 
 ## Run
 
@@ -78,8 +103,9 @@ curl -s "$SCRIBEBASE_URL/context" \
     "task": "answer",
     "top_k": 8,
     "filters": {
-      "source_type": "paper",
-      "language": "en"
+      "source_type": "article",
+      "tags": ["kubernetes", "gitops"],
+      "origin": "company_blog"
     }
   }'
 ```
@@ -102,7 +128,7 @@ curl -s "$SCRIBEBASE_URL/search" \
 For `/context`, use `context_pack` as source material.
 
 For `/search`, inspect `results[].chunk.title`, `source_id`, `chapter`, pages,
-`chunk_id`, `text`, and `score`.
+`chunk_id`, `text`, metadata fields, and `score`.
 
 If no results return, say ScribeBase returned no matching context and ask whether
 to broaden filters or try different wording.

@@ -15,10 +15,19 @@ Before uploading, confirm all required inputs are present:
 - `SCRIBEBASE_URL`
 - `SCRIBEBASE_API_TOKEN`
 - local file path that exists
-- title
+- title, unless the file is Markdown with a `title` frontmatter field
 
 Ask for missing required inputs. Do not guess title from filename unless the user
 asks you to.
+
+## Supported files
+
+- PDFs
+- images and image directories
+- `.md` / `.markdown`
+- `.txt`
+
+For article bodies that are not already local files, prefer `scribebase-article-ingest`.
 
 ## Defaults
 
@@ -33,6 +42,18 @@ Optional fields you may pass through when provided:
 
 - `course`
 - `chapter`
+- `tags` comma-separated
+- `origin`
+- `publisher`
+- `author`
+- `created_at_source`
+- `updated_at_source`
+- `retrieved_at`
+- `url`
+- `canonical_url`
+- `external_id`
+- `collection`
+- `summary`
 - `continue_on_ocr_error`
 
 ## Run
@@ -52,16 +73,32 @@ Health:
 curl -s "$SCRIBEBASE_URL/health"
 ```
 
-Upload:
+Upload a PDF/book:
 
 ```bash
 curl -s "$SCRIBEBASE_URL/ingest" \
   -H "Authorization: Bearer $SCRIBEBASE_API_TOKEN" \
   -F "file=@/path/to/document.pdf" \
   -F "title=Document Title" \
-  -F "source_type=paper" \
+  -F "source_type=book" \
   -F "language=en" \
   -F "ocr=auto"
+```
+
+Upload Markdown/text with metadata:
+
+```bash
+curl -s "$SCRIBEBASE_URL/ingest" \
+  -H "Authorization: Bearer $SCRIBEBASE_API_TOKEN" \
+  -F "file=@/path/to/article.md" \
+  -F "title=Article Title" \
+  -F "source_type=article" \
+  -F "language=en" \
+  -F "tags=kubernetes,gitops" \
+  -F "origin=company_blog" \
+  -F "publisher=Example Blog" \
+  -F "url=https://example.com/article" \
+  -F "collection=infra-reading"
 ```
 
 Poll:
@@ -77,3 +114,7 @@ curl -s "$SCRIBEBASE_URL/jobs/JOB_ID" \
 - `running`: extraction and/or indexing is in progress.
 - `succeeded`: ingestion completed; use `source_id` for future retrieval.
 - `failed`: ingestion failed; show `error` and suggest checking Mac mini logs.
+
+HTTP `409` means ScribeBase found the same external ID/origin, canonical URL,
+or content hash. Report the existing `source_id`; do not retry unless the user
+explicitly requests a separate copy with `duplicate_policy=create`.
