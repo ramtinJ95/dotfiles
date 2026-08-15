@@ -40,6 +40,9 @@ brew bundle install --file=mac-config/mac-install/Brewfile
 # Apply macOS defaults only  
 mac-config/mac-install/set-defaults.sh
 
+# Install the profile that forces screenshots into ~/Screenshots
+open mac-config/mac-install/screenshot-location.mobileconfig
+
 # Validate and stow shared and macOS dotfiles only, from the repo root
 scripts/dotfiles doctor
 scripts/dotfiles stow mac
@@ -75,7 +78,7 @@ brew bundle dump --file=mac-config/mac-install/Brewfile --force
 - Dock: autohide enabled, no launch animations
 - Keyboard: fast key repeat (2ms repeat, 25ms delay)
 - Finder: show status bar, path bar, disable extension warnings
-- Screenshots: PNG format, no shadows
+- Screenshots: forced to `~/Screenshots`, PNG format, no shadows
 - Trackpad: tap to click enabled
 
 ### Dotfiles
