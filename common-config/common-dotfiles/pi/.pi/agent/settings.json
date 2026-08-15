@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.84.1",
+  "lastChangelogVersion": "0.84.2",
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.6-sol",
   "hideThinkingBlock": false,
@@ -21,7 +21,8 @@
     "npm:@ramtinj95/pi-comment-editor",
     "extensions/pi-visualize-code-changes",
     "git:github.com/ramtinJ95/pi-review-loop@5c718468d3d7f635f796670d1d9d9dba9c6dc48f",
-    "npm:@ramtinj95/pi-mermaid-tui"
+    "npm:@ramtinj95/pi-mermaid-tui",
+    "npm:pi-claude-bridge"
   ],
   "compaction": {
     "enabled": true

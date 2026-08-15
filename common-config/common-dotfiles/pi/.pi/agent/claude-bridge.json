@@ -1,0 +1,8 @@
+{
+  "startupNoticeShown": "2026-08-15",
+  "askClaude": {
+    "enabled": true,
+    "defaultMode": "full",
+    "defaultIsolated": true
+  }
+}

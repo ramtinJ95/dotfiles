@@ -113,3 +113,7 @@ export PATH="$HOME/go/bin:$PATH"
 
 # Voxcraft remote API
 [ -f "$HOME/.voxcraft.env" ] && source "$HOME/.voxcraft.env"
+
+. "$HOME/.atuin/bin/env"
+
+eval "$(atuin init zsh)"

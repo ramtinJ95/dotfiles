@@ -29,7 +29,7 @@ Default retrieval settings:
 - `top_k=8` for normal context gathering
 - `top_k=12` for broad or ambiguous questions
 - omit `alpha` unless requested
-- keep `allow_model_mismatch=false` unless the user accepts stale mixed-model results
+- embedding-profile mismatches always fail and require a full index rebuild
 
 ## Filters
 

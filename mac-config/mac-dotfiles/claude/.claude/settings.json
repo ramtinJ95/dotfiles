@@ -1,61 +1,117 @@
 {
+  "autoDreamEnabled": true,
+  "autoMemoryEnabled": true,
+  "autoMode": {
+    "environment": [
+      "### Org-wide",
+      "**Organization**: None configured",
+      "**Cloud provider(s)**: None configured",
+      "**Repository visibility**: PUBLIC — ramtinJ95/scribebase (confirmed via gh)",
+      "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
+      "**Secrets management**: None configured",
+      "**Default / protected branches**: Default branch `main`; protected branches: `main` (no rulesets listed)",
+      "**CI/CD deploy targets**: None configured",
+      "**Network posture**: None configured",
+      "**Source control**: The trusted repo (ramtinJ95/scribebase) and its `origin` remote (github.com:ramtinJ95/scribebase.git) only — no additional orgs configured",
+      "**Trusted internal domains**: None configured",
+      "**Trusted cloud buckets**: None configured",
+      "**Key internal services**: None configured",
+      "**Internal package registry**: None configured",
+      "**Sensitive data locations & audiences**: any file or store holding personal data, confidential business data, credentials, regulated data, or similarly sensitive material; preserve exact handles when known and share only with audiences cleared at the [named+specifics] bar; in this repo `.env`, `.env.*` (excluding `.env.example`) are gitignored and hold local secrets such as `SCRIBEBASE_API_TOKEN`",
+      "**Data retention / declassification**: None configured",
+      "**Sensitive remote targets**: any namespace, host, or container whose name carries `prod` or `production` as a whole word or name segment",
+      "**Protected deployment namespaces / environments**: None configured — fall back to the Sensitive remote targets heuristic",
+      "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries `prod` or `production` as a whole word or name segment",
+      "### User-specific",
+      "**Primary use of Claude Code**: software development",
+      "**Trusted repo**: /Users/ramtin/personal/scribebase (git working directory) and its `origin` remote github.com:ramtinJ95/scribebase.git — repo is PUBLIC: only ScribeBase's own work belongs here; content ported or first read from outside this repo/session is not its own work; secrets and sensitive data are never cleared into it regardless of visibility",
+      "**Org-specific CLIs**: None configured"
+    ],
+    "soft_deny": [
+      "$defaults",
+      "Bash(rm:.env) in /Users/ramtin/personal/scribebase — irreversible deletion of local secret file",
+      "Write(.env) in /Users/ramtin/personal/scribebase when overwriting existing content — risk of clobbering local API token config"
+    ]
+  },
+  "disableArtifact": true,
+  "disableClaudeAiConnectors": true,
+  "disableWorkflows": true,
+  "editorMode": "vim",
+  "effortLevel": "high",
   "env": {
     "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
-  "includeGitInstructions": false,
-  "permissions": {
-    "deny": [
-      "ScheduleWakeup",
-      "ShareOnboardingGuide"
-    ],
-    "defaultMode": "bypassPermissions"
-  },
-  "disableClaudeAiConnectors": true,
-  "skillOverrides": {
-    "claude-api": "user-invocable-only",
-    "update-config": "user-invocable-only",
-    "claude-in-chrome": "off",
-    "dataviz": "user-invocable-only",
-    "keybindings-help": "user-invocable-only",
-    "fewer-permission-prompts": "user-invocable-only",
-    "loop": "off",
-    "schedule": "off",
-    "run": "user-invocable-only",
-    "simplify": "user-invocable-only"
-  },
   "hooks": {
-    "PreToolUse": [
+    "PostToolUse": [
       {
-        "matcher": "Bash",
         "hooks": [
           {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/guard_infra_commands.py"
+            "command": "atuin hook claude-code",
+            "type": "command"
           }
-        ]
+        ],
+        "matcher": "Bash"
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "command": "atuin hook claude-code",
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "$HOME/.claude/hooks/guard_infra_commands.py",
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash"
+      },
+      {
+        "hooks": [
+          {
+            "command": "atuin hook claude-code",
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash"
       }
     ],
     "SessionStart": [
       {
-        "matcher": "*",
         "hooks": [
           {
-            "type": "command",
             "command": "bash '/Users/ramtin/.claude/hooks/herdr-agent-state.sh' session",
-            "timeout": 10
+            "timeout": 10,
+            "type": "command"
           }
-        ]
+        ],
+        "matcher": "*"
       }
     ]
   },
-  "disableWorkflows": true,
-  "disableArtifact": true,
-  "statusLine": {
-    "type": "command",
-    "command": "~/.claude/statusline.sh"
+  "includeGitInstructions": false,
+  "model": "claude-fable-5[1m]",
+  "permissions": {
+    "defaultMode": "auto",
+    "deny": [
+      "ScheduleWakeup",
+      "ShareOnboardingGuide"
+    ]
   },
   "sandbox": {
+    "excludedCommands": [
+      "ssh *",
+      "scp *"
+    ],
     "network": {
       "allowedDomains": [
         "context7.com",
@@ -63,17 +119,28 @@
       ]
     }
   },
-  "effortLevel": "high",
+  "skillOverrides": {
+    "claude-api": "user-invocable-only",
+    "claude-in-chrome": "off",
+    "dataviz": "user-invocable-only",
+    "fewer-permission-prompts": "user-invocable-only",
+    "keybindings-help": "user-invocable-only",
+    "loop": "off",
+    "run": "user-invocable-only",
+    "schedule": "off",
+    "simplify": "user-invocable-only",
+    "update-config": "user-invocable-only"
+  },
+  "skipDangerousModePermissionPrompt": true,
+  "statusLine": {
+    "command": "~/.claude/statusline.sh",
+    "type": "command"
+  },
+  "switchModelsOnFlag": false,
+  "theme": "auto",
   "voice": {
     "enabled": true,
     "mode": "hold"
   },
-  "autoMemoryEnabled": true,
-  "autoDreamEnabled": true,
-  "skipDangerousModePermissionPrompt": true,
-  "theme": "dark",
-  "editorMode": "vim",
-  "switchModelsOnFlag": false,
-  "voiceEnabled": true,
-  "model": "claude-fable-5[1m]"
+  "voiceEnabled": true
 }
