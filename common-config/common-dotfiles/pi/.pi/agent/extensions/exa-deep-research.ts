@@ -125,7 +125,7 @@ interface ModeConfig {
 	extraSystemPrompt: string;
 }
 
-interface ExaConfig {
+export interface ExaConfig {
 	apiKey: string;
 	baseUrl: string;
 	keychainService: string;
@@ -377,7 +377,7 @@ function buildMissingApiKeyMessage(service: string, account: string): string {
 	].join(" ");
 }
 
-async function loadExaConfig(signal?: AbortSignal): Promise<ExaConfig> {
+export async function loadExaConfig(signal?: AbortSignal): Promise<ExaConfig> {
 	const fileConfig = await loadExaFileConfig();
 	const envApiKey = process.env.EXA_API_KEY?.trim() || process.env.EXA_DEEP_RESEARCH_API_KEY?.trim();
 	const keychainService =
