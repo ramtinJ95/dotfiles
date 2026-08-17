@@ -52,6 +52,15 @@ const AGENT_LABELS = {
 	reviewer: "Review",
 	worker: "Work",
 };
+const THINKING_LEVELS = new Set([
+	"off",
+	"minimal",
+	"low",
+	"medium",
+	"high",
+	"xhigh",
+	"max",
+]);
 const WORKER_INTERACTIVE_PROFILE_PATH = resolve(
 	EXAMPLE_DIR,
 	"worker-profile",
@@ -63,6 +72,8 @@ const ALLOWED_KEYS = new Set([
 	"label",
 	"interactive",
 	"user_requested",
+	"model",
+	"thinking",
 ]);
 const GIT_TIMEOUT_MS = 10_000;
 const HERDR_START_TIMEOUT_MS = 30_000;
@@ -109,6 +120,15 @@ export function parseSpawnAgentRequest(text) {
 		throw new Error("label must be a non-empty string when provided");
 	if (value.interactive !== undefined && typeof value.interactive !== "boolean")
 		throw new Error("interactive must be a boolean when provided");
+	if (
+		value.model !== undefined &&
+		(typeof value.model !== "string" || !value.model.trim())
+	)
+		throw new Error("model must be a non-empty string when provided");
+	if (value.thinking !== undefined && !THINKING_LEVELS.has(value.thinking))
+		throw new Error(
+			"thinking must be one of: off, minimal, low, medium, high, xhigh, max",
+		);
 	return {
 		agent_type: value.agent_type,
 		message: value.message.trim(),
@@ -116,6 +136,8 @@ export function parseSpawnAgentRequest(text) {
 		label: value.label?.replace(/\s+/g, " ").trim(),
 		interactive: value.interactive ?? true,
 		user_requested: value.user_requested,
+		model: value.model?.trim(),
+		thinking: value.thinking,
 	};
 }
 
@@ -352,9 +374,9 @@ export function buildPiArgs(request, message) {
 		args.push("--exclude-tools", "spawn_agent");
 	args.push(
 		"--model",
-		config.model,
+		request.model ?? config.model,
 		"--thinking",
-		config.thinking,
+		request.thinking ?? config.thinking,
 		"--append-system-prompt",
 		config.promptPath,
 		message,
@@ -379,9 +401,9 @@ export function buildInteractivePiArgs(request) {
 		args.push("--exclude-tools", "spawn_agent");
 	args.push(
 		"--model",
-		config.model,
+		request.model ?? config.model,
 		"--thinking",
-		config.thinking,
+		request.thinking ?? config.thinking,
 		"--append-system-prompt",
 		config.promptPath,
 		"--append-system-prompt",

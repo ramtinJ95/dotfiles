@@ -51,6 +51,76 @@ test("accepts an explicit headless request", () => {
 	);
 });
 
+test("accepts per-task model and thinking overrides", () => {
+	const request = parseSpawnAgentRequest(
+		JSON.stringify({
+			agent_type: "explorer",
+			message: "Inspect it",
+			model: "  anthropic/claude-opus-4-1  ",
+			thinking: "xhigh",
+		}),
+	);
+	assert.equal(request.model, "anthropic/claude-opus-4-1");
+	assert.equal(request.thinking, "xhigh");
+	for (const args of [
+		buildPiArgs(request, request.message),
+		buildInteractivePiArgs(request),
+	]) {
+		assert.deepEqual(
+			args.slice(args.indexOf("--model"), args.indexOf("--model") + 4),
+			[
+				"--model",
+				"anthropic/claude-opus-4-1",
+				"--thinking",
+				"xhigh",
+			],
+		);
+	}
+});
+
+test("keeps role defaults when model and thinking are omitted", () => {
+	const request = parseSpawnAgentRequest(
+		JSON.stringify({ agent_type: "reviewer", message: "Review it" }),
+	);
+	assert.equal(request.model, undefined);
+	assert.equal(request.thinking, undefined);
+	const args = buildPiArgs(request, request.message);
+	assert.deepEqual(
+		args.slice(args.indexOf("--model"), args.indexOf("--model") + 4),
+		[
+			"--model",
+			"openai-codex/gpt-5.6-sol",
+			"--thinking",
+			"medium",
+		],
+	);
+});
+
+test("rejects invalid model and thinking overrides", () => {
+	assert.throws(
+		() =>
+			parseSpawnAgentRequest(
+				JSON.stringify({
+					agent_type: "explorer",
+					message: "Inspect it",
+					model: "  ",
+				}),
+			),
+		/model must be a non-empty string/,
+	);
+	assert.throws(
+		() =>
+			parseSpawnAgentRequest(
+				JSON.stringify({
+					agent_type: "explorer",
+					message: "Inspect it",
+					thinking: "extreme",
+				}),
+			),
+		/thinking must be one of/,
+	);
+});
+
 test("requires explicit user-request declaration for worker agents", () => {
 	assert.throws(
 		() =>
