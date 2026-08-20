@@ -1,0 +1,14 @@
+{
+  "sol": {
+    "contextWindow": 272000,
+    "reasoning": "high"
+  },
+  "terra": {
+    "contextWindow": 872000,
+    "reasoning": "high"
+  },
+  "luna": {
+    "contextWindow": 472000,
+    "reasoning": "xhigh"
+  }
+}

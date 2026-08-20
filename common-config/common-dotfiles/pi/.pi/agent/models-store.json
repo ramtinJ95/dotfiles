@@ -247,7 +247,7 @@
         }
       }
     ],
-    "checkedAt": 1786829849354,
+    "checkedAt": 1787235715848,
     "lastModified": 1786351890000,
     "etag": "W/\"7572a78e60b78526600ed2a9b74b579d\""
   },
@@ -315,6 +315,28 @@
           "off": "none",
           "xhigh": null
         }
+      },
+      {
+        "api": "openai-completions",
+        "baseUrl": "https://api.berget.ai/v1",
+        "compat": {
+          "supportsDeveloperRole": false
+        },
+        "contextWindow": 262144,
+        "cost": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 1,
+          "output": 2
+        },
+        "id": "Qwen/Qwen3.8-27B-FP8",
+        "input": [
+          "text"
+        ],
+        "maxTokens": 16384,
+        "name": "Qwen/Qwen3.8-27B-FP8",
+        "provider": "berget",
+        "reasoning": false
       },
       {
         "api": "openai-completions",
@@ -520,6 +542,6 @@
         "reasoning": false
       }
     ],
-    "checkedAt": 1786832949550
+    "checkedAt": 1787235715822
   }
 }

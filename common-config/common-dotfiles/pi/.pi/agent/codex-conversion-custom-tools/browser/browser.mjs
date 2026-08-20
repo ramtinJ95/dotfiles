@@ -23,6 +23,7 @@ const RESULT_TTL_MS = 60 * 60 * 1000;
 const SCREENSHOT_TTL_MS = 24 * 60 * 60 * 1000;
 const TEXT_BUDGET_BYTES = 32_000;
 const OUTPUT_BUDGET_BYTES = 38_000;
+const CHILD_OUTPUT_BUDGET_BYTES = 8 * 1024 * 1024;
 const fields = (...names) => new Set(["action", "host", ...names]);
 const ACTION_FIELDS = {
 	help: fields(),
@@ -267,7 +268,8 @@ function artifactDir() {
 async function artifactPath(request) {
 	await mkdir(artifactDir(), { recursive: true, mode: 0o700 });
 	const suffix = request.id ? `-element-${request.id}` : request.selector ? "-element" : "";
-	return join(artifactDir(), `browser-${request.ref_id.slice(0, 12)}${suffix}-${crypto.randomUUID()}.png`);
+	const safeRef = request.ref_id.slice(0, 12).replace(/[^A-Za-z0-9_-]/g, "_");
+	return join(artifactDir(), `browser-${safeRef}${suffix}-${crypto.randomUUID()}.png`);
 }
 
 export async function cliInvocation(request) {
@@ -314,14 +316,26 @@ export async function cliInvocation(request) {
 	}
 }
 
-async function runProgram(command, args, input) {
+export async function runProgram(command, args, input) {
 	const child = spawn(command, args, { stdio: [input === undefined ? "ignore" : "pipe", "pipe", "pipe"] });
 	let stdout = "";
 	let stderr = "";
+	let outputBytes = 0;
+	let outputLimitExceeded = false;
 	child.stdout.setEncoding("utf8");
 	child.stderr.setEncoding("utf8");
-	child.stdout.on("data", chunk => { stdout += chunk; });
-	child.stderr.on("data", chunk => { stderr += chunk; });
+	const append = (current, chunk) => {
+		if (outputLimitExceeded) return current;
+		outputBytes += Buffer.byteLength(chunk);
+		if (outputBytes > CHILD_OUTPUT_BUDGET_BYTES) {
+			outputLimitExceeded = true;
+			child.kill("SIGKILL");
+			return current;
+		}
+		return current + chunk;
+	};
+	child.stdout.on("data", chunk => { stdout = append(stdout, chunk); });
+	child.stderr.on("data", chunk => { stderr = append(stderr, chunk); });
 	const forward = signal => { if (!child.killed) child.kill(signal); };
 	process.once("SIGINT", forward);
 	process.once("SIGTERM", forward);
@@ -331,6 +345,8 @@ async function runProgram(command, args, input) {
 			child.once("error", reject);
 			child.once("close", value => resolve(value ?? 1));
 		});
+		if (outputLimitExceeded)
+			throw new Error("browser child output exceeded 8 MiB; narrow the operation and retry");
 		return { code, stdout: stdout.trim(), stderr: stderr.trim() };
 	} finally {
 		process.off("SIGINT", forward);
@@ -355,7 +371,7 @@ export async function pruneResultCache(now = Date.now()) {
 		throw error;
 	}
 	let removed = 0;
-	for (const name of names.filter(item => /^(?:result-[a-f0-9-]{36}\.txt|(?:desktop-|laptop-|server-)?browser-.*\.png)$/.test(item))) {
+	for (const name of names.filter(item => /^(?:result-[a-f0-9-]{36}\.txt|(?:[A-Za-z0-9_.-]+-)?browser-.*\.png)$/.test(item))) {
 		const path = join(artifactDir(), name);
 		try {
 			const maxAge = name.startsWith("result-") ? RESULT_TTL_MS : SCREENSHOT_TTL_MS;
