@@ -195,7 +195,7 @@ source_type = "local"
 source = "/Users/ramtin/.codex/.tmp/bundled-marketplaces/openai-bundled"
 
 [marketplaces.openai-primary-runtime]
-last_updated = "2026-08-14T08:24:09Z"
+last_updated = "2026-08-19T23:30:26Z"
 source_type = "local"
 source = "/Users/ramtin/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
 
