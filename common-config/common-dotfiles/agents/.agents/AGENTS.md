@@ -14,6 +14,7 @@
   explicit approval instructions; preserve an exact blocked command when required.
 - Write ad-hoc scripts to temp files, run them, then remove them; do not embed multiline scripts in shell commands.
 - Git: never commit unless asked; use small conventional commits; no `Co-Authored-By`; concise PR descriptions without checkboxes or generated-by footer.
+- always draw diagrams where possible in the session using render_mermaid tool
 - When a PR opens or merges, use `ask` once to remind the user about
   `/skill:pr-diary` after merge; never invoke it automatically.
 - For plan stress-testing, choose deliberately: `/grill` batches decisions and keeps
