@@ -1,6 +1,6 @@
 {
   "startupNoticeShown": "2026-08-15",
-  "askClaude": {
+  "delegation": {
     "enabled": true,
     "defaultMode": "full",
     "defaultIsolated": true

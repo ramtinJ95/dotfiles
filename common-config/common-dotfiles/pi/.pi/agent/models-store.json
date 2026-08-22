@@ -247,7 +247,7 @@
         }
       }
     ],
-    "checkedAt": 1787376345451,
+    "checkedAt": 1787391359627,
     "lastModified": 1786351890000,
     "etag": "W/\"7572a78e60b78526600ed2a9b74b579d\""
   },
@@ -270,7 +270,7 @@
         "input": [
           "text"
         ],
-        "maxTokens": 16384,
+        "maxTokens": 32768,
         "name": "openai/gpt-oss-120b",
         "provider": "berget",
         "reasoning": true,
@@ -302,7 +302,7 @@
           "text",
           "image"
         ],
-        "maxTokens": 16384,
+        "maxTokens": 32768,
         "name": "mistralai/Mistral-Medium-3.5-128B",
         "provider": "berget",
         "reasoning": true,
@@ -331,12 +331,22 @@
         },
         "id": "Qwen/Qwen3.8-27B-FP8",
         "input": [
-          "text"
+          "text",
+          "image"
         ],
-        "maxTokens": 16384,
+        "maxTokens": 32768,
         "name": "Qwen/Qwen3.8-27B-FP8",
         "provider": "berget",
-        "reasoning": false
+        "reasoning": true,
+        "thinkingLevelMap": {
+          "high": null,
+          "low": "low",
+          "max": null,
+          "medium": "medium",
+          "minimal": null,
+          "off": "none",
+          "xhigh": "xhigh"
+        }
       },
       {
         "api": "openai-completions",
@@ -356,7 +366,7 @@
           "text",
           "image"
         ],
-        "maxTokens": 16384,
+        "maxTokens": 32768,
         "name": "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
         "provider": "berget",
         "reasoning": false
@@ -378,7 +388,7 @@
         "input": [
           "text"
         ],
-        "maxTokens": 16384,
+        "maxTokens": 32768,
         "name": "zai-org/GLM-4.7-FP8",
         "provider": "berget",
         "reasoning": true,
@@ -441,7 +451,7 @@
           "text",
           "image"
         ],
-        "maxTokens": 16384,
+        "maxTokens": 32768,
         "name": "moonshotai/Kimi-K2.6",
         "provider": "berget",
         "reasoning": true,
@@ -473,7 +483,7 @@
           "text",
           "image"
         ],
-        "maxTokens": 16384,
+        "maxTokens": 32768,
         "name": "moonshotai/Kimi-K3",
         "provider": "berget",
         "reasoning": true,
@@ -505,7 +515,7 @@
           "text",
           "image"
         ],
-        "maxTokens": 16384,
+        "maxTokens": 32768,
         "name": "google/gemma-4-31B-it",
         "provider": "berget",
         "reasoning": true,
@@ -536,12 +546,12 @@
         "input": [
           "text"
         ],
-        "maxTokens": 16384,
+        "maxTokens": 32768,
         "name": "meta-llama/Llama-3.3-70B-Instruct",
         "provider": "berget",
         "reasoning": false
       }
     ],
-    "checkedAt": 1787378552927
+    "checkedAt": 1787402192197
   }
 }
