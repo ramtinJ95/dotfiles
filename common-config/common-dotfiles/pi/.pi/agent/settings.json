@@ -22,7 +22,7 @@
     "extensions/pi-visualize-code-changes",
     "git:github.com/ramtinJ95/pi-review-loop@5c718468d3d7f635f796670d1d9d9dba9c6dc48f",
     "npm:@ramtinj95/pi-mermaid-tui",
-    "npm:pi-claude-bridge",
+    "/Users/ramtin/personal/pi-claude-bridge",
     "npm:@howaboua/pi-gpt-switcher"
   ],
   "compaction": {
