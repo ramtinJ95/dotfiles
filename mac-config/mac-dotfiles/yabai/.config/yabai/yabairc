@@ -1,5 +1,3 @@
-yabai -m signal --add event=dock_did_restart action="sudo yabai --load-sa"
-sudo yabai --load-sa
 # default layout (can be bsp, stack or float)
 yabai -m config layout bsp
 
@@ -27,10 +25,6 @@ yabai -m config mouse_modifier alt
 yabai -m config mouse_action1 move
 # set modifier + right-click drag to resize window
 yabai -m config mouse_action2 resize
-
-# when window is dropped in center of another window, swap them (on edges it will split it)
-yabai -m mouse_drop_action swap
-
 
 # disable specific apps
 yabai -m rule --add app="^System Settings$" manage=off

@@ -181,9 +181,8 @@ local function create_space(space_index)
 		if env.BUTTON == "other" then
 			space_popup:set({ background = { image = "space." .. env.SID } })
 			space:set({ popup = { drawing = "toggle" } })
-		else
-			local op = (env.BUTTON == "right") and "--destroy" or "--focus"
-			sbar.exec("yabai -m space " .. op .. " " .. env.SID)
+		elseif env.BUTTON == "left" then
+			sbar.exec("yabai -m space --focus " .. env.SID)
 		end
 	end)
 
