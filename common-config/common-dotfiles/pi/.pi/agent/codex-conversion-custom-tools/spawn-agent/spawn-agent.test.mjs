@@ -51,16 +51,14 @@ test("accepts an explicit headless request", () => {
 	);
 });
 
-test("accepts per-task model and thinking overrides", () => {
+test("accepts per-task thinking overrides while keeping the configured model", () => {
 	const request = parseSpawnAgentRequest(
 		JSON.stringify({
 			agent_type: "explorer",
 			message: "Inspect it",
-			model: "  anthropic/claude-opus-4-1  ",
 			thinking: "xhigh",
 		}),
 	);
-	assert.equal(request.model, "anthropic/claude-opus-4-1");
 	assert.equal(request.thinking, "xhigh");
 	for (const args of [
 		buildPiArgs(request, request.message),
@@ -70,7 +68,7 @@ test("accepts per-task model and thinking overrides", () => {
 			args.slice(args.indexOf("--model"), args.indexOf("--model") + 4),
 			[
 				"--model",
-				"anthropic/claude-opus-4-1",
+				"openai-codex/gpt-5.6-sol",
 				"--thinking",
 				"xhigh",
 			],
@@ -78,11 +76,10 @@ test("accepts per-task model and thinking overrides", () => {
 	}
 });
 
-test("keeps role defaults when model and thinking are omitted", () => {
+test("keeps role defaults when thinking is omitted", () => {
 	const request = parseSpawnAgentRequest(
 		JSON.stringify({ agent_type: "reviewer", message: "Review it" }),
 	);
-	assert.equal(request.model, undefined);
 	assert.equal(request.thinking, undefined);
 	const args = buildPiArgs(request, request.message);
 	assert.deepEqual(
@@ -96,7 +93,7 @@ test("keeps role defaults when model and thinking are omitted", () => {
 	);
 });
 
-test("rejects invalid model and thinking overrides", () => {
+test("rejects model overrides and invalid thinking overrides", () => {
 	assert.throws(
 		() =>
 			parseSpawnAgentRequest(
@@ -106,7 +103,7 @@ test("rejects invalid model and thinking overrides", () => {
 					model: "  ",
 				}),
 			),
-		/model must be a non-empty string/,
+		/unknown field: model/,
 	);
 	assert.throws(
 		() =>

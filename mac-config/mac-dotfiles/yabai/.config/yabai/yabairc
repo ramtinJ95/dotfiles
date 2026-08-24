@@ -37,3 +37,6 @@ yabai -m rule --add title="^Software Renderer$" manage=off
 
 # Reserve room for sketchybar plus a small gap (sketchybar height is 30).
 yabai -m config external_bar all:35:0
+
+# NSWorkspace cannot target inactive Spaces; reconcile each one when it becomes active.
+yabai -m signal --add event=space_changed label=macarchy-wallpaper action="/Users/ramtin/.local/bin/macarchy reconcile wallpaper"

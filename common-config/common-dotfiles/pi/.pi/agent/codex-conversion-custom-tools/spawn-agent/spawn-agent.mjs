@@ -72,7 +72,6 @@ const ALLOWED_KEYS = new Set([
 	"label",
 	"interactive",
 	"user_requested",
-	"model",
 	"thinking",
 ]);
 const GIT_TIMEOUT_MS = 10_000;
@@ -120,11 +119,6 @@ export function parseSpawnAgentRequest(text) {
 		throw new Error("label must be a non-empty string when provided");
 	if (value.interactive !== undefined && typeof value.interactive !== "boolean")
 		throw new Error("interactive must be a boolean when provided");
-	if (
-		value.model !== undefined &&
-		(typeof value.model !== "string" || !value.model.trim())
-	)
-		throw new Error("model must be a non-empty string when provided");
 	if (value.thinking !== undefined && !THINKING_LEVELS.has(value.thinking))
 		throw new Error(
 			"thinking must be one of: off, minimal, low, medium, high, xhigh, max",
@@ -136,7 +130,6 @@ export function parseSpawnAgentRequest(text) {
 		label: value.label?.replace(/\s+/g, " ").trim(),
 		interactive: value.interactive ?? true,
 		user_requested: value.user_requested,
-		model: value.model?.trim(),
 		thinking: value.thinking,
 	};
 }
@@ -374,7 +367,7 @@ export function buildPiArgs(request, message) {
 		args.push("--exclude-tools", "spawn_agent");
 	args.push(
 		"--model",
-		request.model ?? config.model,
+		config.model,
 		"--thinking",
 		request.thinking ?? config.thinking,
 		"--append-system-prompt",
@@ -401,7 +394,7 @@ export function buildInteractivePiArgs(request) {
 		args.push("--exclude-tools", "spawn_agent");
 	args.push(
 		"--model",
-		request.model ?? config.model,
+		config.model,
 		"--thinking",
 		request.thinking ?? config.thinking,
 		"--append-system-prompt",
