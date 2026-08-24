@@ -1,6 +1,5 @@
-export EZA_CONFIG_DIR="$HOME/.config/eza"
+export EZA_CONFIG_DIR="/Users/ramtin/.config/eza"
 export XDG_CONFIG_HOME="$HOME/.config"
-export BAT_THEME="Catppuccin Mocha"
 export EDITOR="nvim"
 
 setopt SHARE_HISTORY
