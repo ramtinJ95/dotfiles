@@ -13,6 +13,7 @@ skhd
 spicetify
 starship
 tmux
+tuicr
 yabai
 yazi
 zsh

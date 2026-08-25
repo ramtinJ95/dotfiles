@@ -34,6 +34,7 @@ fast_default_opt_out = true
 "gpt-5.1-codex" = "gpt-5.2-codex"
 
 [tui]
+theme = "macarchy-current"
 status_line = ["current-dir", "model-with-reasoning", "five-hour-limit", "weekly-limit", "context-window-size", "context-used"]
 status_line_use_colors = true
 

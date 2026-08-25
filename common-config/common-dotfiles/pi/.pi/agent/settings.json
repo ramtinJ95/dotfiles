@@ -9,7 +9,7 @@
     "-skills/playwriter/SKILL.md"
   ],
   "transport": "auto",
-  "theme": "catppuccin-mocha",
+  "theme": "macarchy-current",
   "packages": [
     "npm:@howaboua/pi-codex-conversion",
     "npm:@howaboua/pi-auto-trees",
