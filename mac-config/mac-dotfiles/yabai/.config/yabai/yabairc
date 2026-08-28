@@ -34,6 +34,7 @@ yabai -m rule --add app="^QuickTime Player$" manage=off
 yabai -m rule --add title="^SFML$" manage=off
 yabai -m rule --add title="Our Love Story$" manage=off
 yabai -m rule --add title="^Software Renderer$" manage=off
+yabai -m rule --add label=macarchy-keybindings-popup app="^macarchy$" title="^Macarchy Keybindings$" role="^AXWindow$" subrole="^AXStandardWindow$" manage=off
 
 # Reserve room for sketchybar plus a small gap (sketchybar height is 30).
 yabai -m config external_bar all:35:0
