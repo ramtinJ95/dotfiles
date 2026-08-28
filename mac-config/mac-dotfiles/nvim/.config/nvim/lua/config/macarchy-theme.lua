@@ -3,11 +3,83 @@ local state = {}
 
 local root = vim.fn.expand("~/.config/macarchy")
 local current_path = vim.fn.stdpath("config") .. "/lua/macarchy/current.lua"
+local imported_colorscheme = "macarchy-imported"
 local runtime_names = {
   ["catppuccin-mocha"] = "catppuccin-mocha",
   ["kanagawa-wave"] = "kanagawa",
+  [imported_colorscheme] = imported_colorscheme,
   ["tokyonight-night"] = "tokyonight-night",
 }
+local palette_keys = {
+  "accent",
+  "cursor",
+  "foreground",
+  "background",
+  "selection_foreground",
+  "selection_background",
+  "bg",
+  "lighter_bg",
+  "selection",
+  "muted",
+  "dark_fg",
+  "fg",
+  "light_fg",
+  "bright_fg",
+  "red",
+  "yellow",
+  "orange",
+  "green",
+  "cyan",
+  "blue",
+  "purple",
+  "brown",
+  "dark_bg",
+  "darker_bg",
+  "bright_red",
+  "bright_yellow",
+  "bright_green",
+  "bright_cyan",
+  "bright_blue",
+  "bright_purple",
+}
+local palette_key_set = {}
+for _, key in ipairs(palette_keys) do
+  palette_key_set[key] = true
+end
+
+local function valid_palette(palette)
+  if type(palette) ~= "table" then
+    return false
+  end
+  local count = 0
+  for key, value in pairs(palette) do
+    if not palette_key_set[key] or type(value) ~= "string" or not value:match("^#%x%x%x%x%x%x$") then
+      return false
+    end
+    count = count + 1
+  end
+  return count == #palette_keys
+end
+
+local function valid_shape(theme)
+  if
+    type(theme) ~= "table"
+    or type(theme.generation_id) ~= "string"
+    or type(theme.theme_id) ~= "string"
+    or not runtime_names[theme.colorscheme]
+  then
+    return false
+  end
+  for key in pairs(theme) do
+    if key ~= "generation_id" and key ~= "theme_id" and key ~= "colorscheme" and key ~= "palette" then
+      return false
+    end
+  end
+  if theme.colorscheme == imported_colorscheme then
+    return valid_palette(theme.palette)
+  end
+  return theme.palette == nil
+end
 
 local function read_current()
   local chunk, load_error = loadfile(current_path)
@@ -19,12 +91,7 @@ local function read_current()
   if not ok then
     error(theme)
   end
-  if
-    type(theme) ~= "table"
-    or type(theme.generation_id) ~= "string"
-    or type(theme.theme_id) ~= "string"
-    or not runtime_names[theme.colorscheme]
-  then
+  if not valid_shape(theme) then
     error("invalid generated Neovim theme")
   end
   return theme
@@ -35,6 +102,21 @@ function M.current()
   if not ok then
     error("Macarchy: " .. theme)
   end
+  return theme
+end
+
+function M.apply_imported()
+  local theme = M.current()
+  if theme.colorscheme ~= imported_colorscheme then
+    error("Macarchy: imported colorscheme requested for a named theme")
+  end
+  local options = {
+    name = imported_colorscheme,
+    transparent = false,
+    colors = theme.palette,
+  }
+  require("aether.config").setup(options)
+  require("aether.theme").setup(options)
   return theme
 end
 
@@ -50,6 +132,14 @@ function M.verify()
         .. "; expected "
         .. runtime_names[theme.colorscheme]
     )
+  end
+  if theme.colorscheme == imported_colorscheme then
+    local colors = require("aether.colorscheme")
+    for _, key in ipairs(palette_keys) do
+      if colors[key] ~= theme.palette[key] then
+        error("Macarchy: active Aether palette does not match generated key " .. key)
+      end
+    end
   end
   return theme
 end
