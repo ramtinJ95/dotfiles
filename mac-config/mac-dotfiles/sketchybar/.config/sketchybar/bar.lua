@@ -5,6 +5,6 @@ sbar.bar({
   topmost = "window",
   height = 30,
   color = colors.bar.bg,
-  padding_right = 2,
-  padding_left = 2,
+  padding_right = 8,
+  padding_left = 8,
 })

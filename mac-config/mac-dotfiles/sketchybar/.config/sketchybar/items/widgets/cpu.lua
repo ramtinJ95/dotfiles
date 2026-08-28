@@ -1,88 +1,72 @@
-local icons = require("icons")
 local colors = require("colors")
 local settings = require("settings")
 
--- Execute the event provider binary which provides the event "cpu_update" for
--- the cpu load data, which is fired every 2.0 seconds.
+-- Publish CPU load every two seconds without putting a graph in the bar.
 sbar.exec("killall cpu_load >/dev/null; $CONFIG_DIR/helpers/event_providers/cpu_load/bin/cpu_load cpu_update 2.0")
 
-local cpu = sbar.add("graph", "widgets.cpu" , 42, {
+local metric_font = {
+  family = settings.font.numbers,
+  style = settings.font.style_map["Bold"],
+  size = 10.0,
+}
+
+local cpu = sbar.add("item", "widgets.cpu", {
   position = "right",
-  graph = { color = colors.blue },
-  background = {
-    height = 22,
-    color = { alpha = 0 },
-    border_color = { alpha = 0 },
-    drawing = true,
-  },
-  icon = { string = icons.cpu },
+  padding_left = 2,
+  padding_right = 2,
+  icon = { drawing = false },
   label = {
     string = "cpu ??%",
-    font = {
-      family = settings.font.numbers,
-      style = settings.font.style_map["Bold"],
-      size = 9.0,
-    },
-    align = "right",
+    color = colors.grey,
+    font = metric_font,
+    width = 54,
+    align = "left",
+    padding_left = 0,
     padding_right = 0,
-    width = 0,
-    y_offset = 4
   },
-  padding_right = settings.paddings + 6
 })
 
 local memory = sbar.add("item", "widgets.memory", {
   position = "right",
   update_freq = 5,
-  icon = {
-    string = "mem",
-    padding_left = 4,
-    font = {
-      style = settings.font.style_map["Heavy"],
-      size = 9.0,
-    },
-    padding_right = 2,
-    y_offset = 5,
-  },
-  label = {
-    string = "??%",
-    font = {
-      family = settings.font.numbers,
-      style = settings.font.style_map["Bold"],
-      size = 9.0,
-    },
-    align = "right",
-    padding_right = 0,
-    width = 0,
-    y_offset = -5,
-  },
-  padding_left = 0,
+  padding_left = 2,
   padding_right = 2,
+  icon = { drawing = false },
+  label = {
+    string = "mem ??%",
+    color = colors.grey,
+    font = metric_font,
+    width = 54,
+    align = "left",
+    padding_left = 0,
+    padding_right = 0,
+  },
 })
 
+local function cpu_color(load)
+  if load >= 80 then return colors.red end
+  if load >= 60 then return colors.orange end
+  if load >= 30 then return colors.yellow end
+  return colors.blue
+end
+
+local function memory_color(load)
+  if load >= 85 then return colors.red end
+  if load >= 70 then return colors.orange end
+  if load >= 50 then return colors.yellow end
+  return colors.blue
+end
+
 cpu:subscribe("cpu_update", function(env)
-  -- Also available: env.user_load, env.sys_load
   local load = tonumber(env.total_load)
-  cpu:push({ load / 100. })
-
-  local color = colors.blue
-  if load > 30 then
-    if load < 60 then
-      color = colors.yellow
-    elseif load < 80 then
-      color = colors.orange
-    else
-      color = colors.red
-    end
-  end
-
+  if not load then return end
+  local color = cpu_color(load)
   cpu:set({
-    graph = { color = color },
-    label = "cpu " .. env.total_load .. "%",
+    label = { string = string.format("cpu %02d%%", load), color = color },
   })
 end)
 
-cpu:subscribe("mouse.clicked", function(env)
+cpu:subscribe("mouse.clicked", function()
   sbar.exec("open -a 'Activity Monitor'")
 end)
 
@@ -90,25 +74,10 @@ memory:subscribe({ "routine", "forced", "system_woke" }, function()
   sbar.exec("memory_pressure", function(memory_info)
     local free = memory_info:match("System%-wide memory free percentage:%s*(%d+)%%")
     if not free then return end
-
     local used = 100 - tonumber(free)
-    local color = colors.blue
-    if used > 50 then
-      if used < 70 then
-        color = colors.yellow
-      elseif used < 85 then
-        color = colors.orange
-      else
-        color = colors.red
-      end
-    end
-
+    local color = memory_color(used)
     memory:set({
-      icon = { color = color },
-      label = {
-        string = string.format("%02d%%", used),
-        color = color,
-      },
+      label = { string = string.format("mem %02d%%", used), color = color },
     })
   end)
 end)
@@ -117,13 +86,7 @@ memory:subscribe("mouse.clicked", function()
   sbar.exec("open -a 'Activity Monitor'")
 end)
 
--- Background around the cpu and memory items
-sbar.add("bracket", "widgets.cpu.bracket", { cpu.name, memory.name }, {
-  background = { color = colors.bg1 }
-})
-
--- Background around the cpu item
 sbar.add("item", "widgets.cpu.padding", {
   position = "right",
-  width = settings.group_paddings
+  width = settings.group_paddings,
 })
