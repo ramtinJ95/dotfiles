@@ -1,4 +1,6 @@
-schema_version = 1
+schema_version = 2
 
-[wallpaper_overrides]
-catppuccin-mocha = "/Users/ramtin/dotfiles/wallpapers/wallhaven-rdj8jj_smoothed_catppuccin.png"
+[[wallpaper_additions]]
+theme_id = "catppuccin-mocha"
+id = "samurai"
+path = "/Users/ramtin/dotfiles/wallpapers/wallhaven-rdj8jj_smoothed_catppuccin.png"
