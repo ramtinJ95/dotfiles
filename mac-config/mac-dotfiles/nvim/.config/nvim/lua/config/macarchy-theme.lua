@@ -97,6 +97,25 @@ local function read_current()
   return theme
 end
 
+local function same_theme(previous, current)
+  if
+    not previous
+    or previous.theme_id ~= current.theme_id
+    or previous.colorscheme ~= current.colorscheme
+  then
+    return false
+  end
+  if previous.palette == nil or current.palette == nil then
+    return previous.palette == nil and current.palette == nil
+  end
+  for _, key in ipairs(palette_keys) do
+    if previous.palette[key] ~= current.palette[key] then
+      return false
+    end
+  end
+  return true
+end
+
 function M.current()
   local ok, theme = pcall(read_current)
   if not ok then
@@ -150,7 +169,8 @@ local function apply_current()
     vim.notify("Macarchy: " .. theme, vim.log.levels.ERROR)
     return
   end
-  if state.generation_id == theme.generation_id then
+  if same_theme(state.theme, theme) then
+    state.theme = theme
     return
   end
 
@@ -159,7 +179,7 @@ local function apply_current()
     vim.notify("Macarchy: " .. apply_error, vim.log.levels.ERROR)
     return
   end
-  state.generation_id = theme.generation_id
+  state.theme = theme
 end
 
 function M.watch()
@@ -194,7 +214,7 @@ function M.watch()
     state.watcher = nil
     error(current)
   end
-  state.generation_id = current.generation_id
+  state.theme = current
   vim.api.nvim_create_autocmd("VimResume", { callback = apply_current })
   vim.api.nvim_create_autocmd("VimLeavePre", {
     once = true,
