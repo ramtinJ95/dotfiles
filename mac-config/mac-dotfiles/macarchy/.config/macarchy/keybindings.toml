@@ -312,6 +312,13 @@ order = 480
 aliases = ["bindings", "shortcuts", "help"]
 
 [[bindings]]
+identity = "cmd+shift-t"
+label = "Browse themes and backgrounds"
+category = "Macarchy"
+order = 485
+aliases = ["themes", "backgrounds", "picker"]
+
+[[bindings]]
 identity = "alt-b"
 label = "Open Google Chrome"
 category = "Applications"
