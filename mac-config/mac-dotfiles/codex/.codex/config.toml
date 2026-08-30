@@ -191,7 +191,7 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [marketplaces.openai-bundled]
-last_updated = "2026-08-20T17:06:56Z"
+last_updated = "2026-08-25T03:54:16Z"
 source_type = "local"
 source = "/Users/ramtin/.codex/.tmp/bundled-marketplaces/openai-bundled"
 

@@ -247,7 +247,7 @@
         }
       }
     ],
-    "checkedAt": 1787552103395,
+    "checkedAt": 1788084204970,
     "lastModified": 1786351890000,
     "etag": "W/\"7572a78e60b78526600ed2a9b74b579d\""
   },
@@ -282,38 +282,6 @@
           "minimal": null,
           "off": "none",
           "xhigh": "xhigh"
-        }
-      },
-      {
-        "api": "openai-completions",
-        "baseUrl": "https://api.berget.ai/v1",
-        "compat": {
-          "supportsDeveloperRole": false
-        },
-        "contextWindow": 262144,
-        "cost": {
-          "cacheRead": 0,
-          "cacheWrite": 0,
-          "input": 1,
-          "output": 2
-        },
-        "id": "mistralai/Mistral-Medium-3.5-128B",
-        "input": [
-          "text",
-          "image"
-        ],
-        "maxTokens": 32768,
-        "name": "mistralai/Mistral-Medium-3.5-128B",
-        "provider": "berget",
-        "reasoning": true,
-        "thinkingLevelMap": {
-          "high": "high",
-          "low": null,
-          "max": null,
-          "medium": "medium",
-          "minimal": null,
-          "off": "none",
-          "xhigh": null
         }
       },
       {
@@ -439,31 +407,43 @@
         "compat": {
           "supportsDeveloperRole": false
         },
-        "contextWindow": 262144,
+        "contextWindow": 327680,
         "cost": {
           "cacheRead": 0,
           "cacheWrite": 0,
           "input": 1,
           "output": 2
         },
-        "id": "moonshotai/Kimi-K2.6",
+        "id": "zai-org/GLM-5.3",
         "input": [
-          "text",
-          "image"
+          "text"
         ],
         "maxTokens": 32768,
-        "name": "moonshotai/Kimi-K2.6",
+        "name": "zai-org/GLM-5.3",
         "provider": "berget",
-        "reasoning": true,
-        "thinkingLevelMap": {
-          "high": "high",
-          "low": null,
-          "max": null,
-          "medium": null,
-          "minimal": null,
-          "off": "none",
-          "xhigh": null
-        }
+        "reasoning": false
+      },
+      {
+        "api": "openai-completions",
+        "baseUrl": "https://api.berget.ai/v1",
+        "compat": {
+          "supportsDeveloperRole": false
+        },
+        "contextWindow": 327680,
+        "cost": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 1,
+          "output": 2
+        },
+        "id": "zai-org/GLM-5.3-Flash",
+        "input": [
+          "text"
+        ],
+        "maxTokens": 32768,
+        "name": "zai-org/GLM-5.3-Flash",
+        "provider": "berget",
+        "reasoning": false
       },
       {
         "api": "openai-completions",
@@ -552,6 +532,6 @@
         "reasoning": false
       }
     ],
-    "checkedAt": 1787552103386
+    "checkedAt": 1788084204959
   }
 }

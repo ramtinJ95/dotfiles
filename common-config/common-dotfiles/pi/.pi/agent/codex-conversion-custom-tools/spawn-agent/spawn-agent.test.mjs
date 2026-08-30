@@ -148,6 +148,35 @@ test("requires explicit user-request declaration for worker agents", () => {
 	);
 });
 
+test("fixes worker to sol high and rejects model-controlled thinking", () => {
+	assert.throws(
+		() =>
+			parseSpawnAgentRequest(
+				JSON.stringify({
+					agent_type: "worker",
+					message: "Implement it",
+					user_requested: true,
+					thinking: "high",
+				}),
+			),
+		/thinking is not configurable for worker/,
+	);
+	for (const args of [
+		buildPiArgs({ agent_type: "worker", thinking: "max" }, "Implement it"),
+		buildInteractivePiArgs({ agent_type: "worker", thinking: "max" }),
+	]) {
+		assert.deepEqual(
+			args.slice(args.indexOf("--model"), args.indexOf("--model") + 4),
+			[
+				"--model",
+				"openai-codex/gpt-5.6-sol",
+				"--thinking",
+				"high",
+			],
+		);
+	}
+});
+
 test("builds a worker Pi with the general-purpose worker prompt", () => {
 	const args = buildInteractivePiArgs({ agent_type: "worker" });
 	assert.equal(args.includes("--no-approve"), true);
