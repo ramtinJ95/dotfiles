@@ -119,6 +119,10 @@ export function parseSpawnAgentRequest(text) {
 		throw new Error("label must be a non-empty string when provided");
 	if (value.interactive !== undefined && typeof value.interactive !== "boolean")
 		throw new Error("interactive must be a boolean when provided");
+	if (value.agent_type === "worker" && value.thinking !== undefined)
+		throw new Error(
+			"thinking is not configurable for worker; worker always uses openai-codex/gpt-5.6-sol with high thinking",
+		);
 	if (value.thinking !== undefined && !THINKING_LEVELS.has(value.thinking))
 		throw new Error(
 			"thinking must be one of: off, minimal, low, medium, high, xhigh, max",
@@ -354,6 +358,10 @@ export function buildAgentName(request, paneId) {
 
 export function buildPiArgs(request, message) {
 	const config = AGENT_CONFIG[request.agent_type];
+	const thinking =
+		request.agent_type === "worker"
+			? config.thinking
+			: (request.thinking ?? config.thinking);
 	const args = [
 		"--print",
 		"--no-session",
@@ -369,7 +377,7 @@ export function buildPiArgs(request, message) {
 		"--model",
 		config.model,
 		"--thinking",
-		request.thinking ?? config.thinking,
+		thinking,
 		"--append-system-prompt",
 		config.promptPath,
 		message,
@@ -379,6 +387,10 @@ export function buildPiArgs(request, message) {
 
 export function buildInteractivePiArgs(request) {
 	const config = AGENT_CONFIG[request.agent_type];
+	const thinking =
+		request.agent_type === "worker"
+			? config.thinking
+			: (request.thinking ?? config.thinking);
 	const extensions =
 		request.agent_type === "worker"
 			? [WORKER_INTERACTIVE_PROFILE_PATH]
@@ -396,7 +408,7 @@ export function buildInteractivePiArgs(request) {
 		"--model",
 		config.model,
 		"--thinking",
-		request.thinking ?? config.thinking,
+		thinking,
 		"--append-system-prompt",
 		config.promptPath,
 		"--append-system-prompt",
