@@ -4,6 +4,7 @@
 
 * For technical work, use concise technical prose.
 * Never include implementation plans in pull requests. Keep plans local and out of the repository.
+* When a PR opens or merges, use `ask` once to remind the user about `/skill:pr-diary` after merge; never invoke it automatically.
 
 ## Codebase understanding
 
