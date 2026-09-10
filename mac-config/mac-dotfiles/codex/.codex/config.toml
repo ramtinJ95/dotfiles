@@ -34,13 +34,13 @@ fast_default_opt_out = true
 "gpt-5.1-codex" = "gpt-5.2-codex"
 
 [tui]
-theme = "macarchy-current"
 status_line = ["current-dir", "model-with-reasoning", "five-hour-limit", "weekly-limit", "context-window-size", "context-used"]
 status_line_use_colors = true
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
 "gpt-5.6-sol" = 4
+gpt-6-astra = 1
 
 [projects."/Users/ramtin/personal-workspace/archivist"]
 trust_level = "trusted"
@@ -308,6 +308,12 @@ global = "kitty"
 [hooks.state."/Users/ramtin/.codex/hooks.json:session_start:0:0"]
 trusted_hash = "sha256:ce3df07c232ca0c8f6788bdfcd2aaeb9f3610f1e122c273a944187930d13e6c4"
 enabled = true
+
+[hooks.state."/Users/ramtin/.codex/hooks.json:pre_tool_use:0:0"]
+trusted_hash = "sha256:fc87dbee1cb8a9be4f78ba094c4fa8d5e2fd38cb800854e3717f9b6a52fe2a47"
+
+[hooks.state."/Users/ramtin/.codex/hooks.json:post_tool_use:0:0"]
+trusted_hash = "sha256:ac371f260e4b23ba1d1b7a4ad68a44a323a8470b61f38471a47aceac1b7a5a7c"
 
 [shell_environment_policy.set]
 BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"

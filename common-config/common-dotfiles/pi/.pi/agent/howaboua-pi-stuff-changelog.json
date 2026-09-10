@@ -1,5 +1,8 @@
 {
-  "@howaboua/pi-codex-conversion": "3.0.23",
-  "@howaboua/pi-gpt-switcher": "0.1.1",
-  "@howaboua/pi-subagent-review": "0.2.19"
+  "@howaboua/pi-ask": "0.0.7",
+  "@howaboua/pi-codex-conversion": "3.0.29",
+  "@howaboua/pi-codex-imagegen": "0.0.3",
+  "@howaboua/pi-codex-web-run": "0.0.2",
+  "@howaboua/pi-gpt-switcher": "0.1.2",
+  "@howaboua/pi-subagent-review": "0.2.20"
 }

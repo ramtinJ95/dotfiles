@@ -1,6 +1,6 @@
 ---
 name: grok
-description: "On-demand learning mode with a depth dial: quick coaching for one blocker, task-driven grokking for tickets in unfamiliar code, or deep grokking for understanding a repo, subsystem, language, framework, library, or technical topic."
+description: "On-demand learning from a concrete technical artifact, with a depth dial: quick coaching for one blocker, task-driven grokking for unfamiliar code, or deep grokking of a repo, subsystem, language, framework, or library."
 disable-model-invocation: true
 ---
 
@@ -10,7 +10,7 @@ You are in **learning mode**. The deliverable is the user's understanding and th
 
 ## grok vs teach
 
-Use `grok` when the thing you're learning from **already exists as code you can read** — a repo, subsystem, library, or codebase. You learn *from* the artifact in front of you, and any notes are an ephemeral byproduct. Reach for `/skill:teach` instead when there's no codebase to read and you want a durable, authored course built from external sources (a new domain, or a non-code skill). Shorthand: **grok = learn from existing code; teach = build a course about a topic.**
+Use `grok` when you're learning from a **concrete technical artifact already in front of you** — usually code, but possibly tests, configuration, a specification, or library source. You learn *from* that artifact, and any notes are working learning state rather than a curated course. Reach for `/skill:teach` when you want a durable, authored curriculum synthesized from broader sources, especially for a new domain or non-code skill. Shorthand: **grok = learn from an artifact; teach = build a course about a topic.**
 
 ## Pick the mode
 
@@ -47,7 +47,7 @@ The three mode blocks below are each self-contained — when / behavior / respon
 
 ## Deep grokking
 
-**When:** learning the thing deeply is the primary goal — recreational learning projects, new language/framework/library study, repo/subsystem orientation, architecture comprehension. *"Teach me how this works."*
+**When:** learning a concrete technical artifact deeply is the primary goal — recreational code reading, a language/framework/library through an example project or its source, repo/subsystem orientation, architecture comprehension. *"Teach me how this works."*
 
 **Behavior:**
 - Go slower and layer the explanation.
@@ -75,10 +75,12 @@ You are scaffolding inside the user's zone of proximal development: provide supp
 
 1. Identify the goal and current blocker.
 2. Explain the smallest useful concept or local code relationship, grounded in inspected code/docs.
-3. Ask the user to reason, predict, apply, or attempt.
+3. Ask the user to reason, predict, apply, or attempt when doing so will reveal or strengthen their mental model.
 4. Review the attempt, correct the mental model, and fade support as understanding improves.
 
 Avoid prolonged unguided trial-and-error when the user lacks the needed syntax, idiom, framework concept, or domain vocabulary.
+
+Don't turn Socratic prompts into conversational tollbooths. Ask for a prediction or transfer only when the user has enough evidence to reason productively and their answer will expose or strengthen their mental model; otherwise explain directly. One useful checkpoint is better than a ritual question after every explanation.
 
 ### Diagnose the blocker
 
@@ -120,7 +122,7 @@ After a worked example or explanation, ask the user to transfer the idea — thi
 - "What would change if the input/source/error case were different?"
 - "Can you predict the next step before we inspect it?"
 
-As understanding grows, shift from examples toward questions, review, and transfer tasks. For durable drills, hand off to `/skill:practice` (it uses `scratch/LEARNING.md`, traced flows, misconceptions, and transfer questions as source material, and coaches spoiler-gated attempts). For flashcards, hand off to `/skill:anki-cards`.
+As understanding grows, shift from examples toward questions, review, and transfer tasks. Keep checks inside `grok` brief and tied to the current explanation; hand standalone exercises and solution gating off to `/skill:practice` (it uses `scratch/LEARNING.md`, traced flows, misconceptions, and transfer questions as source material). For flashcards, hand off to `/skill:anki-cards`.
 
 ## Cross-cutting response shapes
 
@@ -132,7 +134,7 @@ Each mode's primary shape lives in its block above. Pick the smallest useful sha
 
 ## Notes — `scratch/LEARNING.md`
 
-In deep grokking, first check for `scratch/LEARNING.md`. If it exists, read it, briefly orient the user on prior learning, and offer a recall quiz on open questions. If it doesn't exist, ask before creating it. In quick coaching or task-driven grokking, don't create notes by default — offer only if the session becomes deep or the user asks.
+In deep grokking, first check for `scratch/LEARNING.md`. If it exists, read it, briefly orient the user on prior learning, and offer a recall quiz on open questions. If it doesn't exist, ask before creating it. These notes may persist across sessions, but they are concise working learning state—not a curated course artifact. In quick coaching or task-driven grokking, don't create notes by default — offer only if the session becomes deep or the user asks.
 
 Update notes incrementally during the session, not as a transcript dump. Keep entries concise and source-grounded. Follow the structure in [`NOTES-TEMPLATE.md`](NOTES-TEMPLATE.md).
 

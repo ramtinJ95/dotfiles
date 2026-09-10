@@ -1,16 +1,22 @@
 # Dotfiles
 
-Personal dotfiles and system configurations for macOS and Arch Linux, managed with [GNU Stow](https://www.gnu.org/software/stow/). Features a Catppuccin Mocha color scheme across all applications.
+Personal configuration inputs for macOS and Arch Linux, managed with [GNU Stow](https://www.gnu.org/software/stow/). Macarchy owns the managed macOS environment and generated themes; Arch retains its standalone configuration.
 
 ## Platforms
 
 ### macOS
-Automated setup with Homebrew package management, system preferences, and dotfiles installation.
+Macarchy-backed setup: Stow portable inputs and personal tools, then review and
+apply Macarchy’s native package/configuration plan. Requires Apple Silicon,
+macOS 26, Homebrew and Xcode Command Line Tools.
 
 **Quick Start:**
 ```bash
 mac-config/mac-install/install.sh
 ```
+
+The first invocation prepares dotfiles and shows the plan; it does **not**
+automatically approve or apply it. The old Brewfile and standalone provider
+configs are retained as references, not installed by this path.
 
 See [mac-config/mac-install/README.md](mac-config/mac-install/README.md) for detailed setup instructions.
 
@@ -32,12 +38,10 @@ See [arch-config/arch-dotfiles/README.md](arch-config/arch-dotfiles/README.md) f
 - **Pi** - Pi agent configuration, extensions, and skills
 
 ### macOS Specific
-- **Yabai + skhd** - Tiling window manager and hotkeys
-- **Kitty** - Terminal emulator
-- **Sketchybar** - Custom status bar
-- **Spicetify** - Spotify theming
-- **Zsh** - Shell configuration
-- **Bat, btop, eza** - macOS CLI tool configuration
+- **Macarchy profile** - Portable provider, preset, package and bar choices
+- **Macarchy-managed tools** - Yabai/skhd, SketchyBar, Kitty, zsh, Neovim and daily tools
+- **Personal assets** - Agent tools, Git, tmux and Spicetify behavior assets
+- **Native config seeds** - Herdr, Pi and Codex get local writable copies when absent
 
 ### Arch Linux Specific
 - **Hyprland** - Wayland compositor
@@ -55,7 +59,11 @@ state, and skills in the platform trees for now.
 
 ## Theme
 
-All configurations use the **Catppuccin Mocha** color scheme for a consistent look across applications. Wallpapers are included in the `wallpapers/` directory.
+Macarchy supplies the active macOS theme. Installed theme packages, imported
+wallpapers, generated palettes and runtime state stay outside dotfiles under
+the real `~/.config/macarchy` directory. Only its profile and intentional
+override inputs are linked. Arch and the retained standalone configs use their
+own saved themes; `wallpapers/` is a separate static collection.
 
 ## Helper Commands
 
@@ -78,11 +86,16 @@ sudo scripts/dotfiles stow arch-system
 sudo scripts/dotfiles restow arch-system
 ```
 
-Use raw Stow for one-off package work:
+Use the helper for macOS so its ownership exclusions, local config seeds and
+`--no-folding` policy are applied. It refuses existing runtime directory links
+instead of silently migrating them. See the macOS guide before restowing an
+existing Macarchy machine.
+
+Raw Stow is appropriate for unrelated one-off packages:
 
 ```bash
-# Install one package
-stow -d mac-config/mac-dotfiles -t "$HOME" nvim
+# Install a personal package (not a Macarchy-managed provider)
+stow --no-folding -d mac-config/mac-dotfiles -t "$HOME" git
 
 # Remove a package
 stow -D -d common-config/common-dotfiles -t "$HOME" pi
@@ -106,6 +119,12 @@ Put cross-harness skills in `common-config/common-dotfiles/agents/.agents/skills
 Pi discovers `~/.agents/skills` directly, so shared skills should not be
 duplicated under `.pi/agent/skills`. Claude and Codex keep native skill entries
 as repo-relative symlinks back to the shared `.agents` skills.
+
+### Legacy shared-agent migration
+
+The following older recipe is for Arch or unmanaged installations. **Do not run
+it over Macarchy-owned settings or theme links.** On managed macOS, use the
+ownership guidance in [the macOS guide](mac-config/mac-install/README.md#existing-machines).
 
 If this machine already used the old platform-local `agents` and `pi` packages,
 remove stale managed links before stowing from the new shared root. This keeps

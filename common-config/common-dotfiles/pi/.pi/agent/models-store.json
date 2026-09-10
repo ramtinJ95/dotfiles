@@ -245,11 +245,54 @@
           "supportsAdditionalTools": true,
           "supportsToolSearch": true
         }
+      },
+      {
+        "id": "gpt-6-astra",
+        "name": "GPT-6 Astra",
+        "api": "openai-codex-responses",
+        "provider": "openai-codex",
+        "baseUrl": "https://chatgpt.com/backend-api",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 10,
+          "output": 50,
+          "cacheRead": 1,
+          "cacheWrite": 12.5,
+          "tiers": [
+            {
+              "inputTokensAbove": 272000,
+              "input": 20,
+              "output": 75,
+              "cacheRead": 2,
+              "cacheWrite": 25
+            }
+          ]
+        },
+        "contextWindow": 272000,
+        "maxTokens": 128000,
+        "thinkingLevelMap": {
+          "off": null,
+          "minimal": "low",
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh",
+          "max": "max"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true,
+          "supportsAdditionalTools": true,
+          "supportsToolSearch": true
+        }
       }
     ],
-    "checkedAt": 1788084204970,
-    "lastModified": 1786351890000,
-    "etag": "W/\"7572a78e60b78526600ed2a9b74b579d\""
+    "checkedAt": 1789041208196,
+    "lastModified": 1788552640000,
+    "etag": "W/\"d1bab54af7a1a3ffdc37c8c22afc1b4d\""
   },
   "berget": {
     "models": [
@@ -345,37 +388,6 @@
         "compat": {
           "supportsDeveloperRole": false
         },
-        "contextWindow": 131072,
-        "cost": {
-          "cacheRead": 0,
-          "cacheWrite": 0,
-          "input": 1,
-          "output": 2
-        },
-        "id": "zai-org/GLM-4.7-FP8",
-        "input": [
-          "text"
-        ],
-        "maxTokens": 32768,
-        "name": "zai-org/GLM-4.7-FP8",
-        "provider": "berget",
-        "reasoning": true,
-        "thinkingLevelMap": {
-          "high": "high",
-          "low": null,
-          "max": null,
-          "medium": null,
-          "minimal": null,
-          "off": "none",
-          "xhigh": null
-        }
-      },
-      {
-        "api": "openai-completions",
-        "baseUrl": "https://api.berget.ai/v1",
-        "compat": {
-          "supportsDeveloperRole": false
-        },
         "contextWindow": 327680,
         "cost": {
           "cacheRead": 0,
@@ -407,29 +419,7 @@
         "compat": {
           "supportsDeveloperRole": false
         },
-        "contextWindow": 327680,
-        "cost": {
-          "cacheRead": 0,
-          "cacheWrite": 0,
-          "input": 1,
-          "output": 2
-        },
-        "id": "zai-org/GLM-5.3",
-        "input": [
-          "text"
-        ],
-        "maxTokens": 32768,
-        "name": "zai-org/GLM-5.3",
-        "provider": "berget",
-        "reasoning": false
-      },
-      {
-        "api": "openai-completions",
-        "baseUrl": "https://api.berget.ai/v1",
-        "compat": {
-          "supportsDeveloperRole": false
-        },
-        "contextWindow": 327680,
+        "contextWindow": 524288,
         "cost": {
           "cacheRead": 0,
           "cacheWrite": 0,
@@ -438,12 +428,22 @@
         },
         "id": "zai-org/GLM-5.3-Flash",
         "input": [
-          "text"
+          "text",
+          "image"
         ],
         "maxTokens": 32768,
         "name": "zai-org/GLM-5.3-Flash",
         "provider": "berget",
-        "reasoning": false
+        "reasoning": true,
+        "thinkingLevelMap": {
+          "high": "high",
+          "low": "low",
+          "max": "max",
+          "medium": null,
+          "minimal": null,
+          "off": null,
+          "xhigh": null
+        }
       },
       {
         "api": "openai-completions",
@@ -532,6 +532,6 @@
         "reasoning": false
       }
     ],
-    "checkedAt": 1788084204959
+    "checkedAt": 1789055046009
   }
 }

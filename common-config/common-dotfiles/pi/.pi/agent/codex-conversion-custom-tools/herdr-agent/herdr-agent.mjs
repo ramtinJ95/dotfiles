@@ -393,7 +393,7 @@ export async function getAgent(client, target) {
 }
 
 function assertSameAgent(expected, current) {
-	if (current.terminal_id !== expected.terminal_id)
+	if (!expected.terminal_id || current?.terminal_id !== expected.terminal_id)
 		throw new Error(`${expected.pane_id} no longer hosts the targeted Pi agent`);
 	return current;
 }
@@ -547,8 +547,23 @@ function boundText(text) {
 	return { text: `${text.slice(0, MAX_TEXT_CHARS)}\n…`, truncated: true };
 }
 
-function apiWaitTimeout(timeoutMs) {
+export function apiWaitTimeout(timeoutMs) {
 	return timeoutMs + 5_000;
+}
+
+export async function promptAgent(client, panel, text, timeoutMs) {
+	const result = await client.request(
+		"agent.prompt",
+		{
+			target: panel.pane_id,
+			text,
+			...(timeoutMs === undefined
+				? {}
+				: { wait: { until: ["idle", "done", "blocked"], timeout_ms: timeoutMs } }),
+		},
+		timeoutMs === undefined ? 10_000 : apiWaitTimeout(timeoutMs),
+	);
+	return assertSameAgent(panel, result.agent);
 }
 
 function timeoutOutput(panel) {
@@ -559,7 +574,13 @@ function timeoutOutput(panel) {
 	};
 }
 
-export async function settledOutput(reader, panel, baseline, requireNew) {
+export async function settledOutput(
+	reader,
+	panel,
+	baseline,
+	requireNew,
+	{ fullText = false } = {},
+) {
 	// Pi writes its transcript before reporting the settled lifecycle state. Keep
 	// a small allowance for filesystem visibility without restoring status polls.
 	const deadline = Date.now() + 500;
@@ -581,7 +602,7 @@ export async function settledOutput(reader, panel, baseline, requireNew) {
 				...(panel.agent_status === "blocked" && askOutput(view.ask)
 					? { ask: askOutput(view.ask) }
 					: newReply
-						? boundText(newReply.text)
+						? (fullText ? { text: newReply.text } : boundText(newReply.text))
 						: { completed: true }),
 				...(sessionChanged ? { session_changed: true } : {}),
 			};
@@ -1070,23 +1091,12 @@ async function execute(request) {
 	const disposition = resolveSendDisposition({ busy, queue: request.queue });
 	if (!(busy && request.queue)) {
 		try {
-			const result = await client.request(
-				"agent.prompt",
-				{
-					target: panel.pane_id,
-					text: request.text,
-					...(request.wait && !busy
-						? {
-							wait: {
-								until: ["idle", "done", "blocked"],
-								timeout_ms: request.timeout_ms,
-							},
-						}
-						: {}),
-				},
-					request.wait && !busy ? apiWaitTimeout(request.timeout_ms) : 10_000,
-				);
-				assertSameAgent(panel, result.agent);
+			const completedPanel = await promptAgent(
+				client,
+				panel,
+				request.text,
+				request.wait && !busy ? request.timeout_ms : undefined,
+			);
 			if (!request.wait)
 				return {
 					pane: panel.pane_id,
@@ -1097,7 +1107,7 @@ async function execute(request) {
 			if (!busy)
 				return settledOutput(
 					reader,
-					result.agent,
+					completedPanel,
 					{
 						path: baseline.path,
 						assistant_entry_id: baseline.assistant_entry?.id,

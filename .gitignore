@@ -52,3 +52,16 @@ mac-config/mac-dotfiles/claude/.claude/usage-data/
 /common-config/common-dotfiles/workspace-agent/workspace/*
 !/common-config/common-dotfiles/workspace-agent/workspace/AGENTS.md
 !/common-config/common-dotfiles/workspace-agent/workspace/CLAUDE.md
+
+# Macarchy owns installed themes, generated output and machine-local state.
+# Only these deliberate portable inputs may be versioned in its Stow package.
+/mac-config/mac-dotfiles/macarchy/.config/macarchy/*
+!/mac-config/mac-dotfiles/macarchy/.config/macarchy/profile.toml
+!/mac-config/mac-dotfiles/macarchy/.config/macarchy/overrides/
+
+# Generated consumer palettes are not dotfile sources (even when symlinks).
+**/macarchy-current.json
+**/macarchy-current.toml
+**/macarchy-current.tmTheme
+**/macarchy-current.theme
+/mac-config/mac-dotfiles/spicetify/.config/spicetify/Themes/text/color.ini

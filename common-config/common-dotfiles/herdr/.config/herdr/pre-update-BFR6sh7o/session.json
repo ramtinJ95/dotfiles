@@ -1,0 +1,529 @@
+{
+  "version": 3,
+  "workspaces": [
+    {
+      "id": "w1",
+      "custom_name": "Work",
+      "identity_cwd": "/Users/ramtin/workspace/intric-infrastructure",
+      "public_pane_numbers": {
+        "2": 329,
+        "6": 416,
+        "5": 415,
+        "1": 310,
+        "3": 355,
+        "4": 412,
+        "37": 458,
+        "36": 457,
+        "7": 424
+      },
+      "next_public_pane_number": 459,
+      "public_tab_numbers": [
+        285,
+        304,
+        330,
+        387,
+        390,
+        391,
+        399,
+        432,
+        433
+      ],
+      "next_public_tab_number": 434,
+      "tabs": [
+        {
+          "custom_name": "plan helm 4",
+          "layout": {
+            "Pane": 1
+          },
+          "panes": {
+            "1": {
+              "cwd": "/Users/ramtin/workspace/intric-infrastructure",
+              "agent_session": {
+                "source": "herdr:pi",
+                "agent": "pi",
+                "kind": "path",
+                "value": "/Users/ramtin/.pi/agent/sessions/--Users-ramtin-workspace-intric-infrastructure--/2026-08-14T11-12-37-498Z_019ffff9-527a-77ba-a118-bafdef8d1743.jsonl"
+              }
+            }
+          },
+          "zoomed": false,
+          "focused": 1,
+          "root_pane": 1
+        },
+        {
+          "custom_name": "gpu understanding",
+          "layout": {
+            "Pane": 2
+          },
+          "panes": {
+            "2": {
+              "cwd": "/Users/ramtin/workspace/intric-infrastructure",
+              "agent_session": {
+                "source": "herdr:pi",
+                "agent": "pi",
+                "kind": "path",
+                "value": "/Users/ramtin/.pi/agent/sessions/--Users-ramtin-workspace-intric-infrastructure--/2026-09-10T08-06-39-233Z_01a08a5a-c380-76e7-9348-704c5a34cf30.jsonl"
+              }
+            }
+          },
+          "zoomed": false,
+          "focused": 2,
+          "root_pane": 2
+        },
+        {
+          "custom_name": "cs-kpi",
+          "layout": {
+            "Pane": 3
+          },
+          "panes": {
+            "3": {
+              "cwd": "/Users/ramtin/workspace/intric-infrastructure",
+              "agent_session": {
+                "source": "herdr:pi",
+                "agent": "pi",
+                "kind": "path",
+                "value": "/Users/ramtin/.pi/agent/sessions/--Users-ramtin-workspace-intric-infrastructure--/2026-08-20T06-55-14-664Z_01a01df3-d6e8-7367-992a-f7a013b6053b.jsonl"
+              }
+            }
+          },
+          "zoomed": false,
+          "focused": 3,
+          "root_pane": 3
+        },
+        {
+          "custom_name": "Work · Infra PR alignment · current backend contract",
+          "layout": {
+            "Pane": 4
+          },
+          "panes": {
+            "4": {
+              "cwd": "/Users/ramtin/workspace/intric-infrastructure-sandbox-observability",
+              "agent_name": "worker-w1-pcw",
+              "managed_agent_kind": "pi",
+              "agent_session": {
+                "source": "herdr:pi",
+                "agent": "pi",
+                "kind": "path",
+                "value": "/Users/ramtin/.pi/agent/sessions/--Users-ramtin-workspace-intric-infrastructure-sandbox-observability--/2026-08-27T12-38-38-738Z_01a0433a-bf92-7cf4-81fb-d78545c42c55.jsonl"
+              }
+            }
+          },
+          "zoomed": false,
+          "focused": 4,
+          "root_pane": 4
+        },
+        {
+          "custom_name": "argocd rasmus user",
+          "layout": {
+            "Pane": 5
+          },
+          "panes": {
+            "5": {
+              "cwd": "/Users/ramtin/workspace/intric-infrastructure",
+              "agent_session": {
+                "source": "herdr:pi",
+                "agent": "pi",
+                "kind": "path",
+                "value": "/Users/ramtin/.pi/agent/sessions/--Users-ramtin-workspace-intric-infrastructure--/2026-08-28T13-28-56-744Z_01a0488f-28a8-7ed5-8533-b97796834394.jsonl"
+              }
+            }
+          },
+          "zoomed": false,
+          "focused": 5,
+          "root_pane": 5
+        },
+        {
+          "custom_name": "Work · vault-secret-propagation-doc",
+          "layout": {
+            "Pane": 6
+          },
+          "panes": {
+            "6": {
+              "cwd": "/Users/ramtin/workspace/intric-infrastructure",
+              "agent_name": "worker-w1-pc0",
+              "managed_agent_kind": "pi",
+              "agent_session": {
+                "source": "herdr:pi",
+                "agent": "pi",
+                "kind": "path",
+                "value": "/Users/ramtin/.pi/agent/sessions/--Users-ramtin-workspace-intric-infrastructure--/2026-08-28T14-17-16-887Z_01a048bb-6957-7002-adb0-c21858d541d2.jsonl"
+              }
+            }
+          },
+          "zoomed": false,
+          "focused": 6,
+          "root_pane": 6
+        },
+        {
+          "custom_name": "pg restor script",
+          "layout": {
+            "Pane": 7
+          },
+          "panes": {
+            "7": {
+              "cwd": "/Users/ramtin/workspace/intric-infrastructure",
+              "agent_session": {
+                "source": "herdr:pi",
+                "agent": "pi",
+                "kind": "path",
+                "value": "/Users/ramtin/.pi/agent/sessions/--Users-ramtin-workspace-intric-infrastructure--/2026-09-01T16-21-59-265Z_01a05dc7-0561-7a26-9d8e-e87dac3a86d5.jsonl"
+              }
+            }
+          },
+          "zoomed": false,
+          "focused": 7,
+          "root_pane": 7
+        },
+        {
+          "custom_name": null,
+          "layout": {
+            "Pane": 36
+          },
+          "panes": {
+            "36": {
+              "cwd": "/Users/ramtin/workspace/intric-infrastructure",
+              "agent_session": {
+                "source": "herdr:pi",
+                "agent": "pi",
+                "kind": "path",
+                "value": "/Users/ramtin/.pi/agent/sessions/--Users-ramtin-workspace-intric-infrastructure--/2026-09-10T11-53-26-792Z_01a08b2a-6608-7250-8f1f-0fef89f165e6.jsonl"
+              }
+            }
+          },
+          "zoomed": false,
+          "focused": 36,
+          "root_pane": 36
+        },
+        {
+          "custom_name": null,
+          "layout": {
+            "Pane": 37
+          },
+          "panes": {
+            "37": {
+              "cwd": "/Users/ramtin/workspace/intric-infrastructure",
+              "agent_session": {
+                "source": "herdr:pi",
+                "agent": "pi",
+                "kind": "path",
+                "value": "/Users/ramtin/.pi/agent/sessions/--Users-ramtin-workspace-intric-infrastructure--/2026-09-10T14-42-56-179Z_01a08bc5-9233-71c3-ba3e-d59f160feec2.jsonl"
+              }
+            }
+          },
+          "zoomed": false,
+          "focused": 37,
+          "root_pane": 37
+        }
+      ],
+      "active_tab": 8
+    },
+    {
+      "id": "w2",
+      "custom_name": "Learning",
+      "identity_cwd": "/Users/ramtin/workspace/intric-infrastructure",
+      "worktree_space": {
+        "key": "/Users/ramtin/workspace/intric-infrastructure/.git",
+        "label": "intric-infrastructure",
+        "repo_root": "/Users/ramtin/workspace/intric-infrastructure",
+        "checkout_path": "/Users/ramtin/workspace/intric-infrastructure",
+        "is_linked_worktree": false
+      },
+      "public_pane_numbers": {
+        "13": 5,
+        "12": 7,
+        "11": 3
+      },
+      "next_public_pane_number": 9,
+      "public_tab_numbers": [
+        3,
+        6,
+        5
+      ],
+      "next_public_tab_number": 8,
+      "tabs": [
+        {
+          "custom_name": "helm chart learning",
+          "layout": {
+            "Pane": 11
+          },
+          "panes": {
+            "11": {
+              "cwd": "/Users/ramtin/workspace/intric-infrastructure"
+            }
+          },
+          "zoomed": false,
+          "focused": 11,
+          "root_pane": 11
+        },
+        {
+          "custom_name": "intric network learning",
+          "layout": {
+            "Pane": 12
+          },
+          "panes": {
+            "12": {
+              "cwd": "/Users/ramtin/workspace/intric-infrastructure"
+            }
+          },
+          "zoomed": false,
+          "focused": 12,
+          "root_pane": 12
+        },
+        {
+          "custom_name": "intric infra read list",
+          "layout": {
+            "Pane": 13
+          },
+          "panes": {
+            "13": {
+              "cwd": "/Users/ramtin/workspace/intric-infrastructure"
+            }
+          },
+          "zoomed": false,
+          "focused": 13,
+          "root_pane": 13
+        }
+      ],
+      "active_tab": 0
+    },
+    {
+      "id": "w3",
+      "custom_name": "Golang learning",
+      "identity_cwd": "/Users/ramtin/personal/go-explorations/gowc",
+      "public_pane_numbers": {
+        "14": 1,
+        "15": 2
+      },
+      "next_public_pane_number": 3,
+      "public_tab_numbers": [
+        1,
+        2
+      ],
+      "next_public_tab_number": 3,
+      "tabs": [
+        {
+          "custom_name": null,
+          "layout": {
+            "Pane": 14
+          },
+          "panes": {
+            "14": {
+              "cwd": "/Users/ramtin/personal/go-explorations/gowc"
+            }
+          },
+          "zoomed": false,
+          "focused": 14,
+          "root_pane": 14
+        },
+        {
+          "custom_name": null,
+          "layout": {
+            "Pane": 15
+          },
+          "panes": {
+            "15": {
+              "cwd": "/Users/ramtin/personal/go-explorations/gowc"
+            }
+          },
+          "zoomed": false,
+          "focused": 15,
+          "root_pane": 15
+        }
+      ],
+      "active_tab": 1
+    },
+    {
+      "id": "w4",
+      "custom_name": "Macarchy",
+      "identity_cwd": "/Users/ramtin/personal/macarchy",
+      "public_pane_numbers": {
+        "19": 282,
+        "17": 62,
+        "16": 1,
+        "18": 80
+      },
+      "next_public_pane_number": 295,
+      "public_tab_numbers": [
+        1,
+        62,
+        80,
+        280
+      ],
+      "next_public_tab_number": 293,
+      "tabs": [
+        {
+          "custom_name": null,
+          "layout": {
+            "Pane": 16
+          },
+          "panes": {
+            "16": {
+              "cwd": "/Users/ramtin/personal/macarchy",
+              "agent_session": {
+                "source": "herdr:pi",
+                "agent": "pi",
+                "kind": "path",
+                "value": "/Users/ramtin/.pi/agent/sessions/--Users-ramtin-personal-macarchy--/2026-09-09T15-42-40-701Z_01a086d5-e839-744e-a725-766ac83d39ef.jsonl"
+              }
+            }
+          },
+          "zoomed": false,
+          "focused": 16,
+          "root_pane": 16
+        },
+        {
+          "custom_name": "chrome theme integration",
+          "layout": {
+            "Pane": 17
+          },
+          "panes": {
+            "17": {
+              "cwd": "/Users/ramtin/personal/macarchy",
+              "agent_session": {
+                "source": "herdr:pi",
+                "agent": "pi",
+                "kind": "path",
+                "value": "/Users/ramtin/.pi/agent/sessions/--Users-ramtin-personal-macarchy--/2026-08-29T18-20-05-675Z_01a04ec0-12ab-78a2-9fa8-deea6c4b403f.jsonl"
+              }
+            }
+          },
+          "zoomed": false,
+          "focused": 17,
+          "root_pane": 17
+        },
+        {
+          "custom_name": "lockscreen,screensaver",
+          "layout": {
+            "Pane": 18
+          },
+          "panes": {
+            "18": {
+              "cwd": "/Users/ramtin/personal/macarchy",
+              "agent_session": {
+                "source": "herdr:pi",
+                "agent": "pi",
+                "kind": "path",
+                "value": "/Users/ramtin/.pi/agent/sessions/--Users-ramtin-personal-macarchy--/2026-08-30T10-34-26-693Z_01a0523c-1e05-70f8-b4d2-d9871cd46920.jsonl"
+              }
+            }
+          },
+          "zoomed": false,
+          "focused": 18,
+          "root_pane": 18
+        },
+        {
+          "custom_name": null,
+          "layout": {
+            "Pane": 19
+          },
+          "panes": {
+            "19": {
+              "cwd": "/Users/ramtin/personal/macarchy"
+            }
+          },
+          "zoomed": false,
+          "focused": 19,
+          "root_pane": 19
+        }
+      ],
+      "active_tab": 0
+    },
+    {
+      "id": "w5",
+      "custom_name": "Dataplatform work",
+      "identity_cwd": "/Users/ramtin/workspace/intric-infrastructure",
+      "public_pane_numbers": {
+        "27": 14,
+        "28": 15,
+        "21": 6,
+        "22": 10
+      },
+      "next_public_pane_number": 19,
+      "public_tab_numbers": [
+        6,
+        10,
+        14,
+        15
+      ],
+      "next_public_tab_number": 19,
+      "tabs": [
+        {
+          "custom_name": null,
+          "layout": {
+            "Pane": 21
+          },
+          "panes": {
+            "21": {
+              "cwd": "/Users/ramtin/workspace/intric-infrastructure",
+              "agent_session": {
+                "source": "herdr:pi",
+                "agent": "pi",
+                "kind": "path",
+                "value": "/Users/ramtin/.pi/agent/sessions/--Users-ramtin-workspace-intric-infrastructure--/2026-09-04T09-58-02-040Z_01a06bda-9438-7d38-a878-4804a22c4f6e.jsonl"
+              }
+            }
+          },
+          "zoomed": false,
+          "focused": 21,
+          "root_pane": 21
+        },
+        {
+          "custom_name": null,
+          "layout": {
+            "Pane": 22
+          },
+          "panes": {
+            "22": {
+              "cwd": "/Users/ramtin/workspace/intric-infrastructure"
+            }
+          },
+          "zoomed": false,
+          "focused": 22,
+          "root_pane": 22
+        },
+        {
+          "custom_name": "Work · Discuss remaining infra PR 913 comments",
+          "layout": {
+            "Pane": 27
+          },
+          "panes": {
+            "27": {
+              "cwd": "/private/tmp/intric-etl-canary-access",
+              "agent_name": "worker-w5-pe",
+              "managed_agent_kind": "pi",
+              "agent_session": {
+                "source": "herdr:pi",
+                "agent": "pi",
+                "kind": "path",
+                "value": "/Users/ramtin/.pi/agent/sessions/--private-tmp-intric-etl-canary-access--/2026-09-09T09-26-16-988Z_01a0857d-4e9c-72c9-bd78-b0f594c45016.jsonl"
+              }
+            }
+          },
+          "zoomed": false,
+          "focused": 27,
+          "root_pane": 27
+        },
+        {
+          "custom_name": null,
+          "layout": {
+            "Pane": 28
+          },
+          "panes": {
+            "28": {
+              "cwd": "/Users/ramtin/workspace/intric-data-platform"
+            }
+          },
+          "zoomed": false,
+          "focused": 28,
+          "root_pane": 28
+        }
+      ],
+      "active_tab": 0
+    }
+  ],
+  "active": 0,
+  "selected": 0,
+  "sidebar_width": 26,
+  "sidebar_section_split": 0.5,
+  "collapsed_space_keys": []
+}

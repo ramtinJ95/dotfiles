@@ -1,0 +1,21 @@
+schema_version = 1
+
+[presets]
+codex = true
+herdr = true
+pi = true
+slack = true
+spicetify = true
+tuicr = true
+
+[macos_preferences]
+enabled = true
+dock_autohide = true
+finder_show_extensions = true
+
+[packages]
+exclude_casks = ["docker", "tailscale"]
+
+[sketchybar]
+center = ["clock"]
+right = ["battery", "volume", "wifi", "cpu", "memory", "toggle"]

@@ -9,7 +9,6 @@ sbar.begin_config()
 require("bar")
 require("default")
 require("items")
-sbar.add("item", "macarchy.theme.ready", { drawing = false })
 sbar.end_config()
 
 -- Coordinate with the native (auto-hidden, Liquid Glass transparent) menu bar:

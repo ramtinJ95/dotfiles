@@ -1,0 +1,15 @@
+# Retained source configurations. Macarchy owns these providers on macOS.
+# Not used by stow/restow/install; do not install over a managed Macarchy setup.
+atuin
+bat
+btop
+eza
+kitty
+nvim
+sketchybar
+skhd
+starship
+tuicr
+yabai
+yazi
+zsh
