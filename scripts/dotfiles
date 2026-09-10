@@ -34,7 +34,7 @@ Usage: scripts/dotfiles <command> [profile]
 
 Commands:
   doctor              Validate package lists, Stow dry-runs, symlinks, shell, and JSON
-  stow mac            Stow common and macOS user packages into $HOME
+  stow mac            Link Macarchy inputs/personal tools; seed absent native configs
   stow arch           Stow common and Arch user packages into $HOME
   stow arch-system    Stow Arch system packages into /
   restow mac          Restow common and macOS user packages into $HOME
@@ -47,7 +47,7 @@ EOF
 package_root() {
     case "$1" in
         common) printf '%s\n' "$COMMON_DIR" ;;
-        mac) printf '%s\n' "$MAC_DIR" ;;
+        mac|mac-legacy) printf '%s\n' "$MAC_DIR" ;;
         arch|arch-system) printf '%s\n' "$ARCH_DIR" ;;
         *) return 1 ;;
     esac
@@ -92,6 +92,17 @@ check_package_list() {
     present="$(mktemp)"
 
     package_names "$list_name" | sort > "$listed"
+    if [[ "$list_name" == "mac" ]]; then
+        # Retain old provider sources without installing them over Macarchy.
+        while IFS= read -r package; do
+            [[ -d "$root/$package" ]] || fail "mac-legacy lists missing package: $package"
+            if grep -Fxq "$package" "$listed"; then
+                fail "mac package is both active and legacy: $package"
+            fi
+        done < <(package_names mac-legacy)
+        package_names mac-legacy >> "$listed"
+        sort -u "$listed" -o "$listed"
+    fi
     if [[ "$list_name" == "arch" ]]; then
         find "$root" -maxdepth 1 -mindepth 1 -type d ! -name tlp -exec basename {} \; | sort > "$present"
     elif [[ "$list_name" == "arch-system" ]]; then
@@ -110,32 +121,14 @@ check_package_list() {
 }
 
 run_stow_dry_run() {
-    local list_name="$1"
-    local target="$2"
-    local root
-    root="$(package_root "$list_name")"
-
-    if ! command -v stow >/dev/null 2>&1; then
-        fail "stow command is not available"
-        return
-    fi
-
-    local packages
-    packages="$(package_names "$list_name" | tr '\n' ' ')"
-    if [[ -z "$packages" ]]; then
-        fail "$list_name package list is empty"
-        return
-    fi
-
-    if ! stow -n -d "$root" -t "$target" $packages >/dev/null 2>&1; then
-        fail "$list_name Stow dry-run failed"
-    fi
+    run_stow_action simulate "$1" "$2" "${3:-}"
 }
 
 run_stow_action() {
     local action="$1"
     local list_name="$2"
     local target="$3"
+    local profile="${4:-}"
     local root
     root="$(package_root "$list_name")"
 
@@ -144,24 +137,72 @@ run_stow_action() {
         return
     fi
 
-    local packages
-    packages="$(package_names "$list_name" | tr '\n' ' ')"
-    if [[ -z "$packages" ]]; then
+    local packages=()
+    local package
+    while IFS= read -r package; do
+        packages+=("$package")
+    done < <(package_names "$list_name")
+    if [[ "${#packages[@]}" -eq 0 ]]; then
         fail "$list_name package list is empty"
         return
     fi
 
+    local args=(-d "$root" -t "$target")
     case "$action" in
         stow) ;;
-        restow) ;;
+        restow) args+=(-R) ;;
+        simulate) args+=(-n) ;;
         *) fail "unknown stow action: $action"; return ;;
     esac
 
-    info "$action $list_name -> $target"
-    if [[ "$action" == "restow" ]]; then
-        stow -R -d "$root" -t "$target" $packages || fail "$action failed for $list_name"
+    if [[ "$profile" == "mac" ]]; then
+        # Folder symlinks would send generated themes/state back into dotfiles.
+        # Native mutable selectors are seeded below, never Stow-managed on macOS.
+        args+=(--no-folding
+            '--ignore=(^|/)macarchy-current\.(json|toml|tmTheme|theme)$'
+            '--ignore=(^|/)\.pi/agent/(settings\.json|auth\.json|sessions|cache|pi-codex-logs|pi-crash\.log)(/|$)'
+            '--ignore=(^|/)\.config/herdr/(config\.toml|release-notes\.json|session.*\.json|.*\.(log|sock)|pre-update-[^/]+)(/|$)'
+            '--ignore=(^|/)\.codex/config\.toml$'
+            '--ignore=(^|/)\.config/spicetify/(config-xpui\.ini|Themes/text/color\.ini)$'
+        )
+    fi
+    if [[ "$action" == "simulate" ]]; then
+        stow "${args[@]}" "${packages[@]}" >/dev/null 2>&1 || fail "$list_name Stow dry-run failed"
     else
-        stow -d "$root" -t "$target" $packages || fail "$action failed for $list_name"
+        info "$action $list_name -> $target"
+        stow "${args[@]}" "${packages[@]}" || fail "$action failed for $list_name"
+    fi
+}
+
+check_mac_runtime_roots() {
+    local path
+    for path in .config .config/macarchy .config/macarchy/themes \
+        .config/macarchy/generations .config/macarchy/state .config/macarchy/run \
+        .config/macarchy/desktop .config/macarchy/environment .config/macarchy/keybindings \
+        .config/macarchy/screensaver .config/herdr .config/spicetify \
+        .config/spicetify/Themes .config/spicetify/Themes/text \
+        .pi .pi/agent .pi/agent/themes .codex .codex/themes; do
+        if [[ -L "$HOME/$path" ]]; then
+            fail "$HOME/$path is a directory symlink; migrate its ownership before macOS Stow (see mac-config/mac-install/README.md)"
+        elif [[ -e "$HOME/$path" && ! -d "$HOME/$path" ]]; then
+            fail "$HOME/$path must be a real directory"
+        fi
+    done
+}
+
+seed_native_config() {
+    local source="$1"
+    local target="$2"
+    if [[ -L "$target" ]]; then
+        fail "$target is linked; migrate it to an ordinary local file before setup"
+    elif [[ -e "$target" ]]; then
+        [[ -f "$target" ]] || fail "$target is not a regular config file"
+    else
+        [[ -f "$source" ]] || { fail "native config seed missing: $source"; return; }
+        info "seed local config: $target"
+        mkdir -p "$(dirname "$target")" || { fail "cannot create config parent"; return; }
+        # noclobber also protects a file created by the app after the check.
+        (umask 077; set -C; cat "$source" > "$target") || fail "could not seed $target"
     fi
 }
 
@@ -173,8 +214,15 @@ run_profile() {
 
     case "$profile" in
         mac)
-            run_stow_action "$action" common "$HOME"
-            run_stow_action "$action" mac "$HOME"
+            check_mac_runtime_roots
+            [[ "$failures" -eq 0 ]] || return 1
+            run_stow_action "$action" common "$HOME" mac
+            [[ "$failures" -eq 0 ]] || return 1
+            run_stow_action "$action" mac "$HOME" mac
+            [[ "$failures" -eq 0 ]] || return 1
+            seed_native_config "$COMMON_DIR/herdr/.config/herdr/config.toml" "$HOME/.config/herdr/config.toml"
+            seed_native_config "$COMMON_DIR/pi/.pi/agent/settings.json" "$HOME/.pi/agent/settings.json"
+            seed_native_config "$MAC_DIR/codex/.codex/config.toml" "$HOME/.codex/config.toml"
             ;;
         arch)
             run_stow_action "$action" common "$HOME"
@@ -334,7 +382,8 @@ doctor() {
     local target
     target="$(mktemp -d)"
     run_stow_dry_run common "$target"
-    run_stow_dry_run mac "$target"
+    run_stow_dry_run common "$target" mac
+    run_stow_dry_run mac "$target" mac
     run_stow_dry_run arch "$target"
     run_stow_dry_run arch-system "$target"
     rm -rf "$target"

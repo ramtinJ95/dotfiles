@@ -8,6 +8,7 @@ import {
 	parseRequest,
 	parseSessionLines,
 	planAskAnswer,
+	promptAgent,
 	resolveTargetAlias,
 	resolveSendDisposition,
 	settledOutput,
@@ -240,4 +241,110 @@ test("ask inspection recognizes the review frame", () => {
 test("busy fallback catches compaction but not an idle footer", () => {
 	assert.equal(isBusyScreen("Queued message for after compaction\nAuto-compacting..."), true);
 	assert.equal(isBusyScreen("Done.\n────────\n↑12k ↓2k"), false);
+});
+
+test("shared prompt helper waits server-side with a longer transport deadline", async () => {
+	const panel = { pane_id: "pane-child", terminal_id: "terminal-child" };
+	const completed = { ...panel, agent_status: "done" };
+	const result = await promptAgent({
+		async request(method, params, timeoutMs) {
+			assert.equal(method, "agent.prompt");
+			assert.deepEqual(params, {
+				target: "pane-child", text: "Inspect it",
+				wait: { until: ["idle", "done", "blocked"], timeout_ms: 30_000 },
+			});
+			assert.equal(timeoutMs, 35_000);
+			return { agent: completed };
+		},
+	}, panel, "Inspect it", 30_000);
+	assert.equal(result, completed);
+});
+
+test("shared prompt helper preserves nonblocking prompt delivery", async () => {
+	const panel = { pane_id: "pane-child", terminal_id: "terminal-child" };
+	await promptAgent({
+		async request(method, params, timeoutMs) {
+			assert.equal(method, "agent.prompt");
+			assert.deepEqual(params, { target: "pane-child", text: "Follow up" });
+			assert.equal(timeoutMs, 10_000);
+			return { agent: panel };
+		},
+	}, panel, "Follow up");
+});
+
+test("shared prompt helper rejects replaced or missing terminal identity", async () => {
+	for (const terminal_id of ["replacement", undefined]) {
+		await assert.rejects(promptAgent({
+			request: async () => ({ agent: { terminal_id } }),
+		}, { pane_id: "pane-child", terminal_id: "original" }, "Inspect it", 30_000),
+			/no longer hosts the targeted Pi agent/);
+	}
+	await assert.rejects(promptAgent({ request: async () => ({ agent: {} }) },
+		{ pane_id: "pane-child" }, "Inspect it"), /no longer hosts the targeted Pi agent/);
+});
+
+test("shared prompt helper preserves server timeout and transport errors", async () => {
+	for (const code of ["timeout", "ECONNRESET"]) {
+		const error = Object.assign(new Error(code), { code });
+		await assert.rejects(promptAgent({ request: async () => { throw error; } },
+			{ pane_id: "pane-child", terminal_id: "original" }, "Inspect it", 30_000),
+			(actual) => actual === error);
+	}
+});
+
+test("settled output bounds coordination replies but allows full spawn replies", async () => {
+	const text = "x".repeat(40_000);
+	const reader = { read: async () => ({
+		path: "session.jsonl",
+		assistant_entry: { id: "new", stop_reason: "stop" },
+		assistant: { id: "new", text },
+	}) };
+	const panel = {
+		pane_id: "pane-child", agent_status: "idle",
+		agent_session: { kind: "path", value: "session.jsonl" },
+	};
+	const baseline = { path: "session.jsonl", assistant_entry_id: "old", reply_id: "old" };
+	const bounded = await settledOutput(reader, panel, baseline, true);
+	assert.equal(bounded.truncated, true);
+	assert.ok(bounded.text.length < text.length);
+	const full = await settledOutput(reader, panel, baseline, true, { fullText: true });
+	assert.equal(full.text, text);
+	assert.equal(full.truncated, undefined);
+});
+
+test("settled output uses the completion session even if the live pane has advanced", async () => {
+	const completed = {
+		pane_id: "pane-child", terminal_id: "original", agent_status: "done",
+		agent_session: { kind: "path", value: "completed.jsonl" },
+	};
+	const client = {
+		async request(method) {
+			assert.equal(method, "agent.prompt", "never refetch the live panel after completion");
+			return { agent: completed };
+		},
+	};
+	const resultPanel = await promptAgent(client, completed, "Inspect it", 30_000);
+	let reads = 0;
+	const output = await settledOutput({
+		async read(path) {
+			assert.equal(path, "completed.jsonl");
+			assert.equal(++reads, 1);
+			return {
+				path, assistant_entry: { id: "completed" },
+				assistant: { id: "completed", text: "Original result" },
+			};
+		},
+	}, resultPanel, { path: "completed.jsonl", reply_id: "old", assistant_entry_id: "old" }, true);
+	assert.equal(output.text, "Original result");
+});
+
+test("settled output reports persistence lag rather than returning an old reply", async () => {
+	const output = await settledOutput({ read: async () => ({
+		path: "session.jsonl", assistant_entry: { id: "old" },
+		assistant: { id: "old", text: "stale" },
+	}) }, {
+		pane_id: "pane-child", agent_status: "idle",
+		agent_session: { kind: "path", value: "session.jsonl" },
+	}, { path: "session.jsonl", assistant_entry_id: "old", reply_id: "old" }, true);
+	assert.deepEqual(output, { pane: "pane-child", status: "idle", transcript_pending: true });
 });

@@ -1,6 +1,3 @@
-local macarchy = require("config.macarchy-theme")
-local current = macarchy.watch()
-
 return {
   {
     "catppuccin/nvim",
@@ -41,7 +38,7 @@ return {
   {
     "LazyVim/LazyVim",
     opts = {
-      colorscheme = current.colorscheme,
+      colorscheme = "catppuccin",
     },
   },
 }

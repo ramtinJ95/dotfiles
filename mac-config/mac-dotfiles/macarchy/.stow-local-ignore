@@ -1,0 +1,5 @@
+# Only portable inputs belong in this package. Always use --no-folding.
+^/\.stow-local-ignore$
+^/(?!\.config(?:/|$)).+
+^/\.config/(?!macarchy(?:/|$)).+
+^/\.config/macarchy/(?!profile\.toml$|overrides(?:/|$)).+

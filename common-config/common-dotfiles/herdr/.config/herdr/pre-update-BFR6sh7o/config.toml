@@ -10,7 +10,7 @@ onboarding = false
 # Built-in themes: catppuccin, terminal, tokyo-night, dracula, nord,
 #                  gruvbox, one-dark, solarized, kanagawa, rose-pine,
 #                  vesper
-name = "tokyo-night"
+name = "catppuccin"
 
 # Follow host terminal light/dark appearance and switch Herdr UI themes.
 # Existing manual behavior is unchanged unless this is true.
@@ -270,3 +270,19 @@ switch_ascii_input_source_in_prefix = false
 # scrollback_limit_bytes = 10000000
 
 [theme.custom]
+accent = "#cba6f7"
+panel_bg = "#11111b"
+surface0 = "#11111b"
+surface1 = "#313244"
+surface_dim = "#11111b"
+overlay0 = "#585b70"
+overlay1 = "#585b70"
+text = "#cdd6f4"
+subtext0 = "#585b70"
+mauve = "#cba6f7"
+green = "#a6e3a1"
+yellow = "#f9e2af"
+red = "#f38ba8"
+blue = "#89b4fa"
+teal = "#94e2d5"
+peach = "#f9e2af"

@@ -1,108 +1,141 @@
-# Mac Setup Automation
+# macOS setup with Macarchy
 
-Automated setup scripts to quickly reproduce your development environment on a new Mac.
+Macarchy owns the managed desktop, terminal/editor configuration, selected
+packages and themes. Dotfiles owns portable inputs and unrelated personal assets.
+Requires Apple Silicon, macOS 26, Homebrew and Xcode Command Line Tools.
 
-## What This Does
+## Fresh installation
 
-- Installs Xcode Command Line Tools
-- Installs Homebrew and all your packages
-- Sets up shared and macOS dotfiles using GNU Stow
-- Applies your macOS system preferences
-- Configures shell environment
+Install Command Line Tools (`xcode-select --install`) and Homebrew using its
+official instructions at https://brew.sh first. Then:
 
-## Files
-
-- `install.sh` - Main installation script
-- `Brewfile` - Homebrew packages list
-- `set-defaults.sh` - macOS system preferences
-
-## Quick Start
-
-On a **new Mac**:
-
-```bash
-# 1. Clone your dotfiles
+```sh
 git clone git@github.com:ramtinJ95/dotfiles.git ~/workspace/dotfiles
-
-# 2. Run the setup
 cd ~/workspace/dotfiles
 mac-config/mac-install/install.sh
 ```
 
-## Manual Steps (if needed)
+The script:
 
-If you want to run parts separately:
+1. Offers to install missing bootstrap formulae: Stow and Macarchy. Homebrew
+   still enforces its own tap/formula trust requirements.
+2. Runs `scripts/dotfiles stow mac` using the ownership rules below.
+3. Displays `macarchy setup plan` and stops without claiming setup is complete.
 
-```bash
-# Install Homebrew packages only
-brew bundle install --file=mac-config/mac-install/Brewfile
+Resolve the plan’s manual prerequisites, review its package/configuration/native
+preference changes, then use its exact approval flags:
 
-# Apply macOS defaults only  
-mac-config/mac-install/set-defaults.sh
-
-# Install the profile that forces screenshots into ~/Screenshots
-open mac-config/mac-install/screenshot-location.mobileconfig
-
-# Validate and stow shared and macOS dotfiles only, from the repo root
-scripts/dotfiles doctor
-scripts/dotfiles stow mac
-
-# Restow after package moves or config updates
-scripts/dotfiles restow mac
+```sh
+macarchy setup apply  # add the approval flags and digests from your reviewed plan
+macarchy setup doctor
 ```
 
-If `scripts/dotfiles stow mac` reports conflicts on an existing machine, use
-the existing-machine migration section in the root `README.md` first. Fresh
-machines do not need that step.
+Alternatively, `install.sh --apply <approval options>` prepares the inputs,
+shows a fresh plan, and forwards your supplied options to `macarchy setup apply`.
+It never extracts approval digests and approves them for you. Missing, stale or
+insufficient approvals are rejected by Macarchy. Do not save approval digests
+or adoption files in dotfiles; they describe one machine’s current state.
 
-## Updating Your Setup
+The saved profile uses Macarchy’s curated package set and personal opt-outs.
+The old `Brewfile` is **not** applied in addition. Selected presets can still
+require manual setup: Pi installation, Spotify’s first launch and Spicetify
+initialization, and Accessibility grants are not bypassed by this script.
+Spicetify’s saved machine-specific config/backup metadata is deliberately not
+seeded; initialize its native configuration and follow Macarchy’s diagnostics.
+Tmux plugin installation remains separate from Macarchy setup.
 
-When you install new packages or change settings:
+## What Stow owns
 
-```bash
-# Update Brewfile with new packages
-brew bundle dump --file=mac-config/mac-install/Brewfile --force
+- `mac-config/mac-dotfiles/macarchy/.config/macarchy/profile.toml` is the portable
+  profile. It includes the media-free bar layout.
+- Intentional native inputs may live under the adjacent `overrides/` directory
+  and be referenced from the profile. Relative paths resolve beside the actual
+  profile source file, including when the profile is symlinked.
+- Shared agent code/assets, Git, tmux and other selected personal packages remain
+  Stow-managed.
+- Herdr, Pi and Codex native config files are copied from their existing dotfile
+  sources **only when absent**. They are regular local files, not symlinks.
+  Restow preserves local changes. To propagate a personal change, deliberately
+  update the seed and review the corresponding local config edit; do not copy
+  generated theme colours back into the seed. Review machine-specific paths in
+  these existing personal seeds when using a different username or directory.
 
-# Update macOS defaults (edit set-defaults.sh manually)
+MacOS Stow uses `--no-folding`: directories stay real and only individual input
+files/assets become symlinks. This is load-bearing, not a cosmetic layout choice.
+Pi credentials/runtime caches and generated Macarchy consumer palettes are
+excluded from this Stow operation.
+
+Package selection is explicit:
+
+- `packages/common.txt`: shared packages, with macOS-specific writable-config exclusions.
+- `packages/mac.txt`: active personal macOS packages and the Macarchy profile.
+- `packages/mac-legacy.txt`: retained standalone provider sources, never automatically stowed.
+
+Do not directly stow Kitty, Neovim, SketchyBar, yabai, skhd, zsh or other legacy
+provider packages over Macarchy. Their configuration is generated by Macarchy.
+The old `set-defaults.sh`, Brewfile, Lua bar helpers and direct service startup
+path are no longer run by `install.sh`. Arch’s Stow selection remains unchanged.
+
+## What stays outside dotfiles
+
+`~/.config/macarchy` itself must be a **real local directory**, not a Stow
+directory symlink. In particular, keep all of these local:
+
+- `themes/`: packages installed by `macarchy theme install`, including imported assets;
+- `generations/` and `current`: normalized themes and generated consumer output;
+- `state/`, `run/`, `desktop/`, `environment/`, `keybindings/`, `screensaver/`;
+- `machine.toml`, adoption approvals, backups and other machine-specific state.
+
+Git and the Macarchy package’s Stow ignore rules allow only `profile.toml` and
+intentional `overrides/` inputs. Merely ignoring generated files in Git would
+not be enough: a folded directory link could still send writes into the repo.
+Do not use plain directory-folding Stow or `--adopt` on the entire state tree.
+
+Stow does not reinstall your imported themes or restore your active theme.
+Install desired themes separately with `macarchy theme install`; their packages
+and generated files remain local. Do not point Macarchy’s state root into dotfiles.
+
+## Existing machines
+
+Do not rerun the legacy installer, blindly unstow managed providers, or delete
+owned symlinks. The new helper refuses runtime-bearing directory links and
+conflicting files instead of guessing whether it can take ownership.
+
+For the profile alone, first inspect the narrow nonmutating operation:
+
+```sh
+stow --no-folding --simulate -d mac-config/mac-dotfiles -t "$HOME" macarchy
 ```
 
-## What Gets Configured
+If an ordinary local profile conflicts, compare it with the saved profile and
+deliberately migrate that one input. Never use broad Stow adoption to resolve
+conflicts with generated files. Once linked, editing the dotfile changes the
+portable input; run Macarchy’s plan/apply to activate relevant changes.
 
-### Homebrew Packages
-- Development tools (git, node, neovim, etc.)
-- CLI utilities (fzf, ripgrep, etc.) 
-- GUI applications via casks
-- Fonts and other resources
+### Existing Herdr directory links
 
-### macOS Preferences
-- Dock: autohide enabled, no launch animations
-- Keyboard: fast key repeat (2ms repeat, 25ms delay)
-- Finder: show status bar, path bar, disable extension warnings
-- Screenshots: forced to `~/Screenshots`, PNG format, no shadows
-- Trackpad: tap to click enabled
+Older Macarchy setups may own Herdr through a Stow directory link into dotfiles.
+The ownership record pins that topology and resolved config path. Replacing the
+link manually would invalidate the record; disabling the preset does not remove
+that retained path ownership. Do not hand-edit the ownership ledger or tear down
+all managed apps as an incidental Stow step.
 
-### Dotfiles
-- Shared agent configuration from `common-config/common-dotfiles`
-- Zsh configuration
-- Git configuration
-- Terminal tools (btop, eza, starship, etc.)
-- Window management (yabai, skhd)
-- Editor configs (neovim, etc.)
+Such a machine must defer the Herdr relocation until a supported scoped
+migration is available. Its current Herdr theme updates can still affect the
+dotfile source; the rest of the Macarchy theme tree can already remain local.
+The full macOS helper deliberately stops at this old topology. The narrow
+profile package can still be managed separately as above.
 
-## Package Lists
+## Focused verification
 
-The install script calls `scripts/dotfiles stow mac`, which reads package names
-from the repository-level `packages/` directory:
+```sh
+bash scripts/test-macarchy-stow.sh
+bash -n scripts/dotfiles mac-config/mac-install/install.sh
+```
 
-- `packages/common.txt` - shared packages installed on every machine
-- `packages/mac.txt` - macOS user-level packages
-
-Add new package names to the right list when creating a new Stow package.
-
-## Troubleshooting
-
-- If Xcode tools installation hangs, restart and run again
-- Some changes require logout/restart to take effect
-- Run `brew doctor` after setup to check for issues
-- Run the script by path from any working directory; it resolves paths from its
-  own location
+The test uses temporary fixtures: real runtime directories, profile links,
+excluded machine/generated data, local config seeds, restow preservation,
+legacy provider exclusion and refusal of unsafe pre-existing directory links.
+It installs no packages, starts no services and changes no live app configuration.
+Repository-wide `scripts/dotfiles doctor` remains available for the broader
+shared/Arch configuration checks.

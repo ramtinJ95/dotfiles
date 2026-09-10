@@ -16,10 +16,11 @@
     "applyPatchOnly": false,
     "viewImageOnly": false,
     "webRunOnly": false,
-    "imageGenerationOnly": false
+    "imageGenerationOnly": false,
+    "autoReasoning": true
   },
   "ui": {
-    "statusLine": false,
+    "statusLine": true,
     "toolRenaming": true,
     "compactTools": false,
     "codeModeDetails": true,
@@ -30,13 +31,11 @@
     "backgroundShellCloseShortcut": "alt+r"
   },
   "compaction": {
-    "responsesCompaction": true,
-    "version": "v1"
-  },
-  "beta": {
-    "codeMode": true,
-    "responsesLite": false,
-    "v2UserMessageRetention": 64
+    "responsesCompaction": false,
+    "version": "v1",
+    "v2UserMessageRetention": 64,
+    "contextManagement": "remote",
+    "portableSummary": false
   },
   "voice": {
     "protocol": "v3",
@@ -48,13 +47,27 @@
     "dictationShortcutMode": "push",
     "inputDevice": "coreaudio:BuiltInMicrophoneDevice",
     "outputDevice": "coreaudio:BuiltInSpeakerDevice",
-    "serverShortcut": "ctrl+alt+g"
+    "serverShortcut": "ctrl+alt+g",
+    "autoResumeRealtime": false,
+    "audioSetupCompleted": true,
+    "delegationAcknowledgements": true,
+    "forwardReasoningSummaries": true,
+    "muteShortcut": "ctrl+alt+m",
+    "contextReasoning": "high",
+    "refreshRealtimeAfterCompaction": false
   },
   "openai": {
     "fast": false,
     "verbosity": "low",
     "forceCachedWebSockets": true,
     "webSearchModel": "gpt-5.6-luna",
-    "harnessIdentifierHeader": false
+    "harnessIdentifierHeader": false,
+    "lunaCacheKeepaliveMinutes": 0,
+    "proxyResponsesLite": false,
+    "cacheDiagnostics": "off"
+  },
+  "executionMode": "code",
+  "notebook": {
+    "maxHeapMiB": 4096
   }
 }

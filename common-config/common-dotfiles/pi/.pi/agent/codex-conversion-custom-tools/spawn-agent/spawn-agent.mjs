@@ -6,11 +6,13 @@ import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+	apiWaitTimeout,
 	getAgent,
 	HerdrClient,
+	promptAgent,
 	SessionReader,
 	sessionPath,
-	waitForPanel,
+	settledOutput,
 } from "../herdr-agent/herdr-agent.mjs";
 
 const EXAMPLE_DIR = dirname(fileURLToPath(import.meta.url));
@@ -32,17 +34,17 @@ const COORDINATION_PROMPT_PATH = resolve(
 );
 const AGENT_CONFIG = {
 	explorer: {
-		model: "openai-codex/gpt-5.6-sol",
+		model: "openai-codex/gpt-6-astra",
 		thinking: "low",
 		promptPath: resolve(EXAMPLE_DIR, "explorer.prompt.md"),
 	},
 	reviewer: {
-		model: "openai-codex/gpt-5.6-sol",
+		model: "openai-codex/gpt-6-astra",
 		thinking: "medium",
 		promptPath: resolve(EXAMPLE_DIR, "reviewer.prompt.md"),
 	},
 	worker: {
-		model: "openai-codex/gpt-5.6-sol",
+		model: "openai-codex/gpt-6-astra",
 		thinking: "high",
 		promptPath: resolve(EXAMPLE_DIR, "worker.prompt.md"),
 	},
@@ -121,7 +123,7 @@ export function parseSpawnAgentRequest(text) {
 		throw new Error("interactive must be a boolean when provided");
 	if (value.agent_type === "worker" && value.thinking !== undefined)
 		throw new Error(
-			"thinking is not configurable for worker; worker always uses openai-codex/gpt-5.6-sol with high thinking",
+			"thinking is not configurable for worker; worker always uses openai-codex/gpt-6-astra with high thinking",
 		);
 	if (value.thinking !== undefined && !THINKING_LEVELS.has(value.thinking))
 		throw new Error(
@@ -184,10 +186,9 @@ function hasLocalBranch(cwd, branch) {
 		"rev-parse",
 		"--verify",
 		"--quiet",
-		`refs/heads/${branch}`,
+		`refs/heads/${branch}^{commit}`,
 	]);
-	if (ref.code !== 0 || !ref.stdout) return false;
-	return runGit(cwd, ["cat-file", "-e", `${ref.stdout}^{commit}`]).code === 0;
+	return ref.code === 0 && Boolean(ref.stdout);
 }
 
 function selectBaseBranch(currentBranch, branches) {
@@ -442,7 +443,11 @@ export async function startHerdrAgent(
 ) {
 	while (true) {
 		try {
-			return await client.request("agent.start", params);
+			return await client.request(
+				"agent.start",
+				params,
+				apiWaitTimeout(params.timeout_ms ?? HERDR_START_TIMEOUT_MS),
+			);
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
 			if (!message.includes("not an available shell") || Date.now() >= deadline)
@@ -464,27 +469,13 @@ export async function waitForHerdrAgentReady(
 			latest = await getAgent(client, paneId);
 			if (latest.interactive_ready === true && latest.launch_pending !== true)
 				return latest;
-		} catch {
-			// The named agent is not addressable until Herdr finishes launch detection.
+		} catch (error) {
+			// Only an undetected agent is transient; preserve transport/protocol errors.
+			if (error?.code !== "agent_not_found") throw error;
 		}
 		await wait(100);
 	}
 	throw new Error(`${paneId} did not become an interactive Pi agent before timeout`);
-}
-
-function herdrResult({ created, label, panel, view }) {
-	if (view.assistant_entry?.stop_reason === "error") {
-		throw new Error(
-			view.assistant?.text || `${label} stopped with an assistant error`,
-		);
-	}
-	return JSON.stringify({
-		tab: created.tab.tab_id,
-		pane: created.root_pane.pane_id,
-		label,
-		status: panel.agent_status,
-		text: view.assistant?.text ?? null,
-	});
 }
 
 export async function runHerdrSpawn(
@@ -493,7 +484,6 @@ export async function runHerdrSpawn(
 	context,
 	client = new HerdrClient(context.socketPath),
 	reader = new SessionReader(),
-	waitForTurn = waitForPanel,
 ) {
 	const parent = await getAgent(client, context.parentPaneId);
 	if (parent.agent !== "pi") {
@@ -533,37 +523,40 @@ export async function runHerdrSpawn(
 			);
 		}
 		const baseline = await reader.read(readyPath);
-		await client.request("agent.prompt", {
-			target: paneId,
-			text: prepared.message,
-		});
-		const outcome = await waitForTurn(
+		const completedPanel = await promptAgent(
 			client,
-			reader,
-			paneId,
-			{
-				path: baseline.path,
-				leaf_id: baseline.leaf_id,
-				assistant_entry_id: baseline.assistant_entry?.id,
-				reply_id: baseline.assistant?.id,
-				require_new: true,
-			},
+			readyPanel,
+			prepared.message,
 			HERDR_TURN_TIMEOUT_MS,
-		);
-		if (outcome.timed_out) {
+		).catch((error) => {
+			if (error?.code !== "timeout") throw error;
 			throw new Error(
 				`${label} did not settle within ${HERDR_TURN_TIMEOUT_MS}ms; inspect Herdr pane ${paneId}`,
+				{ cause: error },
 			);
-		}
-		const panel = await getAgent(client, paneId);
-		const path = sessionPath(panel);
-		if (!path) {
+		});
+		if (!sessionPath(completedPanel)) {
 			throw new Error(
 				`${label} completed without reporting a Pi session path; inspect Herdr pane ${paneId}`,
 			);
 		}
-		const view = await reader.read(path);
-		return herdrResult({ created, label, panel, view });
+		const outcome = await settledOutput(
+			reader,
+			completedPanel,
+			{
+				path: baseline.path,
+				assistant_entry_id: baseline.assistant_entry?.id,
+				reply_id: baseline.assistant?.id,
+			},
+			true,
+			{ fullText: true },
+		);
+		return JSON.stringify({
+			tab: created.tab.tab_id,
+			label,
+			...outcome,
+			text: outcome.text ?? null,
+		});
 	} catch (error) {
 		if (started) throw error;
 		try {

@@ -7,6 +7,31 @@
 -- Or remove existing autocmds by their group name (which is prefixed with `lazyvim_` for the defaults)
 -- e.g. vim.api.nvim_del_augroup_by_name("lazyvim_wrap_spell")
 
+local intric_infrastructure_root = vim.fs.normalize(vim.fn.expand("~/workspace/intric-infrastructure"))
+local manual_format_files = {
+  [intric_infrastructure_root .. "/helm/intric-helm/values.schema.json"] = true,
+  [intric_infrastructure_root .. "/helm/intric-services/values.schema.json"] = true,
+}
+
+local function preserve_manual_formatting(buf)
+  local path = vim.fs.normalize(vim.api.nvim_buf_get_name(buf))
+  if manual_format_files[path] then
+    vim.b[buf].autoformat = false
+  end
+end
+
+local manual_json_format = vim.api.nvim_create_augroup("manual_json_format", { clear = true })
+
+vim.api.nvim_create_autocmd({ "BufReadPost", "BufNewFile", "BufEnter" }, {
+  group = manual_json_format,
+  pattern = "values.schema.json",
+  callback = function(ev)
+    preserve_manual_formatting(ev.buf)
+  end,
+})
+
+preserve_manual_formatting(0)
+
 local md_line_length = vim.api.nvim_create_augroup("md_line_length", { clear = true })
 
 -- tuido task lines keep all their metadata (due date, priority, …) on the
