@@ -17,5 +17,21 @@ finder_show_extensions = true
 exclude_casks = ["docker", "tailscale"]
 
 [sketchybar]
+automatic_clock = true
 center = ["clock"]
 right = ["battery", "volume", "wifi", "cpu", "memory", "toggle"]
+
+[zsh]
+configuration = "../../../../../../.zshrc"
+
+[kitty]
+configuration = "../../../../../../.config/kitty/kitty.conf"
+
+[atuin]
+native_configuration = "../../../../../../.config/atuin/config.toml"
+
+[starship]
+native_configuration = "../../../../../../.config/starship.toml"
+
+[neovim]
+native_configuration = "../../../../../../.config/nvim"

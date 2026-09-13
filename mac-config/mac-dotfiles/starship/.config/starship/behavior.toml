@@ -1,3 +1,5 @@
+palette = "macarchy_current"
+
 format = """
 $username\
 $hostname\
@@ -23,7 +25,7 @@ format = "[$branch]($style)"
 style = "bright-black"
 
 [git_status]
-format = "[[(*$conflicted$untracked$modified$staged$renamed$deleted)](218) ($ahead_behind$stashed)]($style)"
+format = "[[(*$conflicted$untracked$modified$staged$renamed$deleted)](purple) ($ahead_behind$stashed)]($style)"
 style = "cyan"
 conflicted = "​"
 untracked = "​"
@@ -44,3 +46,12 @@ style = "yellow"
 [python]
 format = "[$virtualenv]($style) "
 style = "bright-black"
+
+[palettes.macarchy_current]
+blue = "#7aa2f7"
+bright-black = "#414868"
+cyan = "#449dab"
+green = "#9ece6a"
+purple = "#ad8ee6"
+red = "#f7768e"
+yellow = "#e0af68"

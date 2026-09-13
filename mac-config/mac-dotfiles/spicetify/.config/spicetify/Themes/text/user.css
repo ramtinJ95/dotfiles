@@ -750,6 +750,8 @@ form .main-topBar-searchBar:placeholder-shown {
 
 /* playback bar itself */
 .main-nowPlayingBar-nowPlayingBar {
+    --text-subdued: var(--spice-text);
+    --essential-subdued: var(--spice-text);
     padding: 8px 8px 32px 8px;
     height: 96px;
 }
@@ -759,18 +761,24 @@ form .main-topBar-searchBar:placeholder-shown {
     bottom: calc(var(--panel-gap) + 8px);
     width: calc(100vw - var(--panel-gap) * 2 - 16px);
     justify-content: center;
+    column-gap: 2ch;
 }
 
 /* playback time indicators */
 .playback-bar__progress-time-elapsed {
     pointer-events: none;
-    width: unset;
 }
 .playback-bar__progress-time-elapsed::after {
-    content: " /";
+    content: "/";
+    position: absolute;
+    top: 0;
+    right: -1.5ch;
 }
 .playback-bar__progress-time-elapsed,
 .main-playbackBarRemainingTime-container {
+    /* Spotify positions timer text absolutely; its wrapper must not collapse. */
+    width: 7ch;
+    flex: 0 0 7ch;
     z-index: 9;
     padding-top: 2px;
 }
@@ -837,14 +845,9 @@ form .main-topBar-searchBar:placeholder-shown {
 .player-controls__buttons {
     margin-bottom: 0;
 }
-.player-controls__buttons,
-.main-nowPlayingBar-extraControls {
-    opacity: 0.25;
-    transition: opacity var(--border-transition);
-}
-.player-controls__buttons:hover,
-.main-nowPlayingBar-extraControls:hover {
-    opacity: 1;
+.main-nowPlayingBar-nowPlayingBar .main-playPauseButton-button,
+.main-nowPlayingBar-nowPlayingBar button[data-testid="control-button-playpause"] > span {
+    color: var(--spice-text);
 }
 .main-shuffleButton-button::before,
 button[data-testid="control-button-shuffle"] > span::after,
