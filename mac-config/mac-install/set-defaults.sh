@@ -54,6 +54,16 @@ defaults write com.apple.finder ShowPathbar -bool true
 defaults write com.apple.finder FXDefaultSearchScope -string "SCcf"
 defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
 
+# Kitty's launch-actions.conf opens these text/config files in Neovim.
+echo "→ Setting text-file associations to Neovim via Kitty..."
+if ! command -v duti >/dev/null 2>&1; then
+    echo "Error: duti is required; install it with brew install duti." >&2
+    exit 1
+fi
+for extension in md markdown txt text json yaml yml log csv; do
+    duti -s net.kovidgoyal.kitty ".$extension" all || exit 1
+done
+
 # Screenshot preferences
 echo "→ Setting screenshot preferences..."
 mkdir -p "$HOME/Screenshots"

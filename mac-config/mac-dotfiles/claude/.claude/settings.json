@@ -142,5 +142,10 @@
       "**Org-specific CLIs**: None configured"
     ]
   },
-  "voiceEnabled": true
+  "voiceEnabled": true,
+  "modelSettings": {
+    "claude-fable-5-1": {
+      "effortLevel": "low"
+    }
+  }
 }
