@@ -61,7 +61,18 @@
         },
         "compat": {
           "supportsOpenAIGrammarTools": true,
-          "supportsToolSearch": true
+          "supportsToolSearch": true,
+          "supportsMidConvoSystemMessages": true
+        },
+        "inputLimits": {
+          "images": {
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
         }
       },
       {
@@ -100,7 +111,18 @@
         "compat": {
           "supportsOpenAIGrammarTools": true,
           "supportsAdditionalTools": true,
-          "supportsToolSearch": true
+          "supportsToolSearch": true,
+          "supportsMidConvoSystemMessages": true
+        },
+        "inputLimits": {
+          "images": {
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
         }
       },
       {
@@ -139,7 +161,18 @@
         "compat": {
           "supportsOpenAIGrammarTools": true,
           "supportsAdditionalTools": true,
-          "supportsToolSearch": true
+          "supportsToolSearch": true,
+          "supportsMidConvoSystemMessages": true
+        },
+        "inputLimits": {
+          "images": {
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
         }
       },
       {
@@ -178,7 +211,18 @@
         "compat": {
           "supportsOpenAIGrammarTools": true,
           "supportsAdditionalTools": true,
-          "supportsToolSearch": true
+          "supportsToolSearch": true,
+          "supportsMidConvoSystemMessages": true
+        },
+        "inputLimits": {
+          "images": {
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
         }
       },
       {
@@ -221,13 +265,24 @@
         "compat": {
           "supportsOpenAIGrammarTools": true,
           "supportsAdditionalTools": true,
-          "supportsToolSearch": true
+          "supportsToolSearch": true,
+          "supportsMidConvoSystemMessages": true
+        },
+        "inputLimits": {
+          "images": {
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
         }
       }
     ],
-    "checkedAt": 1789463474376,
-    "lastModified": 1789043608000,
-    "etag": "W/\"70d0125796d9c9e1f7b38bbf967d0bc7\""
+    "checkedAt": 1790012272583,
+    "lastModified": 1789979786000,
+    "etag": "W/\"b77f14c4e92d579ef47bdd13a1cc6d04\""
   },
   "berget": {
     "models": [
@@ -285,37 +340,6 @@
         "name": "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
         "provider": "berget",
         "reasoning": false
-      },
-      {
-        "api": "openai-completions",
-        "baseUrl": "https://api.berget.ai/v1",
-        "compat": {
-          "supportsDeveloperRole": false
-        },
-        "contextWindow": 327680,
-        "cost": {
-          "cacheRead": 0,
-          "cacheWrite": 0,
-          "input": 1,
-          "output": 2
-        },
-        "id": "zai-org/GLM-5.2",
-        "input": [
-          "text"
-        ],
-        "maxTokens": 32768,
-        "name": "zai-org/GLM-5.2",
-        "provider": "berget",
-        "reasoning": true,
-        "thinkingLevelMap": {
-          "high": "high",
-          "low": null,
-          "max": "max",
-          "medium": null,
-          "minimal": null,
-          "off": "none",
-          "xhigh": null
-        }
       },
       {
         "api": "openai-completions",
@@ -414,6 +438,6 @@
         }
       }
     ],
-    "checkedAt": 1789463474348
+    "checkedAt": 1790012272538
   }
 }

@@ -140,6 +140,8 @@ run_stow_action() {
     local packages=()
     local package
     while IFS= read -r package; do
+        # Neovim is one writable personal tree, linked separately below.
+        [[ "$profile" == "mac" && "$list_name" == "mac" && "$package" == "nvim" ]] && continue
         packages+=("$package")
     done < <(package_names "$list_name")
     if [[ "${#packages[@]}" -eq 0 ]]; then
@@ -171,6 +173,21 @@ run_stow_action() {
     else
         info "$action $list_name -> $target"
         stow "${args[@]}" "${packages[@]}" || fail "$action failed for $list_name"
+    fi
+}
+
+link_native_neovim() {
+    local action="$1"
+    local source="$MAC_DIR/nvim/.config/nvim"
+    local target="$HOME/.config/nvim"
+    [[ -f "$source/init.lua" ]] || { fail "native Neovim source missing: $source"; return; }
+    if [[ -L "$target" ]]; then
+        [[ "$(readlink "$target")" == "$source" ]] || fail "$target links elsewhere; review Neovim ownership before setup"
+    elif [[ -e "$target" ]]; then
+        fail "$target already exists; review and migrate the personal Neovim tree before setup"
+    elif [[ "$action" != "simulate" ]]; then
+        mkdir -p "$HOME/.config" || { fail "cannot create Neovim config parent"; return; }
+        ln -s "$source" "$target" || fail "cannot link personal Neovim tree"
     fi
 }
 
@@ -215,10 +232,13 @@ run_profile() {
     case "$profile" in
         mac)
             check_mac_runtime_roots
+            link_native_neovim simulate
             [[ "$failures" -eq 0 ]] || return 1
             run_stow_action "$action" common "$HOME" mac
             [[ "$failures" -eq 0 ]] || return 1
             run_stow_action "$action" mac "$HOME" mac
+            [[ "$failures" -eq 0 ]] || return 1
+            link_native_neovim "$action"
             [[ "$failures" -eq 0 ]] || return 1
             seed_native_config "$COMMON_DIR/herdr/.config/herdr/config.toml" "$HOME/.config/herdr/config.toml"
             seed_native_config "$COMMON_DIR/pi/.pi/agent/settings.json" "$HOME/.pi/agent/settings.json"

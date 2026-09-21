@@ -523,4 +523,5 @@ export {
   shotStr,
   typeRefStr,
   typeStr,
+  waitForDocumentReady,
 };

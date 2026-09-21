@@ -2,6 +2,7 @@ claude
 codex
 git
 macarchy
+nvim
 remote-access
 spicetify
 tmux

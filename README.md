@@ -172,8 +172,8 @@ dotfiles/
 
 1. **Clone the repository:**
    ```bash
-   git clone git@github.com:ramtinJ95/dotfiles.git ~/workspace/dotfiles
-   cd ~/workspace/dotfiles
+   git clone git@github.com:ramtinJ95/dotfiles.git ~/dotfiles
+   cd ~/dotfiles
    ```
 
 2. **Choose your platform:**

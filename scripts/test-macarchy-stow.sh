@@ -45,12 +45,12 @@ mac="$fixture/mac-config/mac-dotfiles"
 home="$scratch/mac-home"
 mkdir -p "$fixture/scripts" "$fixture/packages" "$home" \
   "$common/herdr/.config/herdr" "$common/pi/.pi/agent/themes" \
-  "$mac/codex/.codex" "$mac/kitty/.config/kitty" \
+  "$mac/codex/.codex" "$mac/kitty/.config/kitty" "$mac/nvim/.config/nvim" \
   "$mac/spicetify/.config/spicetify/Themes/text"
 cp "$repo/scripts/dotfiles" "$fixture/scripts/dotfiles"
 cp -R "$repo/mac-config/mac-dotfiles/macarchy" "$mac/macarchy"
 printf 'herdr\npi\n' > "$fixture/packages/common.txt"
-printf 'codex\nmacarchy\nspicetify\n' > "$fixture/packages/mac.txt"
+printf 'codex\nmacarchy\nnvim\nspicetify\n' > "$fixture/packages/mac.txt"
 printf 'kitty\n' > "$fixture/packages/mac-legacy.txt"
 printf '[theme]\nname = "catppuccin"\n' > "$common/herdr/.config/herdr/config.toml"
 printf 'runtime\n' > "$common/herdr/.config/herdr/release-notes.json"
@@ -60,6 +60,7 @@ printf 'generated-fixture\n' > "$common/pi/.pi/agent/themes/macarchy-current.jso
 printf 'asset\n' > "$common/pi/.pi/agent/keybindings.json"
 printf 'model = "example"\n' > "$mac/codex/.codex/config.toml"
 printf 'do-not-install\n' > "$mac/kitty/.config/kitty/kitty.conf"
+printf 'require("config.lazy")\n' > "$mac/nvim/.config/nvim/init.lua"
 printf 'machine-specific\n' > "$mac/spicetify/.config/spicetify/config-xpui.ini"
 printf 'generated\n' > "$mac/spicetify/.config/spicetify/Themes/text/color.ini"
 printf 'body {}\n' > "$mac/spicetify/.config/spicetify/Themes/text/user.css"
@@ -69,6 +70,9 @@ for path in .config/herdr/config.toml .pi/agent/settings.json .codex/config.toml
     [[ -f "$home/$path" && ! -L "$home/$path" ]]
 done
 [[ -L "$home/.config/macarchy/profile.toml" ]]
+[[ "$(readlink "$home/.config/nvim")" == "$mac/nvim/.config/nvim" ]]
+printf 'personal edit\n' > "$home/.config/nvim/new-plugin.lua"
+[[ -f "$mac/nvim/.config/nvim/new-plugin.lua" ]]
 [[ -L "$home/.pi/agent/keybindings.json" ]]
 [[ ! -L "$home/.config/herdr" && ! -L "$home/.pi/agent/themes" ]]
 [[ ! -e "$home/.pi/agent/auth.json" ]]
@@ -83,6 +87,31 @@ printf '[theme]\nname = "local-choice"\n' > "$home/.config/herdr/config.toml"
 HOME="$home" "$fixture/scripts/dotfiles" restow mac
 grep -q local-choice "$home/.config/herdr/config.toml"
 grep -q catppuccin "$common/herdr/.config/herdr/config.toml"
+[[ -f "$home/.config/nvim/new-plugin.lua" && -L "$home/.config/nvim" ]]
+
+# Never merge an incumbent tree or retarget an unrelated Neovim link.
+for kind in directory link; do
+    blocked="$scratch/nvim-$kind"
+    mkdir -p "$blocked/.config"
+    if [[ "$kind" == directory ]]; then
+        mkdir "$blocked/.config/nvim"
+    else
+        ln -s "$scratch/foreign-nvim" "$blocked/.config/nvim"
+    fi
+    if HOME="$blocked" "$fixture/scripts/dotfiles" stow mac > "$scratch/nvim-blocked.log" 2>&1; then
+        echo "FAIL: foreign Neovim $kind was accepted" >&2
+        exit 1
+    fi
+    [[ ! -e "$blocked/.config/macarchy/profile.toml" ]]
+    grep -q 'review' "$scratch/nvim-blocked.log"
+done
+for seam in colors/macarchy-imported.lua lua/macarchy/current.lua lua/config/macarchy-theme.lua lua/plugins/colorscheme.lua; do
+    git -C "$repo" check-ignore --no-index -q "mac-config/mac-dotfiles/nvim/.config/nvim/$seam"
+done
+if git -C "$repo" check-ignore --no-index -q mac-config/mac-dotfiles/nvim/.config/nvim/lazy-lock.json; then
+    echo 'FAIL: personal Neovim lockfile is ignored' >&2
+    exit 1
+fi
 
 # Existing directory ownership is a decision, never an implicit migration.
 for path in .config/herdr .config/macarchy/themes; do

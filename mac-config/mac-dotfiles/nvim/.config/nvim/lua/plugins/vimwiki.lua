@@ -5,7 +5,7 @@ return {
     init = function()
       vim.g.vimwiki_list = {
         {
-          path = "/Users/ramtin/personal/Mywiki/",
+          path = vim.fn.expand("~/personal/Mywiki/"),
           syntax = "markdown",
           ext = ".md",
         },

@@ -1,0 +1,6 @@
+# Personal skhd bindings. Macarchy loads packaged defaults first.
+# Add a chord or replace its default command here, for example:
+# alt - return : open -a kitty
+# Disable defaults with [keybindings] disabled in the profile.
+# Only Macarchy's supported skhd binding syntax is accepted (no modes/includes).
+# Menu saves validate and reload keybindings only; invalid edits remain saved.

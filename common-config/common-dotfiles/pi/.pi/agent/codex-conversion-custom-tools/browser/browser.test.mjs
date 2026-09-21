@@ -93,7 +93,7 @@ test("tabs are structured, filterable, and byte-bounded", async () => {
 		url: `https://example.com/${"x".repeat(100)}`,
 	}));
 	const listed = await formatLocalResult(
-		{ action: "tabs", query: "linkedin", offset: 0 },
+		{ action: "tabs", pattern: "linkedin", offset: 0 },
 		JSON.stringify(tabs),
 	);
 	assert.ok(listed.tabs.every(tab => tab.title === "LinkedIn"));

@@ -9,11 +9,13 @@ arch-config/arch-dotfiles/claude/.claude/mcp-needs-auth-cache.json
 arch-config/arch-dotfiles/claude/.claude/paste-cache/
 arch-config/arch-dotfiles/claude/.claude/plugins/
 arch-config/arch-dotfiles/claude/.claude/policy-limits.json
+arch-config/arch-dotfiles/claude/.claude/policy-limits.json.stamp.json
 arch-config/arch-dotfiles/claude/.claude/projects/
 arch-config/arch-dotfiles/claude/.claude/remote-settings.json
 arch-config/arch-dotfiles/claude/.claude/session-env/
 arch-config/arch-dotfiles/claude/.claude/sessions/
 arch-config/arch-dotfiles/claude/.claude/shell-snapshots/
+arch-config/arch-dotfiles/claude/.claude/skills/synced/
 arch-config/arch-dotfiles/claude/.claude/tasks/
 arch-config/arch-dotfiles/claude/.claude/telemetry/
 arch-config/arch-dotfiles/claude/.claude/teams/session-*/
@@ -38,11 +40,13 @@ mac-config/mac-dotfiles/claude/.claude/mcp-needs-auth-cache.json
 mac-config/mac-dotfiles/claude/.claude/paste-cache/
 mac-config/mac-dotfiles/claude/.claude/plugins/
 mac-config/mac-dotfiles/claude/.claude/policy-limits.json
+mac-config/mac-dotfiles/claude/.claude/policy-limits.json.stamp.json
 mac-config/mac-dotfiles/claude/.claude/projects/
 mac-config/mac-dotfiles/claude/.claude/remote-settings.json
 mac-config/mac-dotfiles/claude/.claude/session-env/
 mac-config/mac-dotfiles/claude/.claude/sessions/
 mac-config/mac-dotfiles/claude/.claude/shell-snapshots/
+mac-config/mac-dotfiles/claude/.claude/skills/synced/
 mac-config/mac-dotfiles/claude/.claude/tasks/
 mac-config/mac-dotfiles/claude/.claude/telemetry/
 mac-config/mac-dotfiles/claude/.claude/teams/session-*/
@@ -65,3 +69,9 @@ mac-config/mac-dotfiles/claude/.claude/usage-data/
 **/macarchy-current.tmTheme
 **/macarchy-current.theme
 /mac-config/mac-dotfiles/spicetify/.config/spicetify/Themes/text/color.ini
+
+# Native Neovim behavior is portable; these four theme links are machine-local.
+/mac-config/mac-dotfiles/nvim/.config/nvim/colors/macarchy-imported.lua
+/mac-config/mac-dotfiles/nvim/.config/nvim/lua/macarchy/current.lua
+/mac-config/mac-dotfiles/nvim/.config/nvim/lua/config/macarchy-theme.lua
+/mac-config/mac-dotfiles/nvim/.config/nvim/lua/plugins/colorscheme.lua

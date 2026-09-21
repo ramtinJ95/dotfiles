@@ -1,4 +1,5 @@
 return {
   "shortcuts/no-neck-pain.nvim",
-  vim.keymap.set("n", "<leader>zz", ":NoNeckPain<CR>"),
+  keys = { { "<leader>zz", "<cmd>NoNeckPain<cr>", desc = "Toggle centered editing" } },
+  opts = {},
 }
