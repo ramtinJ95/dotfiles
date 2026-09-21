@@ -100,6 +100,11 @@
     ]
   },
   "effortLevel": "high",
+  "modelSettings": {
+    "claude-fable-5-1": {
+      "effortLevel": "medium"
+    }
+  },
   "voice": {
     "enabled": true,
     "mode": "hold"
@@ -142,10 +147,5 @@
       "**Org-specific CLIs**: None configured"
     ]
   },
-  "voiceEnabled": true,
-  "modelSettings": {
-    "claude-fable-5-1": {
-      "effortLevel": "low"
-    }
-  }
+  "voiceEnabled": true
 }

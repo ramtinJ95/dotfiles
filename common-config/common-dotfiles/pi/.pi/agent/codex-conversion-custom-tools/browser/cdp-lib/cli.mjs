@@ -83,7 +83,7 @@ export function isMainModule(moduleUrl) {
 
 const NEEDS_TARGET = new Set([
   'snap','snapshot','eval','shot','screenshot','shotel','screenshot-element','elementshot','html','nav','navigate',
-  'shotref','htmlref','find','net','network','click','clickref','clickxy','type','typeref','loadall','evalraw',
+  'shotref','htmlref','find','semantic','net','network','click','clickref','clickxy','type','typeref','loadall','evalraw',
 ]);
 
 async function runCli({ discoveryRecovery, startBrowser, usage } = {}) {

@@ -16,6 +16,7 @@ import {
   shotStr,
   typeRefStr,
   typeStr,
+  waitForDocumentReady,
 } from './actions.mjs';
 import { evalStr } from './evaluate.mjs';
 import { formatPageList, formatPagesJson, getPages, getTargetRef } from './pages.mjs';
@@ -32,6 +33,7 @@ import {
   sockPath,
 } from './runtime.mjs';
 import { findStr, snapshotStr } from './snapshot.mjs';
+import { semanticPage } from '../semantic-page.mjs';
 
 async function runDaemon(targetId, discoveryRecovery) {
   const sp = sockPath(targetId);
@@ -86,9 +88,10 @@ async function runDaemon(targetId, discoveryRecovery) {
   }
 
   // Handle a command
-  async function handleCommand({ cmd, args, targetRef }) {
+  async function handleCommand({ cmd, args, targetRef, signal }) {
     resetIdle();
     try {
+      signal?.throwIfAborted();
       let result;
       switch (cmd) {
         case 'list': {
@@ -106,8 +109,19 @@ async function runDaemon(targetId, discoveryRecovery) {
           result = formatPagesJson(pages);
           break;
         }
-        case 'snap': case 'snapshot': result = await snapshotStr(cdp, sessionId, elementRefs, targetRef || await getTargetRef(cdp, targetId), args[0], args[1]); break;
+        case 'snap': case 'snapshot':
+          if (args[2] === 'ready') await waitForDocumentReady(cdp, sessionId);
+          result = await snapshotStr(cdp, sessionId, elementRefs, targetRef || await getTargetRef(cdp, targetId), args[0], args[1]);
+          break;
         case 'find': result = await findStr(cdp, sessionId, elementRefs, targetRef || await getTargetRef(cdp, targetId), args[0], args[1], args[2]); break;
+        case 'semantic': {
+          const request = JSON.parse(args[0]);
+          if (request.wait_ready) await waitForDocumentReady(cdp, sessionId);
+          result = JSON.stringify(await semanticPage(cdp, sessionId, elementRefs, {
+            ...request, ref_id: targetRef || await getTargetRef(cdp, targetId),
+          }, { signal }));
+          break;
+        }
         case 'eval': result = await evalStr(cdp, sessionId, args[0]); break;
         case 'shot': case 'screenshot': result = await shotStr(cdp, sessionId, args[0], targetId); break;
         case 'shotel': case 'screenshot-element': case 'elementshot': result = await shotElementStr(cdp, sessionId, args[0], args[1], targetId); break;
@@ -145,6 +159,11 @@ async function runDaemon(targetId, discoveryRecovery) {
   // Response: { "id": <number>, "ok": <boolean>, "result": "<string>" }
   //           or { "id": <number>, "ok": false, "error": "<message>" }
   const server = net.createServer((conn) => {
+    const controller = new AbortController();
+    const cancel = () => controller.abort();
+    conn.on('end', cancel);
+    conn.on('close', cancel);
+    conn.on('error', cancel);
     let buf = '';
     conn.on('data', (chunk) => {
       buf += chunk.toString();
@@ -159,7 +178,8 @@ async function runDaemon(targetId, discoveryRecovery) {
           conn.write(JSON.stringify({ ok: false, error: 'Invalid JSON request', id: null }) + '\n');
           continue;
         }
-        enqueueCommand(req).then((res) => {
+        enqueueCommand({ ...req, signal: controller.signal }).then((res) => {
+          if (conn.destroyed) return;
           const payload = JSON.stringify({ ...res, id: req.id }) + '\n';
           if (res.stopAfter) conn.end(payload, shutdown);
           else conn.write(payload);

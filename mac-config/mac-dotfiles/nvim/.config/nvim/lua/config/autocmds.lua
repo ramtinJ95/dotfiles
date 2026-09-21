@@ -1,82 +1,68 @@
--- Autocmds are automatically loaded on the VeryLazy event
--- Default autocmds that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/autocmds.lua
---
--- Add any additional autocmds here
--- with `vim.api.nvim_create_autocmd`
---
--- Or remove existing autocmds by their group name (which is prefixed with `lazyvim_` for the defaults)
--- e.g. vim.api.nvim_del_augroup_by_name("lazyvim_wrap_spell")
-
-local intric_infrastructure_root = vim.fs.normalize(vim.fn.expand("~/workspace/intric-infrastructure"))
+-- Preserve hand-maintained schema formatting in the infrastructure repository.
+local infrastructure_root = vim.fs.normalize(vim.fn.expand("~/workspace/intric-infrastructure"))
 local manual_format_files = {
-  [intric_infrastructure_root .. "/helm/intric-helm/values.schema.json"] = true,
-  [intric_infrastructure_root .. "/helm/intric-services/values.schema.json"] = true,
+  [infrastructure_root .. "/helm/intric-helm/values.schema.json"] = true,
+  [infrastructure_root .. "/helm/intric-services/values.schema.json"] = true,
 }
 
 local function preserve_manual_formatting(buf)
-  local path = vim.fs.normalize(vim.api.nvim_buf_get_name(buf))
-  if manual_format_files[path] then
+  if manual_format_files[vim.fs.normalize(vim.api.nvim_buf_get_name(buf))] then
     vim.b[buf].autoformat = false
   end
 end
 
-local manual_json_format = vim.api.nvim_create_augroup("manual_json_format", { clear = true })
-
 vim.api.nvim_create_autocmd({ "BufReadPost", "BufNewFile", "BufEnter" }, {
-  group = manual_json_format,
+  group = vim.api.nvim_create_augroup("manual_json_format", { clear = true }),
   pattern = "values.schema.json",
   callback = function(ev)
     preserve_manual_formatting(ev.buf)
   end,
 })
-
 preserve_manual_formatting(0)
 
-local md_line_length = vim.api.nvim_create_augroup("md_line_length", { clear = true })
+-- Keep todo shorthand expansion and syncing local to the todo tree.
+local todo_root = vim.fn.expand("~/personal/todo") .. "/"
+local group = vim.api.nvim_create_augroup("tuido_fmt", { clear = true })
 
--- tuido task lines keep all their metadata (due date, priority, …) on the
--- task line itself; hard-wrapping silently demotes fields to prose. Todo
--- files get visual-only soft wrap instead of textwidth.
-local todo_root = vim.fn.expand("~/personal/todo")
+local function is_todo(buf)
+  return vim.startswith(vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buf), ":p"), todo_root)
+end
 
 vim.api.nvim_create_autocmd("FileType", {
-  group = md_line_length,
+  group = group,
   pattern = "markdown",
   callback = function(ev)
-    local path = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(ev.buf), ":p")
-    if vim.startswith(path, todo_root .. "/") then
-      vim.opt_local.wrap = true
-      vim.opt_local.linebreak = true
-      vim.opt_local.breakindent = true
+    if not is_todo(ev.buf) then
+      vim.bo[ev.buf].textwidth = 80
+      vim.opt_local.formatoptions:append("t")
       return
     end
-    vim.opt_local.textwidth = 80
-    vim.opt_local.formatoptions:append("t")
+    -- Metadata must stay on its task line; wrap visually, never in the file.
+    vim.bo[ev.buf].textwidth = 0
+    vim.bo[ev.buf].formatoptions = vim.bo[ev.buf].formatoptions:gsub("[tc]", "")
+    vim.opt_local.wrap = true
+    vim.opt_local.linebreak = true
+    vim.opt_local.breakindent = true
   end,
 })
 
--- Expand tuido shorthand (:p2, :due monday, …) into the emoji dialect on save
--- by filtering the buffer through `tuido fmt -`. BufWritePre keeps it in the
--- same undo step as the save; a nonzero exit (e.g. conflict markers) leaves
--- the buffer untouched.
-local tuido_fmt = vim.api.nvim_create_augroup("tuido_fmt", { clear = true })
-
 vim.api.nvim_create_autocmd("BufWritePre", {
-  group = tuido_fmt,
+  group = group,
   pattern = "*.md",
   callback = function(ev)
-    local path = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(ev.buf), ":p")
-    if not vim.startswith(path, todo_root .. "/") then
+    if not is_todo(ev.buf) then
       return
     end
     if vim.fn.executable("tuido") == 0 then
+      vim.notify("tuido fmt: executable missing from PATH; saving without expansion", vim.log.levels.ERROR)
       return
     end
     local lines = vim.api.nvim_buf_get_lines(ev.buf, 0, -1, false)
-    local res = vim.system({ "tuido", "fmt", "-" },
-      { stdin = table.concat(lines, "\n") .. "\n" }):wait()
+    local res = vim.system({ "tuido", "fmt", "-" }, {
+      stdin = table.concat(lines, "\n") .. "\n",
+    }):wait()
     if res.code ~= 0 then
-      vim.notify("tuido fmt: " .. vim.trim(res.stderr or ""), vim.log.levels.WARN)
+      vim.notify("tuido fmt: " .. vim.trim(res.stderr or "") .. "; saving without expansion", vim.log.levels.ERROR)
       return
     end
     local out = vim.split(res.stdout, "\n")
@@ -89,20 +75,19 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   end,
 })
 
--- After the write lands, commit the file and push in the background, so edits
--- made in the editor sync like edits made through tuido commands. Fire and
--- forget: tuido never blocks the editor on the network.
 vim.api.nvim_create_autocmd("BufWritePost", {
-  group = tuido_fmt,
+  group = group,
   pattern = "*.md",
   callback = function(ev)
-    local path = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(ev.buf), ":p")
-    if not vim.startswith(path, todo_root .. "/") then
+    if not is_todo(ev.buf) then
       return
     end
-    if vim.fn.executable("tuido") == 0 then
-      return
-    end
-    vim.system({ "tuido", "_commit", path })
+    vim.system({ "tuido", "_commit", vim.api.nvim_buf_get_name(ev.buf) }, {}, function(res)
+      if res.code ~= 0 then
+        vim.schedule(function()
+          vim.notify("tuido _commit: " .. vim.trim(res.stderr or ""), vim.log.levels.ERROR)
+        end)
+      end
+    end)
   end,
 })

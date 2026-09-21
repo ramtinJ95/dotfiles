@@ -6,6 +6,7 @@ import { mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises"
 import { hostname, tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { rankCandidates, systemOne, redact, safeUrl } from "./typesafe.mjs";
 
 const TOOL_DIR = dirname(fileURLToPath(import.meta.url));
 const CDP_PATH = join(TOOL_DIR, "cdp.mjs");
@@ -28,13 +29,14 @@ const fields = (...names) => new Set(["action", "host", ...names]);
 const ACTION_FIELDS = {
 	help: fields(),
 	start: fields(),
-	tabs: fields("query", "offset"),
-	open: fields("ref_id", "url", "lineno", "response_length"),
-	find: fields("ref_id", "pattern", "lineno", "response_length"),
-	click: fields("ref_id", "id", "selector", "x", "y"),
-	type: fields("ref_id", "id", "text"),
-	screenshot: fields("ref_id", "id", "selector"),
-	html: fields("ref_id", "id", "selector"),
+	tabs: fields("query", "pattern", "offset"),
+	open: fields("ref_id", "url", "query", "lineno", "response_length"),
+	find: fields("ref_id", "query", "pattern", "lineno", "response_length"),
+	click: fields("ref_id", "target", "id", "selector", "x", "y"),
+	type: fields("ref_id", "target", "id", "text"),
+	screenshot: fields("ref_id", "target", "id", "selector"),
+	html: fields("ref_id", "target", "id", "selector"),
+	verify: fields("ref_id", "claims"),
 	navigate: fields("ref_id", "url"),
 	evaluate: fields("ref_id", "expression"),
 	network: fields("ref_id"),
@@ -46,7 +48,7 @@ const ACTION_FIELDS = {
 };
 const OPERATION_ORDER = [
 	"start", "tabs", "navigate", "open", "find", "click", "type",
-	"screenshot", "html", "evaluate", "network", "load_all", "raw",
+	"screenshot", "html", "verify", "evaluate", "network", "load_all", "raw",
 	"read_result", "discard_result", "stop",
 ];
 const BATCH_FIELDS = new Set(["host", "response_length", ...OPERATION_ORDER]);
@@ -132,33 +134,42 @@ function parseActionRequest(text) {
 	const routed = (request) => (host ? { ...request, host } : request);
 
 	if (["help", "start"].includes(value.action)) return routed({ action: value.action });
-	if (value.action === "tabs")
+	if (value.action === "tabs") {
+		if (value.query !== undefined && value.pattern !== undefined) throw new Error("tabs accepts query or pattern, not both");
 		return routed({
 			action: "tabs",
 			...(optionalString(value.query, "query") ? { query: value.query.trim() } : {}),
+			...(optionalString(value.pattern, "pattern") ? { pattern: value.pattern.trim() } : {}),
 			offset: parseOffset(value.offset),
 		});
+	}
 	if (value.action === "open") {
 		const refId = optionalString(value.ref_id, "ref_id");
 		const url = optionalString(value.url, "url");
 		if (Boolean(refId) === Boolean(url)) throw new Error("open requires exactly one of ref_id or url");
+		const query = optionalString(value.query, "query");
 		return routed(url
-			? { action: "open", url }
+			? { action: "open", url, ...(query ? { query } : {}), lineno: parseLine(value.lineno), response_length: parseResponseLength(value.response_length) }
 			: {
 				action: "open",
 				ref_id: refId,
+				...(query ? { query } : {}),
 				lineno: parseLine(value.lineno),
 				response_length: parseResponseLength(value.response_length),
 			});
 	}
-	if (value.action === "find")
+	if (value.action === "find") {
+		const query = optionalString(value.query, "query");
+		const pattern = optionalString(value.pattern, "pattern");
+		if (Boolean(query) === Boolean(pattern)) throw new Error("find requires exactly one of query or pattern");
 		return routed({
 			action: "find",
 			ref_id: parseRef(value.ref_id),
-			pattern: requiredString(value.pattern, "pattern"),
+			...(query ? { query } : { pattern }),
 			lineno: parseLine(value.lineno),
 			response_length: parseResponseLength(value.response_length),
 		});
+	}
 	if (value.action === "read_result")
 		return routed({ action: "read_result", handle: parseHandle(value.handle), offset: parseOffset(value.offset) });
 	if (value.action === "discard_result")
@@ -170,6 +181,13 @@ function parseActionRequest(text) {
 		});
 
 	const refId = parseRef(value.ref_id);
+	if (value.action === "verify") {
+		if (!Array.isArray(value.claims) || !value.claims.length || value.claims.length > 32)
+			throw new Error("verify requires 1 to 32 claims");
+		const claims = value.claims.map(claim => requiredString(claim, "claim"));
+		if (Buffer.byteLength(JSON.stringify(claims)) > 16_000) throw new Error("verify claims exceed 16 KB; split the claims");
+		return routed({ action: "verify", ref_id: refId, claims });
+	}
 	if (value.action === "network") return routed({ action: "network", ref_id: refId });
 	if (value.action === "navigate")
 		return routed({ action: "navigate", ref_id: refId, url: requiredString(value.url, "url") });
@@ -177,27 +195,31 @@ function parseActionRequest(text) {
 		return routed({ action: "evaluate", ref_id: refId, expression: requiredString(value.expression, "expression") });
 	if (value.action === "click") {
 		const id = parseElementId(value.id);
+		const target = optionalString(value.target, "target");
 		const selector = optionalString(value.selector, "selector");
 		const hasX = value.x !== undefined;
 		const hasY = value.y !== undefined;
 		if (hasX !== hasY) throw new Error("click coordinates require both x and y");
 		if (hasX && (![value.x, value.y].every(item => typeof item === "number" && Number.isFinite(item))))
 			throw new Error("x and y must be finite CSS-pixel numbers");
-		const modes = Number(id !== undefined) + Number(Boolean(selector)) + Number(hasX);
-		if (modes !== 1) throw new Error("click requires exactly one of id, selector, or x+y");
-		return routed({ action: "click", ref_id: refId, ...(id ? { id } : {}), ...(selector ? { selector } : {}), ...(hasX ? { x: value.x, y: value.y } : {}) });
+		const modes = Number(id !== undefined) + Number(Boolean(selector)) + Number(hasX) + Number(Boolean(target));
+		if (modes !== 1) throw new Error("click requires exactly one of target, id, selector, or x+y");
+		return routed({ action: "click", ref_id: refId, ...(target ? { target } : {}), ...(id ? { id } : {}), ...(selector ? { selector } : {}), ...(hasX ? { x: value.x, y: value.y } : {}) });
 	}
 	if (value.action === "type") {
 		if (typeof value.text !== "string" || value.text.length === 0)
 			throw new Error("text must be a non-empty string");
 		const id = parseElementId(value.id);
-		return routed({ action: "type", ref_id: refId, ...(id ? { id } : {}), text: value.text });
+		const target = optionalString(value.target, "target");
+		if (id && target) throw new Error("type accepts target or id, not both");
+		return routed({ action: "type", ref_id: refId, ...(target ? { target } : {}), ...(id ? { id } : {}), text: value.text });
 	}
 	if (value.action === "screenshot" || value.action === "html") {
 		const id = parseElementId(value.id);
 		const selector = optionalString(value.selector, "selector");
-		if (id && selector) throw new Error(`${value.action} accepts id or selector, not both`);
-		return routed({ action: value.action, ref_id: refId, ...(id ? { id } : {}), ...(selector ? { selector } : {}) });
+		const target = optionalString(value.target, "target");
+		if ([id, selector, target].filter(Boolean).length > 1) throw new Error(`${value.action} accepts only one of target, id, or selector`);
+		return routed({ action: value.action, ref_id: refId, ...(target ? { target } : {}), ...(id ? { id } : {}), ...(selector ? { selector } : {}) });
 	}
 	if (value.action === "load_all") {
 		const interval = value.interval_ms ?? 1500;
@@ -273,12 +295,16 @@ async function artifactPath(request) {
 }
 
 export async function cliInvocation(request) {
+	if ((!request.url && request.query && ["open", "find"].includes(request.action)) || request.target || request.action === "verify") {
+		const file = request.action === "screenshot" ? await artifactPath(request) : undefined;
+		return { args: ["semantic", request.ref_id, JSON.stringify({ ...request, ...(file ? { file } : {}) })], ...(file ? { file } : {}) };
+	}
 	switch (request.action) {
 		case "start": return { args: ["start"] };
 		case "tabs": return { args: ["tabsjson"] };
 		case "open": return request.url
 			? { args: ["open", request.url] }
-			: { args: ["snap", request.ref_id, String(request.lineno), request.response_length] };
+			: { args: ["snap", request.ref_id, String(request.lineno), request.response_length, ...(request.wait_ready ? ["ready"] : [])] };
 		case "find": return { args: ["find", request.ref_id, request.pattern, String(request.lineno), request.response_length] };
 		case "evaluate": return { args: ["eval", request.ref_id, request.expression] };
 		case "screenshot": {
@@ -454,6 +480,8 @@ function boundPage(page) {
 		url: page.url,
 		lineno: page.lineno,
 		...(page.pattern ? { pattern: page.pattern } : {}),
+		...(page.query ? { query: page.query } : {}),
+		...(page.semantic ? { semantic: page.semantic } : {}),
 	};
 	const elements = new Map((page.elements || []).map(element => [element.id, element]));
 	const content = [];
@@ -491,13 +519,29 @@ function parseJsonOutput(stdout, action) {
 	}
 }
 
-export async function formatLocalResult(request, stdout, file) {
+export async function formatLocalResult(request, stdout, file, { evaluate = systemOne } = {}) {
+	if (request.target) {
+		const parsed = parseJsonOutput(stdout, request.action);
+		const { target, ...exact } = request;
+		const result = await formatLocalResult({ ...exact, id: parsed.id }, parsed.result, file);
+		return { ...result, id: parsed.id, semantic: parsed.semantic };
+	}
+	if (request.action === "verify") return parseJsonOutput(stdout, "verify");
 	if (request.action === "tabs") {
 		let tabs = parseJsonOutput(stdout, "tabs");
 		if (!Array.isArray(tabs)) throw new Error("tabs result is not an array");
-		if (request.query) {
-			const query = request.query.toLowerCase();
+		let semantic;
+		if (request.pattern) {
+			const query = request.pattern.toLowerCase();
 			tabs = tabs.filter(tab => `${tab.title}\n${tab.url}`.toLowerCase().includes(query));
+		}
+		if (request.query) {
+			const ranking = await rankCandidates(request.query, tabs.map((tab, i) => ({ id: `t${i}`, title: redact(tab.title), url: safeUrl(tab.url) })), {
+				intent: "finding a browser tab from its title and URL only", evaluate,
+			});
+			const matches = ranking.ranked.filter(candidate => candidate.probability > 0.3);
+			semantic = { ...ranking.telemetry, candidates_evaluated: tabs.length, scope: "tab titles and URLs only", status: matches[0]?.probability >= 0.7 ? "matched" : matches.length ? "uncertain" : "not_found" };
+			tabs = matches.map(candidate => ({ ...tabs[Number(candidate.id.slice(1))], probability: candidate.probability }));
 		}
 		if (request.offset > tabs.length)
 			throw new Error(`offset ${request.offset} exceeds tab count ${tabs.length}`);
@@ -507,6 +551,7 @@ export async function formatLocalResult(request, stdout, file) {
 				ref_id: tab.ref_id,
 				title: String(tab.title || "").slice(0, 500),
 				url: String(tab.url || "").slice(0, 8_000),
+				...(tab.probability !== undefined ? { probability: tab.probability } : {}),
 			};
 			if (Buffer.byteLength(JSON.stringify({ tabs: [...kept, compact] })) > OUTPUT_BUDGET_BYTES) break;
 			kept.push(compact);
@@ -515,6 +560,7 @@ export async function formatLocalResult(request, stdout, file) {
 		return {
 			offset: request.offset,
 			tabs: kept,
+			...(semantic ? { semantic } : {}),
 			...(remaining > 0 ? { truncated: true, omitted_tabs: remaining, next_offset: request.offset + kept.length } : {}),
 		};
 	}
@@ -552,14 +598,15 @@ export function browserHelp() {
 		host: "optional desktop | laptop | server",
 		batching: "operations are non-empty arrays; independent items may share one call; dependent steps use separate calls",
 		actions: {
-			tabs: "[{query?, offset?}] -> ref_id/title/url",
-			open: "[{ref_id, lineno?} inspect | {url} new tab]",
-			find: "[{ref_id, pattern, lineno?}]",
-			click: "[{ref_id, id | selector | x+y}]",
-			type: "[{ref_id, text, id?}]; id focuses first",
-			screenshot: "[{ref_id, id? | selector?}] -> local file",
+			tabs: "[{query? | pattern?, offset?}]; query ranks tabs with TypeSafe",
+			open: "[{ref_id | url, query?, lineno?}]; query returns relevant evidence; URL opens and reads",
+			find: "[{ref_id, query | pattern, lineno?}]; query is semantic, pattern is literal",
+			click: "[{ref_id, target | id | selector | x+y}]; target describes an element",
+			type: "[{ref_id, text, target? | id?}]; target resolves and types in one call",
+			screenshot: "[{ref_id, target? | id? | selector?}] -> local file",
 			navigate: "[{ref_id, url}]",
-			html: "[{ref_id, id? | selector?}]",
+			html: "[{ref_id, target? | id? | selector?}]",
+			verify: "[{ref_id, claims: [string, ...]}] -> batched TypeSafe probabilities",
 			evaluate: "[{ref_id, expression}]",
 			network: "[{ref_id}]",
 			load_all: "[{ref_id, selector, interval_ms?}]",
@@ -570,7 +617,8 @@ export function browserHelp() {
 			discard_result: "[{handle}]; same host",
 		},
 		notes: [
-			"Prefer tabs -> open -> click/type; ref_id/id/lineno follow web__run vocabulary",
+			"Prefer query/target for semantic work; exact IDs/selectors need no model",
+			"TypeSafe uses TYPESAFE_API_KEY on executing host; service errors are explicit",
 			"Continue with next_lineno or next_offset; top-level response_length is short|medium|long",
 			"Ask before unfamiliar low-trust navigation or consequential external actions unless already authorized",
 			"Never close the shared browser after a task",
@@ -578,14 +626,26 @@ export function browserHelp() {
 	};
 }
 
-async function executeOperation(request) {
+export async function executeOperation(request, { run = runProgram } = {}) {
 	if (request.action === "read_result") return readCachedResult(request);
 	if (request.action === "discard_result") return discardCachedResult(request.handle);
 	const invocation = await cliInvocation(request);
-	const result = await runProgram(process.execPath, [CDP_PATH, ...invocation.args]);
-	if (result.code !== 0)
-		throw new Error(cleanFailure(result.stderr || result.stdout || `browser command exited with code ${result.code}`));
-	return await formatLocalResult(request, result.stdout, invocation.file);
+	const result = await run(process.execPath, [CDP_PATH, ...invocation.args]);
+	if (result.code !== 0) {
+		const message = cleanFailure(result.stderr || result.stdout || `browser command exited with code ${result.code}`);
+		if (message.includes("Unknown command: semantic"))
+			throw new Error(`Tab bridge predates TypeSafe support. Use stop:[{ref_id:"${request.ref_id}"}] on this host, then retry; this stops the bridge, not the browser tab`);
+		throw new Error(message);
+	}
+	const formatted = await formatLocalResult(request, result.stdout, invocation.file);
+	if (request.action === "open" && request.url) {
+		try {
+			return await executeOperation({ action: "open", ref_id: formatted.ref_id, wait_ready: true, lineno: request.lineno, response_length: request.response_length, ...(request.query ? { query: request.query } : {}) }, { run });
+		} catch (error) {
+			throw new Error(`Tab ${formatted.ref_id} was opened, but reading it failed: ${error.message}. Retry open with this ref_id, not the URL`);
+		}
+	}
+	return formatted;
 }
 
 async function executeBatch(request) {

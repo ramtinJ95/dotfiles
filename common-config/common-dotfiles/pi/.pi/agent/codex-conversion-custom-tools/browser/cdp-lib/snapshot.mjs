@@ -44,6 +44,7 @@ const INTERACTIVE_ROLES = new Set([
   'spinbutton', 'switch', 'tab', 'textbox', 'treeitem',
 ]);
 const SNAPSHOT_LIMITS = { short: 60, medium: 140, long: 300 };
+const ELEMENT_STATES = new Set(['checked', 'selected', 'expanded', 'disabled', 'required', 'readonly', 'invalid', 'pressed']);
 const NEXT_ELEMENT_IDS = new WeakMap();
 
 function normalizeSnapshotText(value) {
@@ -58,9 +59,7 @@ function splitSnapshotText(value, max = 700) {
   return parts;
 }
 
-async function snapshotData(cdp, sid, elementRefs, options = {}) {
-  const lineno = positiveInteger(options.lineno ?? '1', 'line cursor');
-  const responseLength = snapshotResponseLength(options.responseLength);
+async function captureSnapshot(cdp, sid, elementRefs, refId) {
   const { nodes } = await cdp.send('Accessibility.getFullAXTree', {}, sid);
   const nodesById = new Map(nodes.map(node => [node.nodeId, node]));
   const childrenByParent = new Map();
@@ -102,20 +101,25 @@ async function snapshotData(cdp, sid, elementRefs, options = {}) {
     visited.add(node.nodeId);
     const role = node.role?.value || '';
     const name = normalizeSnapshotText(node.name?.value ?? '');
-    const value = node.value?.value;
+    const protectedField = node.properties?.some(property => property.name === 'protected' && property.value?.value);
+    const value = protectedField ? undefined : node.value?.value;
     let renderedName = parentName;
     if (!node.ignored && shouldShowAxNode(node, true)) {
       const interactive = INTERACTIVE_ROLES.has(role) && node.backendDOMNodeId;
       if (interactive) {
+        const states = Object.fromEntries((node.properties || []).filter(property => ELEMENT_STATES.has(property.name)).map(property => [property.name, property.value?.value]));
+        const href = node.properties?.find(property => property.name === 'url')?.value?.value;
         const element = {
           id: nextElementId(),
           role,
           ...(name ? { name } : {}),
           ...(value === '' || value == null ? {} : { value }),
+          ...(Object.keys(states).length ? { states } : {}),
+          ...(href ? { href } : {}),
         };
         elementRefs.set(element.id, node.backendDOMNodeId);
         elements.push(element);
-        addLine(`[${element.id}] ${role}${name ? ` ${name}` : ''}${value === '' || value == null ? '' : ` = ${JSON.stringify(value)}`}`, element, 'interactive');
+        addLine(`[${element.id}] ${role}${name ? ` ${name}` : ''}${value === '' || value == null ? '' : ` = ${JSON.stringify(value)}`}${Object.keys(states).length ? ` states=${JSON.stringify(states)}` : ''}`, element, 'interactive');
         renderedName = name;
       } else if (role === 'StaticText') {
         if (name && name !== parentName) addStaticText(name);
@@ -134,26 +138,39 @@ async function snapshotData(cdp, sid, elementRefs, options = {}) {
   for (const node of nodes) visit(node, 0);
 
   const metadata = JSON.parse(await evalStr(cdp, sid, '({title: document.title, url: location.href})'));
+  return { ref_id: refId, title: metadata.title, url: metadata.url, content: lines, elements };
+}
+
+function sliceSnapshot(snapshot, options = {}) {
+  const lineno = positiveInteger(options.lineno ?? '1', 'line cursor');
+  const responseLength = snapshotResponseLength(options.responseLength);
   const pattern = options.pattern?.toLowerCase();
   const matching = pattern
-    ? lines.filter(line => line.text.toLowerCase().includes(pattern))
-    : lines;
+    ? snapshot.content.filter(line => line.text.toLowerCase().includes(pattern))
+    : snapshot.content;
   const start = lineno - 1;
   const limit = SNAPSHOT_LIMITS[responseLength];
   const content = matching.slice(start, start + limit).map(({ kind: _kind, ...line }) => line);
   const visibleIds = new Set(content.map(line => line.element_id).filter(Boolean));
-  const visibleElements = elements.filter(element => visibleIds.has(element.id));
+  const visibleElements = snapshot.elements.filter(element => visibleIds.has(element.id));
   const hasMore = start + content.length < matching.length;
   return {
-    ref_id: options.refId,
-    title: metadata.title,
-    url: metadata.url,
+    ref_id: snapshot.ref_id,
+    title: snapshot.title,
+    url: snapshot.url,
     lineno: start + 1,
     content,
     elements: visibleElements,
     ...(pattern ? { pattern: options.pattern } : {}),
     ...(hasMore ? { next_lineno: start + content.length + 1 } : {}),
   };
+}
+
+async function snapshotData(cdp, sid, elementRefs, options = {}) {
+  // Validate before acquiring or invalidating element refs.
+  positiveInteger(options.lineno ?? '1', 'line cursor');
+  snapshotResponseLength(options.responseLength);
+  return sliceSnapshot(await captureSnapshot(cdp, sid, elementRefs, options.refId), options);
 }
 
 async function snapshotStr(cdp, sid, elementRefs, refId, lineno, responseLength) {
@@ -190,4 +207,4 @@ function snapshotResponseLength(value) {
   return resolved;
 }
 
-export { findStr, positiveInteger, snapshotData, snapshotResponseLength, snapshotStr };
+export { captureSnapshot, sliceSnapshot, findStr, positiveInteger, snapshotData, snapshotResponseLength, snapshotStr };

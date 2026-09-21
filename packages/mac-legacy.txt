@@ -5,7 +5,6 @@ bat
 btop
 eza
 kitty
-nvim
 sketchybar
 skhd
 starship

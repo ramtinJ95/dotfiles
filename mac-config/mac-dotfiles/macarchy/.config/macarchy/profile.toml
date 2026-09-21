@@ -35,3 +35,6 @@ native_configuration = "../../../../../../.config/starship.toml"
 
 [neovim]
 native_configuration = "../../../../../../.config/nvim"
+
+[keybindings]
+override = "overrides/keybindings.skhdrc"

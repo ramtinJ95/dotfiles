@@ -1,6 +1,6 @@
-usage = '''await tools.browser("help") // Logged-in browser with web__run-style operation arrays/refs; optional host: desktop|laptop|server; ask before consequential external actions'''
-description = '''Inspect and control logged-in browser tabs locally or over SSH. Batched operation arrays use web__run's ref_id/id/lineno/response_length vocabulary while returning live accessibility content and interactive elements; expert CDP actions remain available.'''
-output = "Bounded JSON with ref_id, line content, numbered elements, continuations, and local screenshot path where relevant."
+usage = '''await tools.browser("help") // TypeSafe-powered logged-in browser: query ranks tabs/finds evidence, target resolves click/type/html/screenshot, verify checks claims; exact refs still work; optional host: desktop|laptop|server; ask before consequential external actions'''
+description = '''Inspect and control logged-in browser tabs locally or over SSH. Prefer natural-language query/target for semantic work: TypeSafe ranks tabs, retrieves page evidence, selects existing element refs, and checks claims. Batched operation arrays retain web__run's ref_id/id/lineno/response_length vocabulary; exact CDP actions remain deterministic.'''
+output = "Bounded JSON with original evidence/ref_id/element IDs, semantic probabilities and timing/token telemetry, continuations, and local screenshot paths."
 command = "./browser/browser.mjs"
 input = "stdin"
 defer_loading = false
