@@ -23,34 +23,24 @@ arch-config/arch-dotfiles/claude/.claude/usage-data/
 common-config/common-dotfiles/herdr/.config/herdr/*.log
 common-config/common-dotfiles/herdr/.config/herdr/*.sock
 common-config/common-dotfiles/herdr/.config/herdr/session*.json
+common-config/common-dotfiles/herdr/.config/herdr/session-snapshots/
 common-config/common-dotfiles/herdr/.config/herdr/.plugins.lock
 common-config/common-dotfiles/herdr/.config/herdr/*.pre-dotfiles-*
 common-config/common-dotfiles/pi/.pi/openai-codex-images/
-mac-config/mac-dotfiles/claude/.claude/.last-cleanup
-mac-config/mac-dotfiles/claude/.claude/.last-update-result.json
-mac-config/mac-dotfiles/claude/.claude/backups/
-mac-config/mac-dotfiles/claude/.claude/cache/
-mac-config/mac-dotfiles/claude/.claude/downloads/
-mac-config/mac-dotfiles/claude/.claude/file-history/
-mac-config/mac-dotfiles/claude/.claude/history.jsonl
-mac-config/mac-dotfiles/claude/.claude/image-cache/
-mac-config/mac-dotfiles/claude/.claude/infra-guard-approval
-mac-config/mac-dotfiles/claude/.claude/infra-guard-pending.json
-mac-config/mac-dotfiles/claude/.claude/mcp-needs-auth-cache.json
-mac-config/mac-dotfiles/claude/.claude/paste-cache/
-mac-config/mac-dotfiles/claude/.claude/plugins/
-mac-config/mac-dotfiles/claude/.claude/policy-limits.json
-mac-config/mac-dotfiles/claude/.claude/policy-limits.json.stamp.json
-mac-config/mac-dotfiles/claude/.claude/projects/
-mac-config/mac-dotfiles/claude/.claude/remote-settings.json
-mac-config/mac-dotfiles/claude/.claude/session-env/
-mac-config/mac-dotfiles/claude/.claude/sessions/
-mac-config/mac-dotfiles/claude/.claude/shell-snapshots/
-mac-config/mac-dotfiles/claude/.claude/skills/synced/
-mac-config/mac-dotfiles/claude/.claude/tasks/
-mac-config/mac-dotfiles/claude/.claude/telemetry/
-mac-config/mac-dotfiles/claude/.claude/teams/session-*/
-mac-config/mac-dotfiles/claude/.claude/usage-data/
+# Claude Code writes caches, sessions, daemon state and backups into ~/.claude.
+# Only the portable setup below is versioned; new setup files need a `!` line.
+/mac-config/mac-dotfiles/claude/.claude/*
+!/mac-config/mac-dotfiles/claude/.claude/CLAUDE.md
+!/mac-config/mac-dotfiles/claude/.claude/settings.json
+!/mac-config/mac-dotfiles/claude/.claude/keybindings.json
+!/mac-config/mac-dotfiles/claude/.claude/mcp.json
+!/mac-config/mac-dotfiles/claude/.claude/statusline.sh
+!/mac-config/mac-dotfiles/claude/.claude/commands/
+!/mac-config/mac-dotfiles/claude/.claude/hooks/
+!/mac-config/mac-dotfiles/claude/.claude/skills/
+/mac-config/mac-dotfiles/claude/.claude/skills/.trash/
+/mac-config/mac-dotfiles/claude/.claude/skills/synced/
+/mac-config/mac-dotfiles/claude/.claude/**/.cc-writes/
 
 # Local repos live here via the stowed workspace; keep only shared agent files tracked.
 /common-config/common-dotfiles/workspace-agent/workspace/*
