@@ -1,17 +1,33 @@
 {
   "env": {
     "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1",
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "NODE_USE_ENV_PROXY": "1"
   },
   "includeGitInstructions": false,
   "permissions": {
     "deny": [
+      "Bash(herdr server:*)",
       "ScheduleWakeup",
       "ShareOnboardingGuide"
     ],
-    "defaultMode": "auto"
+    "defaultMode": "auto",
+    "allow": [
+      "Bash(herdr agent:*)",
+      "Bash(herdr api snapshot:*)",
+      "Bash(herdr pane current:*)",
+      "Bash(herdr pane layout:*)",
+      "Bash(herdr pane list:*)",
+      "Bash(herdr pane read:*)",
+      "Bash(herdr pane split:*)",
+      "Bash(herdr status:*)",
+      "Bash(herdr tab create:*)",
+      "Bash(herdr tab list:*)",
+      "Bash(herdr tab rename:*)",
+      "Bash(herdr workspace list:*)",
+      "Bash(ssh infra-testbench:*)"
+    ]
   },
-  "model": "fable[1m]",
   "disableClaudeAiConnectors": true,
   "skillOverrides": {
     "claude-api": "user-invocable-only",
@@ -23,7 +39,28 @@
     "run": "user-invocable-only",
     "schedule": "off",
     "simplify": "user-invocable-only",
-    "update-config": "user-invocable-only"
+    "update-config": "user-invocable-only",
+    "typesafe-ai": "user-invocable-only",
+    "practice": "user-invocable-only",
+    "implement": "user-invocable-only",
+    "review-codebase": "user-invocable-only",
+    "anthropic-skills:docs": "user-invocable-only",
+    "anthropic-skills:docx": "user-invocable-only",
+    "anthropic-skills:google-workspace": "user-invocable-only",
+    "anthropic-skills:pdf": "user-invocable-only",
+    "anthropic-skills:pptx": "user-invocable-only",
+    "anthropic-skills:xlsx": "user-invocable-only",
+    "anthropic-skills:import-memory": "user-invocable-only",
+    "anthropic-skills:morning": "user-invocable-only",
+    "anthropic-skills:skill-creator": "user-invocable-only",
+    "grok": "off",
+    "scribebase-article-ingest": "off",
+    "scribebase-ingest": "off",
+    "visualize-code-changes": "off",
+    "voxcraft-remote": "off",
+    "writing-great-skills": "off",
+    "get-pr-comments": "off",
+    "spellcheck": "off"
   },
   "hooks": {
     "PostToolUse": [
@@ -70,7 +107,7 @@
     ],
     "SessionStart": [
       {
-        "matcher": "*",
+        "matcher": "^(startup|resume|clear|compact|fork)$",
         "hooks": [
           {
             "type": "command",
@@ -92,19 +129,33 @@
       "allowedDomains": [
         "context7.com",
         "*.context7.com"
+      ],
+      "allowUnixSockets": [
+        "/Users/ramtin/.config/herdr/herdr.sock",
+        "/Users/ramtin/dotfiles/common-config/common-dotfiles/herdr/.config/herdr/herdr.sock"
       ]
     },
     "excludedCommands": [
-      "ssh *",
-      "scp *"
+      "gh *",
+      "git fetch *",
+      "git ls-remote *",
+      "git pull *",
+      "git push *",
+      "herdr *",
+      "scp *",
+      "ssh *"
     ]
   },
   "effortLevel": "high",
   "modelSettings": {
     "claude-fable-5-1": {
       "effortLevel": "medium"
+    },
+    "claude-opus-5-5": {
+      "effortLevel": "high"
     }
   },
+  "promptSuggestionEnabled": false,
   "voice": {
     "enabled": true,
     "mode": "hold"
@@ -125,13 +176,13 @@
       "### Org-wide",
       "**Organization**: None configured",
       "**Cloud provider(s)**: None configured",
-      "**Repository visibility**: PUBLIC — ramtinJ95/scribebase (confirmed via gh)",
+      "**Repository visibility**: ramtinJ95/scribebase is PUBLIC; visibility of other repos varies, so check per repo before publishing anything",
       "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
       "**Secrets management**: None configured",
       "**Default / protected branches**: Default branch `main`; protected branches: `main` (no rulesets listed)",
       "**CI/CD deploy targets**: None configured",
       "**Network posture**: None configured",
-      "**Source control**: The trusted repo (ramtinJ95/scribebase) and its `origin` remote (github.com:ramtinJ95/scribebase.git) only — no additional orgs configured",
+      "**Source control**: repos under /Users/ramtin/workspace/ (GitHub org inooLabs) and /Users/ramtin/personal/ (GitHub user ramtinJ95), and their origin remotes",
       "**Trusted internal domains**: None configured",
       "**Trusted cloud buckets**: None configured",
       "**Key internal services**: None configured",
@@ -143,8 +194,15 @@
       "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries `prod` or `production` as a whole word or name segment",
       "### User-specific",
       "**Primary use of Claude Code**: software development",
-      "**Trusted repo**: /Users/ramtin/personal/scribebase (git working directory) and its `origin` remote github.com:ramtinJ95/scribebase.git — repo is PUBLIC: only ScribeBase's own work belongs here; content ported or first read from outside this repo/session is not its own work; secrets and sensitive data are never cleared into it regardless of visibility",
-      "**Org-specific CLIs**: None configured"
+      "**Trusted repos**: every git working directory under /Users/ramtin/workspace/ (work: inooLabs repos such as intric-backend and intric-infrastructure, including their .claude/worktrees/*) and under /Users/ramtin/personal/ (personal projects), plus their origin remotes. /Users/ramtin/personal/scribebase is PUBLIC: only ScribeBase's own work belongs there; content ported or first read from outside that repo is not its own work; secrets and sensitive data are never cleared into it",
+      "**Org-specific CLIs**: None configured",
+      "**infra-testbench**: the user's personal experimental VM on the company tailnet, reachable via ssh/scp; not production and not shared infrastructure"
+    ],
+    "allow": [
+      "$defaults",
+      "Running herdr CLI commands (pane/tab/agent control) to delegate work to a trusted agent in a separate terminal pane, including commands the sandbox blocks",
+      "allow anything related to herdr thats just workflow stuff nothing else",
+      "Running ssh and scp against infra-testbench (the user's personal experimental VM on the tailnet), including commands the sandbox would otherwise block; this does not cover any other host"
     ]
   },
   "voiceEnabled": true

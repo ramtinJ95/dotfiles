@@ -76,14 +76,8 @@ function control() {
 
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
-# Created by `pipx` on 2024-08-14 10:33:54
-export PATH="$PATH:$HOME/.local/bin"
 export CPATH=/opt/homebrew/include:$CPATH
 export LIBRARY_PATH=/opt/homebrew/lib:$LIBRARY_PATH
-
-
-# Created by `pipx` on 2025-06-28 08:41:46
-export PATH="$PATH:$HOME/.local/bin"
 
 export PATH="$PATH:$HOME/.spicetify"
 

@@ -62,7 +62,7 @@ if [[ -f "$CACHE_FILE" ]]; then
     SEVEN_D_RESET_AT=$(jq -r '.seven_day.resets_at // empty' "$CACHE_FILE" 2>/dev/null)
 
     if [[ -n "$FIVE_H_RESET_AT" ]]; then
-        reset_epoch=$(date -j -f "%Y-%m-%dT%H:%M:%S" "${FIVE_H_RESET_AT%%.*}" +%s 2>/dev/null)
+        reset_epoch=$(TZ=UTC date -j -f "%Y-%m-%dT%H:%M:%S" "${FIVE_H_RESET_AT%%.*}" +%s 2>/dev/null)
         if [[ -n "$reset_epoch" ]] && (( reset_epoch > now )); then
             remaining=$(( reset_epoch - now ))
             hours=$(( remaining / 3600 ))
@@ -76,7 +76,7 @@ if [[ -f "$CACHE_FILE" ]]; then
     fi
 
     if [[ -n "$SEVEN_D_RESET_AT" ]]; then
-        reset_epoch=$(date -j -f "%Y-%m-%dT%H:%M:%S" "${SEVEN_D_RESET_AT%%.*}" +%s 2>/dev/null)
+        reset_epoch=$(TZ=UTC date -j -f "%Y-%m-%dT%H:%M:%S" "${SEVEN_D_RESET_AT%%.*}" +%s 2>/dev/null)
         if [[ -n "$reset_epoch" ]] && (( reset_epoch > now )); then
             remaining=$(( reset_epoch - now ))
             days=$(( remaining / 86400 ))
@@ -86,4 +86,15 @@ if [[ -f "$CACHE_FILE" ]]; then
     fi
 fi
 
-echo "${MODEL} | ${USED_FMT}/${TOTAL_FMT} (${CTX_PCT}%) | 5h: ${FIVE_H}%${FIVE_H_RESET} | 7d: ${SEVEN_D}%${SEVEN_D_RESET}"
+CTX_WARN_START=200000
+CTX_WARN_FULL=400000
+CTX_SEGMENT="${USED_FMT}/${TOTAL_FMT} (${CTX_PCT}%)"
+if (( USED_TOKENS >= CTX_WARN_FULL )); then
+    CTX_SEGMENT=$'\033[1;38;2;255;0;0m'"${CTX_SEGMENT}"$'\033[0m'
+elif (( USED_TOKENS >= CTX_WARN_START )); then
+    # Fade yellow (255,255,0) to red (255,0,0) by lowering green across the warning range.
+    green=$(( 255 - (USED_TOKENS - CTX_WARN_START) * 255 / (CTX_WARN_FULL - CTX_WARN_START) ))
+    CTX_SEGMENT=$'\033[38;2;255;'"${green}"$';0m'"${CTX_SEGMENT}"$'\033[0m'
+fi
+
+echo "${MODEL} | ${CTX_SEGMENT} | 5h: ${FIVE_H}%${FIVE_H_RESET} | 7d: ${SEVEN_D}%${SEVEN_D_RESET}"
