@@ -25,7 +25,8 @@
         },
         "compat": {
           "supportsOpenAIGrammarTools": true
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "gpt-5.5",
@@ -73,7 +74,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "gpt-5.6-luna",
@@ -123,7 +125,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "gpt-5.6-sol",
@@ -137,17 +140,17 @@
           "image"
         ],
         "cost": {
-          "input": 5,
-          "output": 30,
-          "cacheRead": 0.5,
-          "cacheWrite": 6.25,
+          "input": 4,
+          "output": 20,
+          "cacheRead": 0.4,
+          "cacheWrite": 5,
           "tiers": [
             {
               "inputTokensAbove": 272000,
-              "input": 10,
-              "output": 45,
-              "cacheRead": 1,
-              "cacheWrite": 12.5
+              "input": 8,
+              "output": 30,
+              "cacheRead": 0.8,
+              "cacheWrite": 10
             }
           ]
         },
@@ -173,7 +176,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "gpt-5.6-terra",
@@ -223,7 +227,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "gpt-6-astra",
@@ -277,12 +282,178 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
+      },
+      {
+        "id": "gpt-6-luna",
+        "name": "GPT-6 Luna",
+        "api": "openai-codex-responses",
+        "provider": "openai-codex",
+        "baseUrl": "https://chatgpt.com/backend-api",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 0.1,
+          "output": 0.5,
+          "cacheRead": 0.01,
+          "cacheWrite": 0.125,
+          "tiers": [
+            {
+              "inputTokensAbove": 272000,
+              "input": 0.2,
+              "output": 0.75,
+              "cacheRead": 0.02,
+              "cacheWrite": 0.25
+            }
+          ]
+        },
+        "contextWindow": 272000,
+        "maxTokens": 128000,
+        "thinkingLevelMap": {
+          "off": "none",
+          "minimal": "low",
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh",
+          "max": "max"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true,
+          "supportsAdditionalTools": true,
+          "supportsToolSearch": true,
+          "supportsMidConvoSystemMessages": true
+        },
+        "inputLimits": {
+          "images": {
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
+        },
+        "type": "chat"
+      },
+      {
+        "id": "gpt-6-sol",
+        "name": "GPT-6 Sol",
+        "api": "openai-codex-responses",
+        "provider": "openai-codex",
+        "baseUrl": "https://chatgpt.com/backend-api",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 2,
+          "output": 10,
+          "cacheRead": 0.2,
+          "cacheWrite": 2.5,
+          "tiers": [
+            {
+              "inputTokensAbove": 272000,
+              "input": 4,
+              "output": 15,
+              "cacheRead": 0.4,
+              "cacheWrite": 5
+            }
+          ]
+        },
+        "contextWindow": 272000,
+        "maxTokens": 128000,
+        "thinkingLevelMap": {
+          "off": "none",
+          "minimal": "low",
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh",
+          "max": "max"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true,
+          "supportsAdditionalTools": true,
+          "supportsToolSearch": true,
+          "supportsMidConvoSystemMessages": true
+        },
+        "inputLimits": {
+          "images": {
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
+        },
+        "type": "chat"
+      },
+      {
+        "id": "gpt-6.1-sol",
+        "name": "GPT-6.1 Sol",
+        "api": "openai-codex-responses",
+        "provider": "openai-codex",
+        "baseUrl": "https://chatgpt.com/backend-api",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 2,
+          "output": 10,
+          "cacheRead": 0.1,
+          "cacheWrite": 2.5,
+          "tiers": [
+            {
+              "inputTokensAbove": 272000,
+              "input": 4,
+              "output": 15,
+              "cacheRead": 0.2,
+              "cacheWrite": 5
+            }
+          ]
+        },
+        "contextWindow": 272000,
+        "maxTokens": 128000,
+        "thinkingLevelMap": {
+          "off": null,
+          "minimal": "low",
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh",
+          "max": "max"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true,
+          "supportsAdditionalTools": true,
+          "supportsToolSearch": true,
+          "supportsMidConvoSystemMessages": true
+        },
+        "inputLimits": {
+          "images": {
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
+        },
+        "type": "chat"
       }
     ],
-    "checkedAt": 1790012272583,
-    "lastModified": 1789979786000,
-    "etag": "W/\"b77f14c4e92d579ef47bdd13a1cc6d04\""
+    "checkedAt": 1791545497919,
+    "lastModified": 1790772158000,
+    "etag": "W/\"8003e3819641342fe5725e65d6bea0fb\""
   },
   "berget": {
     "models": [
@@ -296,8 +467,8 @@
         "cost": {
           "cacheRead": 0,
           "cacheWrite": 0,
-          "input": 1,
-          "output": 2
+          "input": 0.39999999999999997,
+          "output": 3
         },
         "id": "Qwen/Qwen3.8-27B-FP8",
         "input": [
@@ -328,8 +499,8 @@
         "cost": {
           "cacheRead": 0,
           "cacheWrite": 0,
-          "input": 1,
-          "output": 2
+          "input": 0.3,
+          "output": 0.3
         },
         "id": "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
         "input": [
@@ -347,12 +518,12 @@
         "compat": {
           "supportsDeveloperRole": false
         },
-        "contextWindow": 524288,
+        "contextWindow": 1048576,
         "cost": {
           "cacheRead": 0,
           "cacheWrite": 0,
-          "input": 1,
-          "output": 2
+          "input": 0.25,
+          "output": 0.5
         },
         "id": "zai-org/GLM-5.3-Flash",
         "input": [
@@ -383,8 +554,8 @@
         "cost": {
           "cacheRead": 0,
           "cacheWrite": 0,
-          "input": 1,
-          "output": 2
+          "input": 3,
+          "output": 15
         },
         "id": "moonshotai/Kimi-K3",
         "input": [
@@ -415,8 +586,8 @@
         "cost": {
           "cacheRead": 0,
           "cacheWrite": 0,
-          "input": 1,
-          "output": 2
+          "input": 0.25,
+          "output": 0.5
         },
         "id": "google/gemma-4-31B-it",
         "input": [
@@ -438,6 +609,31 @@
         }
       }
     ],
-    "checkedAt": 1790012272538
+    "checkedAt": 1791614741870
+  },
+  "typesafe": {
+    "models": [
+      {
+        "type": "classifier",
+        "id": "jev-latest",
+        "name": "Jev",
+        "api": "typesafe-system-one",
+        "provider": "typesafe",
+        "baseUrl": "https://api.typesafe.ai/v1/",
+        "input": [
+          "text"
+        ],
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0
+        },
+        "contextWindow": 64000
+      }
+    ],
+    "checkedAt": 1791613590923,
+    "lastModified": 1790772181000,
+    "etag": "W/\"47640c642eb6644d668905b81fb24ac1\""
   }
 }
