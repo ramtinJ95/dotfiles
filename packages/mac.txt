@@ -5,4 +5,5 @@ macarchy
 nvim
 remote-access
 spicetify
+tailscale-home
 tmux

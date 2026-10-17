@@ -1,0 +1,3 @@
+#!/bin/sh
+# Always address the isolated userspace daemon, never the work Mac app.
+exec /opt/homebrew/bin/tailscale --socket="$HOME/.local/state/tailscale-home/tailscaled.sock" "$@"

@@ -38,3 +38,6 @@ native_configuration = "../../../../../../.config/nvim"
 
 [keybindings]
 override = "overrides/keybindings.skhdrc"
+
+[focus_ring]
+provider = "lean"

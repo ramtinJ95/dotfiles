@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.ramtin.tailscaled-home</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/tailscaled</string>
+    <string>--tun=userspace-networking</string>
+    <string>--statedir=/Users/ramtin/.local/state/tailscale-home</string>
+    <string>--socket=/Users/ramtin/.local/state/tailscale-home/tailscaled.sock</string>
+    <string>--port=0</string>
+    <string>--socks5-server=localhost:1055</string>
+    <string>--outbound-http-proxy-listen=localhost:1056</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>Umask</key>
+  <integer>63</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/ramtin/.local/state/tailscale-home/stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/ramtin/.local/state/tailscale-home/stderr.log</string>
+</dict>
+</plist>

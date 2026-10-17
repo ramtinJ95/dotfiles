@@ -55,23 +55,7 @@ alias compress='tar -cvf'
 alias claude='claude --disallowedTools=ScheduleWakeup,ShareOnboardingGuide'
 
 function control() {
-	local target="$1" host
-
-	case "$target" in
-		macmini|ramtins-mac-mini)
-			host="ramtins-mac-mini.tailc817d3.ts.net"
-			;;
-		"")
-			echo "usage: control macmini"
-			return 2
-			;;
-		*)
-			host="$(ssh -G "$target" 2>/dev/null | awk '/^hostname / { print $2; exit }')"
-			[[ -z "$host" ]] && host="$target"
-			;;
-	esac
-
-	open "vnc://$host"
+	"$HOME/.local/bin/control" "$@"
 }
 
 eval "$(starship init zsh)"

@@ -6,12 +6,6 @@
   },
   "includeGitInstructions": false,
   "permissions": {
-    "deny": [
-      "Bash(herdr server:*)",
-      "ScheduleWakeup",
-      "ShareOnboardingGuide"
-    ],
-    "defaultMode": "auto",
     "allow": [
       "Bash(herdr agent:*)",
       "Bash(herdr api snapshot:*)",
@@ -26,7 +20,13 @@
       "Bash(herdr tab rename:*)",
       "Bash(herdr workspace list:*)",
       "Bash(ssh infra-testbench:*)"
-    ]
+    ],
+    "deny": [
+      "Bash(herdr server:*)",
+      "ScheduleWakeup",
+      "ShareOnboardingGuide"
+    ],
+    "defaultMode": "auto"
   },
   "disableClaudeAiConnectors": true,
   "skillOverrides": {
@@ -124,6 +124,20 @@
     "type": "command",
     "command": "~/.claude/statusline.sh"
   },
+  "enabledPlugins": {
+    "notes-compaction@claude-mods": true,
+    "shepherdr@claude-mods": true,
+    "review-pane@claude-mods": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-mods": {
+      "source": {
+        "source": "github",
+        "repo": "ramtinJ95/claude-mods"
+      },
+      "autoUpdate": true
+    }
+  },
   "sandbox": {
     "network": {
       "allowedDomains": [
@@ -155,6 +169,7 @@
       "effortLevel": "high"
     }
   },
+  "autoCompactWindow": 400000,
   "promptSuggestionEnabled": false,
   "voice": {
     "enabled": true,
@@ -163,10 +178,16 @@
   "autoMemoryEnabled": true,
   "autoDreamEnabled": true,
   "skipDangerousModePermissionPrompt": true,
-  "theme": "auto",
+  "theme": "dark-ansi",
   "editorMode": "vim",
   "switchModelsOnFlag": false,
   "autoMode": {
+    "allow": [
+      "$defaults",
+      "Running herdr CLI commands (pane/tab/agent control) to delegate work to a trusted agent in a separate terminal pane, including commands the sandbox blocks",
+      "allow anything related to herdr thats just workflow stuff nothing else",
+      "Running ssh and scp against infra-testbench (the user's personal experimental VM on the tailnet), including commands the sandbox would otherwise block; this does not cover any other host"
+    ],
     "soft_deny": [
       "$defaults",
       "Bash(rm:.env) in /Users/ramtin/personal/scribebase — irreversible deletion of local secret file",
@@ -197,12 +218,6 @@
       "**Trusted repos**: every git working directory under /Users/ramtin/workspace/ (work: inooLabs repos such as intric-backend and intric-infrastructure, including their .claude/worktrees/*) and under /Users/ramtin/personal/ (personal projects), plus their origin remotes. /Users/ramtin/personal/scribebase is PUBLIC: only ScribeBase's own work belongs there; content ported or first read from outside that repo is not its own work; secrets and sensitive data are never cleared into it",
       "**Org-specific CLIs**: None configured",
       "**infra-testbench**: the user's personal experimental VM on the company tailnet, reachable via ssh/scp; not production and not shared infrastructure"
-    ],
-    "allow": [
-      "$defaults",
-      "Running herdr CLI commands (pane/tab/agent control) to delegate work to a trusted agent in a separate terminal pane, including commands the sandbox blocks",
-      "allow anything related to herdr thats just workflow stuff nothing else",
-      "Running ssh and scp against infra-testbench (the user's personal experimental VM on the tailnet), including commands the sandbox would otherwise block; this does not cover any other host"
     ]
   },
   "voiceEnabled": true

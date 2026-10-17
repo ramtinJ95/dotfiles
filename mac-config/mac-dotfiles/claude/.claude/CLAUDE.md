@@ -27,3 +27,12 @@
   tab per task, never a split (`herdr tab create --no-focus --cwd "$PWD"
   --label <task-label>`), start pi in its root pane with a matching
   kebab-case agent name, and reuse that agent for follow-ups on the same task.
+- On the work Mac, two tailnets run side by side and must never be bridged. The
+  Tailscale app (`/usr/local/bin/tailscale`) is the work tailnet. The personal
+  home tailnet is a separate userspace daemon: control it only with `ts-home`
+  and reach its machines only through the `home-*` SSH aliases (`home-firebat`,
+  `home-macmini`, `home-infrabench`) or the SOCKS5 proxy on `localhost:1055`.
+  A `home-` prefix means home; anything else means work. Never enable routes,
+  exit nodes or sharing on either, or use one tailnet's tools for the other's
+  machines. The Claude Code sandbox can't reach the home daemon, so hand
+  homelab commands to Astra or ask the user to run them with `!`.
