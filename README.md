@@ -119,6 +119,10 @@ Put cross-harness skills in `common-config/common-dotfiles/agents/.agents/skills
 Pi discovers `~/.agents/skills` directly, so shared skills should not be
 duplicated under `.pi/agent/skills`. Claude and Codex keep native skill entries
 as repo-relative symlinks back to the shared `.agents` skills.
+Claude-only skills live as real directories in
+`mac-config/mac-dotfiles/claude/.claude/skills/<name>` (and the Arch Claude
+package only if needed there), with no `.agents` copy or bridge; `doctor`
+checks only shared-skill bridges.
 
 ### Legacy shared-agent migration
 

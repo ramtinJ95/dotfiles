@@ -97,4 +97,40 @@ elif (( USED_TOKENS >= CTX_WARN_START )); then
     CTX_SEGMENT=$'\033[38;2;255;'"${green}"$';0m'"${CTX_SEGMENT}"$'\033[0m'
 fi
 
+CWD=$(echo "$input" | jq -r --arg pwd "$PWD" '.workspace.current_dir // .cwd // $pwd')
+SHOWN_PATH="$CWD"
+if [[ "$CWD" == "$HOME" || "$CWD" == "$HOME"/* ]]; then
+    SHOWN_PATH="~${CWD#"$HOME"}"
+fi
+LOCATION=$'\033[1;34m'"${SHOWN_PATH}"$'\033[0m'
+
+# --no-optional-locks keeps this frequent refresh from taking index.lock away from Claude's own git commands.
+GIT_STATUS=$(git -C "$CWD" --no-optional-locks status --porcelain=v2 --branch 2>/dev/null)
+if [[ -n "$GIT_STATUS" ]]; then
+    read -r BRANCH OID STAGED MODIFIED UNTRACKED CONFLICTED < <(echo "$GIT_STATUS" | awk '
+        /^# branch\.head / { head = $3 }
+        /^# branch\.oid / { oid = substr($3, 1, 7) }
+        /^[12] / { if (substr($2, 1, 1) != ".") s++; if (substr($2, 2, 1) != ".") m++ }
+        /^u / { c++ }
+        /^\? / { u++ }
+        END { print head, oid, s + 0, m + 0, u + 0, c + 0 }')
+    if [[ "$BRANCH" == "(detached)" ]]; then
+        BRANCH="detached@${OID}"
+    fi
+    LOCATION+=" "$'\033[35m'"⎇ ${BRANCH}"$'\033[0m'
+
+    { read -r GIT_DIR; read -r COMMON_DIR; read -r TOPLEVEL; } < <(git -C "$CWD" rev-parse --path-format=absolute --git-dir --git-common-dir --show-toplevel 2>/dev/null)
+    if [[ "$GIT_DIR" != "$COMMON_DIR" ]]; then
+        LOCATION+=" "$'\033[33m'"worktree ${TOPLEVEL##*/}"$'\033[0m'
+    fi
+
+    CHANGES=""
+    (( CONFLICTED > 0 )) && CHANGES+=" "$'\033[1;31m'"✖${CONFLICTED}"$'\033[0m'
+    (( STAGED > 0 )) && CHANGES+=" "$'\033[32m'"+${STAGED}"$'\033[0m'
+    (( MODIFIED > 0 )) && CHANGES+=" "$'\033[33m'"!${MODIFIED}"$'\033[0m'
+    (( UNTRACKED > 0 )) && CHANGES+=" "$'\033[2m'"?${UNTRACKED}"$'\033[0m'
+    LOCATION+="${CHANGES}"
+fi
+
+echo "$LOCATION"
 echo "${MODEL} | ${CTX_SEGMENT} | 5h: ${FIVE_H}%${FIVE_H_RESET} | 7d: ${SEVEN_D}%${SEVEN_D_RESET}"

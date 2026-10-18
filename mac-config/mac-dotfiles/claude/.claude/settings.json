@@ -24,7 +24,8 @@
     "deny": [
       "Bash(herdr server:*)",
       "ScheduleWakeup",
-      "ShareOnboardingGuide"
+      "ShareOnboardingGuide",
+      "ReportFindings"
     ],
     "defaultMode": "auto"
   },
@@ -60,7 +61,8 @@
     "voxcraft-remote": "off",
     "writing-great-skills": "off",
     "get-pr-comments": "off",
-    "spellcheck": "off"
+    "spellcheck": "off",
+    "code-review": "off"
   },
   "hooks": {
     "PostToolUse": [
@@ -127,13 +129,21 @@
   "enabledPlugins": {
     "notes-compaction@claude-mods": true,
     "shepherdr@claude-mods": true,
-    "review-pane@claude-mods": true
+    "review-pane@claude-mods": true,
+    "pstack@cursor-plugins": true
   },
   "extraKnownMarketplaces": {
     "claude-mods": {
       "source": {
         "source": "github",
         "repo": "ramtinJ95/claude-mods"
+      },
+      "autoUpdate": true
+    },
+    "cursor-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "cursor/plugins"
       },
       "autoUpdate": true
     }

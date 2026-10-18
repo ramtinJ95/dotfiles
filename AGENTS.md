@@ -54,6 +54,10 @@ including the settings, hooks, and skills of the agent doing the editing.
   `../../../../../common-config/common-dotfiles/agents/.agents/skills/<name>`.
   When removing a shared skill, remove its directory and both bridges; `doctor`
   checks every bridge.
+- Claude-only skills live as real directories in
+  `mac-config/mac-dotfiles/claude/.claude/skills/<name>` (and the Arch Claude
+  package only if needed there), with no `.agents` copy and no bridge.
+  `doctor` checks only shared-skill bridges.
 - `~/.claude` is `mac-config/mac-dotfiles/claude/.claude`, and Claude Code
   writes caches, sessions, and daemon state there. The root `.gitignore`
   allowlists only the portable setup. A new setup file or directory needs its
