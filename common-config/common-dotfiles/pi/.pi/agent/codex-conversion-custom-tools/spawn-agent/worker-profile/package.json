@@ -14,8 +14,7 @@
     ],
     "skills": [
       "../../../../../../agents/.agents/skills/grok/SKILL.md",
-      "../../../../../../agents/.agents/skills/grilling/SKILL.md",
-      "../../../../../../agents/.agents/skills/lavish/SKILL.md"
+      "../../../../../../agents/.agents/skills/grilling/SKILL.md"
     ]
   }
 }
