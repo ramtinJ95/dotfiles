@@ -28,10 +28,15 @@
     "code-review@claude-plugins-official": true
   },
   "effortLevel": "high",
+  "autoMemoryEnabled": true,
   "autoDreamEnabled": true,
   "skipDangerousModePermissionPrompt": true,
-  "autoMemoryEnabled": true,
-  "theme": "dark",
+  "theme": "auto",
   "editorMode": "vim",
-  "switchModelsOnFlag": false
+  "switchModelsOnFlag": false,
+  "modelSettings": {
+    "claude-opus-5-5": {
+      "effortLevel": "high"
+    }
+  }
 }
