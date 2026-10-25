@@ -14,6 +14,7 @@ dock_autohide = true
 finder_show_extensions = true
 
 [packages]
+brewfile = "profile.toml.Brewfile"
 exclude_casks = ["docker", "tailscale"]
 
 [sketchybar]

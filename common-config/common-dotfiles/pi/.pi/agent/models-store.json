@@ -2,82 +2,6 @@
   "openai-codex": {
     "models": [
       {
-        "id": "gpt-5.3-codex-spark",
-        "name": "GPT-5.3 Codex Spark",
-        "api": "openai-codex-responses",
-        "provider": "openai-codex",
-        "baseUrl": "https://chatgpt.com/backend-api",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "cost": {
-          "input": 1.75,
-          "output": 14,
-          "cacheRead": 0.175,
-          "cacheWrite": 0
-        },
-        "contextWindow": 128000,
-        "maxTokens": 128000,
-        "thinkingLevelMap": {
-          "xhigh": "xhigh",
-          "minimal": "low"
-        },
-        "compat": {
-          "supportsOpenAIGrammarTools": true
-        },
-        "type": "chat"
-      },
-      {
-        "id": "gpt-5.5",
-        "name": "GPT-5.5",
-        "api": "openai-codex-responses",
-        "provider": "openai-codex",
-        "baseUrl": "https://chatgpt.com/backend-api",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "cost": {
-          "input": 5,
-          "output": 30,
-          "cacheRead": 0.5,
-          "cacheWrite": 0,
-          "tiers": [
-            {
-              "inputTokensAbove": 272000,
-              "input": 10,
-              "output": 45,
-              "cacheRead": 1,
-              "cacheWrite": 0
-            }
-          ]
-        },
-        "contextWindow": 272000,
-        "maxTokens": 128000,
-        "thinkingLevelMap": {
-          "xhigh": "xhigh",
-          "minimal": "low"
-        },
-        "compat": {
-          "supportsOpenAIGrammarTools": true,
-          "supportsToolSearch": true,
-          "supportsMidConvoSystemMessages": true
-        },
-        "inputLimits": {
-          "images": {
-            "resize": {
-              "maxWidth": 2000,
-              "maxHeight": 2000,
-              "maxBytes": 4718592,
-              "jpegQuality": 80
-            }
-          }
-        },
-        "type": "chat"
-      },
-      {
         "id": "gpt-5.6-luna",
         "name": "GPT-5.6 Luna",
         "api": "openai-codex-responses",
@@ -421,7 +345,7 @@
             }
           ]
         },
-        "contextWindow": 272000,
+        "contextWindow": 500000,
         "maxTokens": 128000,
         "thinkingLevelMap": {
           "off": null,
@@ -451,9 +375,9 @@
         "type": "chat"
       }
     ],
-    "checkedAt": 1791545497919,
-    "lastModified": 1790772158000,
-    "etag": "W/\"8003e3819641342fe5725e65d6bea0fb\""
+    "lastModified": 1792760299000,
+    "etag": "W/\"0d8aeb670ec61bff454473f35c84d2b9\"",
+    "checkedAt": 1792838924523
   },
   "berget": {
     "models": [
@@ -621,7 +545,8 @@
         "provider": "typesafe",
         "baseUrl": "https://api.typesafe.ai/v1/",
         "input": [
-          "text"
+          "text",
+          "image"
         ],
         "cost": {
           "input": 0,
@@ -629,11 +554,15 @@
           "cacheRead": 0,
           "cacheWrite": 0
         },
-        "contextWindow": 64000
+        "contextWindow": 64000,
+        "compat": {
+          "imageInput": "assets",
+          "sendImageOptInHeader": true
+        }
       }
     ],
-    "checkedAt": 1792217212031,
-    "lastModified": 1790772181000,
-    "etag": "W/\"47640c642eb6644d668905b81fb24ac1\""
+    "lastModified": 1792665058000,
+    "etag": "W/\"442429959944e1c3cc56a984d9f6051a\"",
+    "checkedAt": 1792878427218
   }
 }

@@ -19,7 +19,8 @@
       "Bash(herdr tab list:*)",
       "Bash(herdr tab rename:*)",
       "Bash(herdr workspace list:*)",
-      "Bash(ssh infra-testbench:*)"
+      "Bash(ssh infra-testbench:*)",
+      "mcp__github"
     ],
     "deny": [
       "Bash(herdr server:*)",
@@ -93,15 +94,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/guard_infra_commands.py"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
             "command": "atuin hook claude-code"
           }
         ]
@@ -130,7 +122,8 @@
     "notes-compaction@claude-mods": true,
     "shepherdr@claude-mods": true,
     "review-pane@claude-mods": true,
-    "pstack@cursor-plugins": true
+    "pstack@cursor-plugins": true,
+    "nexus@claude-mods": true
   },
   "extraKnownMarketplaces": {
     "claude-mods": {
@@ -181,6 +174,7 @@
   },
   "autoCompactWindow": 400000,
   "promptSuggestionEnabled": false,
+  "tui": "fullscreen",
   "voice": {
     "enabled": true,
     "mode": "hold"

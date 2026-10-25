@@ -7,7 +7,6 @@
       "../../../extensions/herdr-agent-state.ts",
       "../../../npm/node_modules/@howaboua/pi-auto-trees",
       "../../../npm/node_modules/@howaboua/pi-ask",
-      "../../../npm/node_modules/@ramtinj95/pi-infra-command-guard",
       "../../../npm/node_modules/@ramtinj95/pi-comment-editor",
       "../../../npm/node_modules/@ramtinj95/pi-mermaid-tui",
       "../../../extensions/pi-vim"
