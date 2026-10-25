@@ -200,7 +200,7 @@ test("builds a worker Pi with the general-purpose worker prompt", () => {
 	const profile = JSON.parse(
 		readFileSync(resolve(extensions[0], "package.json"), "utf8"),
 	);
-	assert.equal(profile.pi.extensions.length, 8);
+	assert.equal(profile.pi.extensions.length, 7);
 	assert.deepEqual(
 		profile.pi.skills.map((path) => path.split("/").at(-2)),
 		["grok", "grilling"],
