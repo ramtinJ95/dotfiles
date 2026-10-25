@@ -1,0 +1,13 @@
+#!/bin/bash
+set -euo pipefail
+
+env_file="${VOXCRAFT_ENV_FILE:-$HOME/.voxcraft.env}"
+[[ -f $env_file ]] && source "$env_file"
+
+voxcraft_bin="$HOME/workspace/voxcraft/.venv/bin/voxcraft"
+if [[ ! -x $voxcraft_bin ]]; then
+  echo "voxcraft client is missing: $voxcraft_bin" >&2
+  exit 1
+fi
+
+exec "$voxcraft_bin" "$@"

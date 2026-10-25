@@ -12,5 +12,4 @@ omarchy
 scripts
 starship
 tmux
-waybar
 yazi

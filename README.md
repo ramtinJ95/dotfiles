@@ -44,11 +44,11 @@ See [arch-config/arch-dotfiles/README.md](arch-config/arch-dotfiles/README.md) f
 - **Native config seeds** - Herdr, Pi and Codex get local writable copies when absent
 
 ### Arch Linux Specific
-- **Hyprland** - Wayland compositor
+- **Hyprland** - Wayland compositor (Omarchy quattro Lua config)
+- **Omarchy shell** - Bar layout, idle/lock timings, and theme-set hook
 - **Bash + ble.sh** - Enhanced bash with line editor
 - **TLP** - Power management
-- **Hypridle/Hyprlock** - Idle management and screen locking
-- **Ghostty, k9s, Waybar** - Arch desktop and terminal tooling
+- **Kitty, Ghostty, k9s** - Arch desktop and terminal tooling
 
 ### Platform Packages With Similar Names
 

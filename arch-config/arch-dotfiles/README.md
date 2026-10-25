@@ -16,12 +16,11 @@ independently:
 - `hypr/` - Hyprland window manager configuration
 - `k9s/` - k9s Kubernetes terminal UI configuration
 - `nvim/` - Neovim configuration
-- `omarchy/` - Omarchy hooks and Waybar profiles
+- `omarchy/` - Omarchy shell config (`shell.json`) and the `theme-set` hook
 - `scripts/` - Arch helper scripts
 - `starship/` - Starship prompt configuration
 - `tlp/` - TLP power management configuration (system-wide)
 - `tmux/` - tmux terminal multiplexer configuration
-- `waybar/` - Waybar status bar configuration
 - `yazi/` - Yazi file manager configuration
 
 ## Usage
@@ -54,43 +53,33 @@ stow -D -d common-config/common-dotfiles -t "$HOME" pi
 stow -n -d arch-config/arch-dotfiles -t "$HOME" hypr
 ```
 
-## Omarchy Waybar Theme Hooks
+## Omarchy quattro
 
-The `omarchy/` package installs a `theme-set` hook that swaps Waybar profiles
-when Omarchy themes change:
+These packages target Omarchy quattro (4.x): Hyprland is configured in Lua
+(`hypr/*.lua`), and the Omarchy shell replaces Waybar, mako, walker, swayosd,
+hypridle and hyprlock. The pre-quattro `.conf` files and Waybar profiles live
+in git history.
 
-- `Lavender` uses the saved custom Lavender Waybar profile
-- `Purple Dream` uses the saved custom Purple Dream Waybar profile
-- all other themes use a larger, theme-reactive stock-style Waybar profile
-- every profile uses the Arch logo in the top-left Waybar menu button
+`hypr/monitors.lua` pins the ThinkPad panel (`eDP-1`, 1920x1200 at 1x) and
+mirrors external displays to it; adjust it on machines with a different panel.
 
-On a new Omarchy machine, set this up in this order:
+A fresh Omarchy install writes its own copies of the files these packages own,
+so Stow will report conflicts. Move Omarchy's copies aside, then stow:
 
 ```bash
-# 1. Clone this repo and enter it
 cd ~/dotfiles
-
-# 2. Install shared and Arch user-level dotfiles, including the omarchy package
+for f in hypr/{hyprland,bindings,input,looknfeel,monitors,autostart}.lua \
+  hypr/.luarc.json hypr/hyprsunset.conf hypr/xdph.conf kitty/kitty.conf \
+  ghostty/config tmux/tmux.conf xdg-terminals.list omarchy/shell.json; do
+  [[ -e ~/.config/$f && ! -L ~/.config/$f ]] && mv ~/.config/$f ~/.config/$f.omarchy-default
+done
 scripts/dotfiles stow arch
-
-# 3. Install optional themes used by the hook
-omarchy theme install https://github.com/hembramnishant50-glitch/omarchy-lavender-theme.git
-omarchy theme install https://github.com/ramtinJ95/purple-dream.git
-
-# 4. Apply a theme; this triggers ~/.config/omarchy/hooks/theme-set.d/waybar-profile
-omarchy theme set "Batou"
-
-# 5. If the current theme was already set before stowing, run the hook manually
-omarchy-hook theme-set "$(cat ~/.config/omarchy/current/theme.name)"
+hyprctl reload && hyprctl configerrors
+omarchy-hook theme-set "$(cat ~/.local/state/omarchy/current/theme.name)"
 ```
 
-The hook copies profile files into `~/.config/waybar/` at runtime and restarts
-Waybar only when something changed. It removes existing Waybar config symlinks
-before copying, so it will not overwrite files inside this dotfiles repository.
-If a later `scripts/dotfiles restow arch` reports conflicts for
-`~/.config/waybar/{config.jsonc,style.css,colors.css}`, remove those generated
-files and rerun `scripts/dotfiles restow arch`, then reapply the current theme
-hook.
+The `theme-set` hook regenerates the kitty tab bar, tmux status line,
+Starship palette and Yazi flavor from the active theme's `colors.toml`.
 
 ## Notes
 

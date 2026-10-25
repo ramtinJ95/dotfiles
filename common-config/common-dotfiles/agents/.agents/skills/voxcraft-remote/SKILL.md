@@ -44,7 +44,7 @@ User-invoked only. If this skill was not explicitly named by the user, stop.
 
    ```bash
    mkdir -p ~/Downloads/voxcraft
-   title="$(~/personal/voxcraft/.venv/bin/python -m yt_dlp --print title --skip-download "<youtube-url>" 2>/dev/null | head -n 1 || true)"
+   title="$(~/workspace/voxcraft/.venv/bin/python -m yt_dlp --print title --skip-download "<youtube-url>" 2>/dev/null | head -n 1 || true)"
    slug="$(printf '%s' "$title" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g; s/-+/-/g' | cut -c1-120)"
    if [ -n "$slug" ]; then
      output="$HOME/Downloads/voxcraft/${slug}--<youtube_id>-final.md"
