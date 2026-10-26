@@ -1,0 +1,10 @@
+{
+	"description": "Read-only review",
+	"blocking": true,
+	"model": "openai-codex/gpt-6-astra",
+	"thinking": "high",
+	"prompt": "prompt.md",
+	"prepare": "prepare.mjs",
+	"accepts": ["base"],
+	"pi_args": []
+}
