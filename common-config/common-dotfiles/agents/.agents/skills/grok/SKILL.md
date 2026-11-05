@@ -10,11 +10,11 @@ You are in **learning mode**. The deliverable is the user's understanding and th
 
 ## grok vs teach
 
-Use `grok` when you're learning from a **concrete technical artifact already in front of you** — usually code, but possibly tests, configuration, a specification, or library source. You learn *from* that artifact, and any notes are working learning state rather than a curated course. Reach for `/skill:teach` when you want a durable, authored curriculum synthesized from broader sources, especially for a new domain or non-code skill. Shorthand: **grok = learn from an artifact; teach = build a course about a topic.**
+Use `grok` when you're learning from a **concrete technical artifact already in front of you** — usually code, but possibly tests, configuration, a specification, or library source. You learn *from* that artifact, and any notes are working learning state rather than a curated course. Reach for the `teach` skill when you want a durable, authored curriculum synthesized from broader sources, especially for a new domain or non-code skill. Shorthand: **grok = learn from an artifact; teach = build a course about a topic.**
 
 ## Pick the mode
 
-Use a depth dial, not one fixed behavior. If the user invoked `/skill:grok quick ...`, `task ...`, or `deep ...`, use that mode. Otherwise infer from the request; ask only when the choice materially changes the session.
+Use a depth dial, not one fixed behavior. If the user invoked grok with `quick ...`, `task ...`, or `deep ...`, use that mode. Otherwise infer from the request; ask only when the choice materially changes the session.
 
 The three mode blocks below are each self-contained — when / behavior / response shape. Everything after them (grounding, scaffolding, transfer, notes) is shared across all three.
 
@@ -64,8 +64,8 @@ Never teach from a guess. Build an accurate picture first, in this priority:
 
 1. **Start with the local project** — code, tests, config, dependency manifests, entry points, build/test/run commands, local docs. Claims about how this code works point to real files/lines you inspected.
 2. **`npx ctx7`** for external frameworks/libraries when version-correct behavior matters.
-3. **Web search or `spawn_agent` with `agent_type: "explorer"`** for broader concepts, specs, design rationale, or history not available locally.
-4. **`deep_research`** only for genuinely deep, ambiguous, multi-source, or explicitly requested research.
+3. **Web search, or an explorer/research subagent if your harness has one,** for broader concepts, specs, design rationale, or history not available locally.
+4. **A deep-research tool, if available,** only for genuinely deep, ambiguous, multi-source, or explicitly requested research.
 
 Do this grounding quietly — the user wants the teaching, not a blow-by-blow of every file read. Flag assumptions explicitly: a plausible fiction is worse than an honest gap.
 
@@ -122,7 +122,7 @@ After a worked example or explanation, ask the user to transfer the idea — thi
 - "What would change if the input/source/error case were different?"
 - "Can you predict the next step before we inspect it?"
 
-As understanding grows, shift from examples toward questions, review, and transfer tasks. Keep checks inside `grok` brief and tied to the current explanation; hand standalone exercises and solution gating off to `/skill:practice` (it uses `scratch/LEARNING.md`, traced flows, misconceptions, and transfer questions as source material). For flashcards, hand off to `/skill:anki-cards`.
+As understanding grows, shift from examples toward questions, review, and transfer tasks. Keep checks inside `grok` brief and tied to the current explanation; hand standalone exercises and solution gating off to the `practice` skill (it uses `scratch/LEARNING.md`, traced flows, misconceptions, and transfer questions as source material). For flashcards, hand off to the `anki-cards` skill.
 
 ## Cross-cutting response shapes
 
@@ -142,4 +142,4 @@ Recording rules:
 
 - Prefer recording corrected misconceptions, key distinctions, concepts the user struggled with, and reusable patterns. Don't record every fact or every file touched.
 - Include source anchors for repo claims whenever possible.
-- Keep `Card candidates` as raw material, not polished cards — `/skill:anki-cards` will refine, deduplicate, and write them.
+- Keep `Card candidates` as raw material, not polished cards — the `anki-cards` skill will refine, deduplicate, and write them.
