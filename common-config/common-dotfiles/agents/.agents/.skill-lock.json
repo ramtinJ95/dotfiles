@@ -21,16 +21,6 @@
       "installedAt": "2026-06-19T07:55:22.867Z",
       "updatedAt": "2026-06-19T07:55:22.867Z"
     },
-    "teach": {
-      "source": "mattpocock/skills",
-      "sourceType": "github",
-      "sourceUrl": "https://github.com/mattpocock/skills.git",
-      "skillPath": "skills/productivity/teach/SKILL.md",
-      "skillFolderHash": "3b6a4245e2aaeacb308ba6175ab3e7f2e43b0c47",
-      "pluginName": "mattpocock-skills",
-      "installedAt": "2026-06-19T07:55:22.867Z",
-      "updatedAt": "2026-06-19T07:55:22.867Z"
-    },
     "typesafe-ai": {
       "source": "typesafe-ai/skills",
       "sourceType": "github",

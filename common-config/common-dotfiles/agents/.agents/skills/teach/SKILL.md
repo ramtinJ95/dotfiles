@@ -1,6 +1,6 @@
 ---
 name: teach
-description: Teach the user a new skill or concept, within this workspace.
+description: Teach the user a new skill or concept over multiple sessions, in a persistent course workspace under ~/personal/teachings/<topic>/.
 disable-model-invocation: true
 argument-hint: "What would you like to learn about?"
 ---
@@ -15,10 +15,11 @@ Use `teach` when you're authoring a durable course about a topic — especially 
 
 Every teaching subject gets its own workspace directory under the fixed home **`~/personal/teachings/<topic>/`** (e.g. `~/personal/teachings/kubernetes-helm/`) — always this absolute location, regardless of the current working directory when the skill is invoked. Never resolve the workspace relative to the cwd, and never scatter one into the repo you happen to be in: all courses live together under `~/personal/teachings/` so they accumulate in one findable place across sessions.
 
-When the user asks to work on a topic, resolve `~/personal/teachings/` first. If a `<topic>` workspace already exists there, treat the request as **resuming** that course: read its existing state (mission, learning records, notes, lessons) and continue from there rather than starting over. Otherwise create `~/personal/teachings/` if it doesn't exist, then the `<topic>` subdirectory inside it, and treat that subdirectory as the teaching workspace. The state of their learning is captured in this workspace in several files:
+When the user asks to work on a topic, resolve `~/personal/teachings/` first. If a `<topic>` workspace already exists there, treat the request as **resuming** that course: read its existing state (mission, learning records, notes, lessons) and continue from there rather than starting over. Otherwise create `~/personal/teachings/` if it doesn't exist, then the `<topic>` subdirectory inside it, and treat that subdirectory as the teaching workspace. Workspace paths (`./lessons/` and the rest) resolve from that workspace directory; only the `*-FORMAT.md` links resolve from this skill's folder. The state of their learning is captured in this workspace in several files:
 
 - `MISSION.md`: A document capturing the _reason_ the user is interested in the topic. This should be used to ground all teaching. Use the format in [MISSION-FORMAT.md](./MISSION-FORMAT.md).
-- `./reference/*.html`: A directory of reference materials. These are the compressed learnings from the lessons - cheat sheets, reference algorithms, syntax, yoga poses, glossaries. They are the raw units of learning. They should be beautiful documents which print out well, and are designed for quick reference.
+- `GLOSSARY.md`: The canonical terminology for the topic, holding only terms the user already understands. Every lesson, reference document, and learning record uses its terms. Use the format in [GLOSSARY-FORMAT.md](./GLOSSARY-FORMAT.md).
+- `./reference/*.html`: A directory of reference materials. These are the compressed learnings from the lessons - cheat sheets, reference algorithms, syntax, yoga poses. They are the raw units of learning. They should be beautiful documents which print out well, and are designed for quick reference.
 - `RESOURCES.md`: A list of resources which can be explored to ground your teaching in contextual knowledge, or to acquire knowledge and wisdom. Use the format in [RESOURCES-FORMAT.md](./RESOURCES-FORMAT.md).
 - `./learning-records/*.md`: A directory of learning records, which capture what the user has learned. These are loosely equivalent to architectural decision records in software development - they capture non-obvious lessons and key insights that may need to be revised later, or drive future sessions. These should be used to calculate the zone of proximal development. They are titled `0001-<dash-case-name>.md`, where the number increments each time. Use the format in [LEARNING-RECORD-FORMAT.md](./LEARNING-RECORD-FORMAT.md).
 - `./lessons/*.html`: A directory of lessons. A **lesson** is a single, self-contained HTML output that teaches one tightly-scoped thing tied to the mission. This is the primary unit of teaching in this workspace.
@@ -131,7 +132,7 @@ For skill acquisition, difficulty is the tool. Effortful retrieval is what build
 
 Each of these should be based on a **feedback loop**, where the user receives feedback on their performance. This feedback loop should be as tight as possible, giving feedback immediately - and ideally automatically.
 
-For quizzes, each answer should be exactly the same number of words (and characters, if possible). Don't give the user any clues about the answer through formatting.
+For quizzes, each answer should be exactly the same number of words (and characters, if possible). Vary which position holds the correct answer across questions. Don't give the user any clues about the answer through formatting or order.
 
 When the user specifically wants standalone exercises, drills, kata, or attempt review, hand off to `/skill:practice` rather than expanding the lesson. Practice can create spoiler-gated exercise scaffolds from this teaching workspace while preserving the lesson's role as the primary teaching unit.
 
@@ -171,9 +172,8 @@ Some learning topics lend themselves to reference:
 - Algorithms and flowcharts for processes
 - Yoga poses and sequences for yoga
 - Exercises and routines for fitness
-- Glossaries for any topic with its own nomenclature
 
-Glossaries, in particular, are an essential reference. Once one is created, it should be adhered to in every lesson.
+The glossary is the most important reference, but it lives in `GLOSSARY.md` at the workspace root, not in `./reference/`. Once it exists, every lesson and reference document should use its terms. Promote a term into it only after the user can use that term correctly.
 
 ## `NOTES.md`
 
