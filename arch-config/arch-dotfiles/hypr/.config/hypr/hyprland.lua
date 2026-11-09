@@ -27,3 +27,8 @@ require("default.hypr.toggles")
 
 -- Add any other personal Hyprland configuration below.
 -- o.window("qemu", { workspace = "5" })
+
+-- Herdr is a terminal app: tag it so Omarchy's universal copy/paste sends
+-- Ctrl+Shift+C/V (herdr's terminal.copy/paste) instead of Ctrl+C/V, which
+-- would interrupt the program in the pane.
+o.window("herdr-app", { tag = "+terminal" })
