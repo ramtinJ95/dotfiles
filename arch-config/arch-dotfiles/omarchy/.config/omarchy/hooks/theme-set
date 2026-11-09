@@ -235,6 +235,22 @@ dark = "omarchy"
 YAZI_THEME
 fi
 
+# herdr-app: Omarchy renders ~/.config/omarchy/themed/herdr-app.json.tpl into the
+# theme; install it where herdr-app reads themes. herdr-app reloads it live.
+herdr_app_theme_src="$HOME/.local/state/omarchy/current/theme/herdr-app.json"
+herdr_app_theme_file="$HOME/.config/herdr-app/themes/omarchy.json"
+if [[ -d $(dirname "$herdr_app_theme_file") ]]; then
+  if [[ ! -f $herdr_app_theme_src ]] || grep -q '{{' "$herdr_app_theme_src"; then
+    omarchy-notification-send -u normal "herdr-app theme not updated" \
+      "$herdr_app_theme_src is missing or has unrendered colors" >/dev/null 2>&1
+  else
+    tmp_herdr_app=$(mktemp "$herdr_app_theme_file.XXXXXX")
+    cp "$herdr_app_theme_src" "$tmp_herdr_app"
+    chmod 644 "$tmp_herdr_app"
+    mv "$tmp_herdr_app" "$herdr_app_theme_file"
+  fi
+fi
+
 if pgrep -x tmux >/dev/null; then
   tmux source-file "$tmux_theme_file" >/dev/null 2>&1 || true
 fi
