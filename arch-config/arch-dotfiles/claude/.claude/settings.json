@@ -6,6 +6,7 @@
   "permissions": {
     "defaultMode": "auto"
   },
+  "model": "opus",
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline.sh"
@@ -20,8 +21,8 @@
       "effortLevel": "high"
     }
   },
-  "autoMemoryEnabled": true,
-  "autoDreamEnabled": true,
+  "autoMemoryEnabled": false,
+  "autoDreamEnabled": false,
   "skipDangerousModePermissionPrompt": true,
   "theme": "auto",
   "editorMode": "vim",
