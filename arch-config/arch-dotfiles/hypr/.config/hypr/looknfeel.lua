@@ -32,3 +32,8 @@ for _, monitor in ipairs({ "DP-7", "DP-1" }) do -- home BenQ, work Dell
     hl.workspace_rule({ workspace = tostring(workspace), monitor = monitor, default = workspace == 1 or nil })
   end
 end
+
+-- Opt another application in to Omarchy's standard transparency.
+-- Find its class with: hyprctl clients
+-- o.transparent_window("my-app")
+-- o.transparent_window("my-app", "0.9 0.85") -- Custom active/inactive opacity.
