@@ -11,26 +11,39 @@ they are intentionally split into shared files plus a small OS overlay.
 - `agents/` - Canonical user-level `.agents/AGENTS.md` and `.agents/skills` tree for shared agent instructions and skills
 - `pi/` - Pi agent configuration, extensions, and skills
 
-## Herdr App Mods
+## Herdr App
 
-The Herdr app mods (tuido, nexus) live in
-[herdr-stuff](https://github.com/ramtinJ95/herdr-stuff), not in this repo, so
-they are installed by a script rather than stowed. It works the same on macOS
-and Arch:
+The Herdr app rewrites the files in its home (`~/.config/herdr-app`), and its
+default `keys.json` differs between macOS and Linux, so nothing there is
+stowed. A script sets it up instead. It works the same on macOS and Arch:
 
 ```bash
 scripts/herdr-mods install
 ```
 
-It clones herdr-stuff to `~/personal/herdr-stuff` (or `HERDR_STUFF_DIR`), or
-fast-forwards an existing checkout. It then links each mod into
-`~/.config/herdr-app/mods/` and adds each mod's `keys.json` bindings to
-`~/.config/herdr-app/keys.json` (`ctrl-f t` opens tuido, `ctrl-f e` nexus).
-Open the Herdr app once first so it writes its home. The script never replaces
-anything: a mod folder of the same name makes it fail, and a key you already
-use stays yours, with a warning. Run
-it again after pulling to pick up new mods. Restart the app after it links a
-new mod.
+Open the Herdr app once first so it writes its home. The script then:
+
+- clones [herdr-stuff](https://github.com/ramtinJ95/herdr-stuff), where the
+  mods (tuido, nexus) live, to `~/personal/herdr-stuff` (or `HERDR_STUFF_DIR`),
+  or fast-forwards an existing checkout, and links each mod into
+  `~/.config/herdr-app/mods/`;
+- adds each mod's `keys.json` bindings (`ctrl-f t` opens tuido, `ctrl-f e`
+  nexus) and the personal bindings in `herdr-app/keys.json` (the `ctrl-f`
+  prefix keys for panes, tabs and spaces) to the app's `keys.json`, keeping the
+  OS's own defaults;
+- on Omarchy, makes the app follow the Omarchy theme and font. The arch
+  `omarchy` package does the work on every switch: `themed/herdr-app.json.tpl`
+  renders the colors, and the `theme-set` and `font-set` hooks install them
+  and set `theme` and `font` in `settings.json`. A fresh install applied its
+  theme before the app existed, so the script applies it once (stow the arch
+  packages first).
+
+The script never replaces anything: a mod folder of the same name makes it
+fail, and a key you already use stays yours, with a warning. Run it again after
+pulling to pick up new mods or bindings; when everything is in place it changes
+nothing. Restart the app after it links a new mod. To change a shared binding,
+edit `herdr-app/keys.json` here and run the script; it adds new keys but won't
+change a key the app's `keys.json` already binds.
 
 Each mod's README lists what it needs: tuido needs the `tuido` CLI set up with
 `tuido init`, and nexus needs `nexus connect`. Herdr stops adding new default

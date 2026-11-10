@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Installs the Herdr app mods from herdr-stuff on this machine, macOS or Linux: clones or fast-forwards the checkout,
-# links each mod into ~/.config/herdr-app/mods and merges each mod's keys.json into the app's keys.json.
+# Sets up the Herdr app on this machine, macOS or Linux: clones or fast-forwards herdr-stuff, links each mod into
+# ~/.config/herdr-app/mods, merges each mod's keys.json and common-config/herdr-app/keys.json (personal bindings) into
+# the app's keys.json, and on Omarchy makes the app follow the Omarchy theme and font.
 # The mods' code stays in herdr-stuff, so `git pull` there (or running this again) updates every mod.
 set -u
 
@@ -20,7 +21,8 @@ Usage: scripts/herdr-mods install
 
 Clones or fast-forwards herdr-stuff (HERDR_STUFF_DIR, default ~/personal/herdr-stuff),
 links each of its mods into ~/.config/herdr-app/mods, and adds each mod's keys.json
-bindings to ~/.config/herdr-app/keys.json without replacing a key you already use.
+bindings and common-config/herdr-app/keys.json to ~/.config/herdr-app/keys.json without
+replacing a key you already use. On Omarchy it also applies the theme and font to the app.
 EOF
 }
 
@@ -63,6 +65,42 @@ link_mod() {
     return 1
 }
 
+# On Omarchy, herdr-app's colors and font come from the arch omarchy package: a themed/ template plus the theme-set and
+# font-set hooks. A fresh install applied its theme before herdr-app or the template existed, so apply them once here.
+apply_omarchy_look() {
+    command -v omarchy >/dev/null 2>&1 || return 0
+    local template="$HOME/.config/omarchy/themed/herdr-app.json.tpl"
+    local rendered="$HOME/.local/state/omarchy/current/theme/herdr-app.json"
+    local settings="$APP_HOME/settings.json"
+    local font
+    font="$(omarchy font current)"
+    [[ -f "$template" ]] || { fail "$template is missing; run scripts/dotfiles stow arch first"; return 1; }
+
+    if [[ -f "$APP_HOME/themes/omarchy.json" ]] \
+        && [[ "$(jq -r '.theme // empty' "$settings" 2>/dev/null)" == omarchy ]] \
+        && [[ "$(jq -r '.font // empty' "$settings" 2>/dev/null)" == "$font" ]]; then
+        pass "herdr-app follows the Omarchy theme and font"
+        return 0
+    fi
+
+    if [[ -f "$rendered" ]]; then
+        info "apply the Omarchy theme to herdr-app"
+        omarchy-hook theme-set "$(cat "$HOME/.local/state/omarchy/current/theme.name")"
+    else
+        # The current theme was rendered without the template; apply it again to render it.
+        info "re-apply the Omarchy theme to render herdr-app's colors"
+        omarchy theme set "$(omarchy theme current)"
+    fi
+    info "apply the Omarchy font to herdr-app"
+    omarchy-hook font-set "$font"
+
+    if [[ -f "$APP_HOME/themes/omarchy.json" && "$(jq -r '.theme // empty' "$settings")" == omarchy ]]; then
+        pass "herdr-app follows the Omarchy theme and font"
+    else
+        fail "herdr-app theme was not applied; check $rendered and $settings"
+    fi
+}
+
 install() {
     command -v git >/dev/null 2>&1 || { fail "git is required"; return 1; }
     command -v python3 >/dev/null 2>&1 || { fail "python3 is required to merge key bindings"; return 1; }
@@ -80,9 +118,11 @@ install() {
         [[ -f "$mod/mod.json" ]] || continue
         link_mod "$mod" && [[ -f "$mod/keys.json" ]] && keys+=("$mod/keys.json")
     done
-    if [[ "${#keys[@]}" -gt 0 ]]; then
-        python3 -I "$SCRIPT_DIR/herdr-mod-keys.py" "$APP_HOME/keys.json" "${keys[@]}" || fail "could not merge key bindings"
-    fi
+    # Personal bindings shared by every machine, macOS and Linux alike.
+    keys+=("$SCRIPT_DIR/../common-config/herdr-app/keys.json")
+    python3 -I "$SCRIPT_DIR/herdr-mod-keys.py" "$APP_HOME/keys.json" "${keys[@]}" || fail "could not merge key bindings"
+
+    apply_omarchy_look
 
     if [[ "$failures" -eq 0 ]]; then
         pass "herdr mods installed; restart the Herdr app to load newly linked mods (each mod's README lists what it needs)"
