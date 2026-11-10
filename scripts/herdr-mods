@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+# Installs the Herdr app mods from herdr-stuff on this machine, macOS or Linux: clones or fast-forwards the checkout,
+# links each mod into ~/.config/herdr-app/mods and merges each mod's keys.json into the app's keys.json.
+# The mods' code stays in herdr-stuff, so `git pull` there (or running this again) updates every mod.
+set -u
+
+REPO_URL="https://github.com/ramtinJ95/herdr-stuff.git"
+STUFF_DIR="${HERDR_STUFF_DIR:-$HOME/personal/herdr-stuff}"
+APP_HOME="${HERDR_APP_HOME:-$HOME/.config/herdr-app}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+failures=0
+info() { printf '==> %s\n' "$1"; }
+pass() { printf 'OK: %s\n' "$1"; }
+fail() { printf 'FAIL: %s\n' "$1" >&2; failures=$((failures + 1)); }
+
+usage() {
+    cat <<'EOF'
+Usage: scripts/herdr-mods install
+
+Clones or fast-forwards herdr-stuff (HERDR_STUFF_DIR, default ~/personal/herdr-stuff),
+links each of its mods into ~/.config/herdr-app/mods, and adds each mod's keys.json
+bindings to ~/.config/herdr-app/keys.json without replacing a key you already use.
+EOF
+}
+
+sync_checkout() {
+    if [[ -d "$STUFF_DIR/.git" ]]; then
+        # fetch + merge --ff-only rather than pull: a pull configured to rebase refuses a checkout with local edits,
+        # while a fast-forward goes ahead unless those edits touch the incoming files.
+        info "update $STUFF_DIR"
+        git -C "$STUFF_DIR" fetch --quiet && git -C "$STUFF_DIR" merge --ff-only --quiet '@{upstream}' \
+            || fail "could not fast-forward $STUFF_DIR to its upstream; resolve it there and run this again"
+    elif [[ -e "$STUFF_DIR" ]]; then
+        fail "$STUFF_DIR exists but is not a git checkout"
+    else
+        info "clone herdr-stuff into $STUFF_DIR"
+        mkdir -p "$(dirname "$STUFF_DIR")" && git clone "$REPO_URL" "$STUFF_DIR" || fail "could not clone $REPO_URL"
+    fi
+}
+
+# A link that already points here is left alone; anything else with the mod's name is reported, never replaced.
+# Succeeds only when the mod is linked, so a mod that isn't never gets its keys bound.
+link_mod() {
+    local mod="$1"
+    local name
+    name="$(basename "$mod")"
+    local target="$APP_HOME/mods/$name"
+    if [[ -L "$target" ]]; then
+        if [[ "$(readlink "$target")" == "$mod" ]]; then
+            pass "mod linked: $name"
+            return 0
+        fi
+        fail "$target links to $(readlink "$target"); remove it to link $mod"
+    elif [[ -e "$target" ]]; then
+        fail "$target exists and is not a link; another mod named $name is installed"
+    elif ln -s "$mod" "$target"; then
+        info "link mod: $name"
+        return 0
+    else
+        fail "could not link $target"
+    fi
+    return 1
+}
+
+install() {
+    command -v git >/dev/null 2>&1 || { fail "git is required"; return 1; }
+    command -v python3 >/dev/null 2>&1 || { fail "python3 is required to merge key bindings"; return 1; }
+    # The app writes its home, keys.json included, on first start; merging into nothing would hide its defaults.
+    [[ -f "$APP_HOME/keys.json" ]] || { fail "$APP_HOME/keys.json is missing; open the Herdr app once first"; return 1; }
+
+    sync_checkout
+    [[ "$failures" -eq 0 ]] || return 1
+    mkdir -p "$APP_HOME/mods" || { fail "could not create $APP_HOME/mods"; return 1; }
+
+    local mod
+    local keys=()
+    for mod in "$STUFF_DIR"/mods/*/; do
+        mod="${mod%/}"
+        [[ -f "$mod/mod.json" ]] || continue
+        link_mod "$mod" && [[ -f "$mod/keys.json" ]] && keys+=("$mod/keys.json")
+    done
+    if [[ "${#keys[@]}" -gt 0 ]]; then
+        python3 -I "$SCRIPT_DIR/herdr-mod-keys.py" "$APP_HOME/keys.json" "${keys[@]}" || fail "could not merge key bindings"
+    fi
+
+    if [[ "$failures" -eq 0 ]]; then
+        pass "herdr mods installed; restart the Herdr app to load newly linked mods (each mod's README lists what it needs)"
+        return 0
+    fi
+    return 1
+}
+
+case "${1:-}" in
+    install) install ;;
+    -h|--help|help|'') usage ;;
+    *) usage >&2; exit 2 ;;
+esac
