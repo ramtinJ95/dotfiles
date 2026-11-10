@@ -42,6 +42,7 @@ Commands:
   restow arch         Restow common and Arch user packages into $HOME
   restow arch-system  Restow Arch system packages into /
   install-herdr arch   Install Herdr from the AUR, or the official installer when no AUR helper exists
+  install-inkline arch Install or update inkline (bash suggestions/highlighting) from its GitHub release
 EOF
 }
 
@@ -306,6 +307,21 @@ install_herdr_arch() {
     [[ "$failures" -eq 0 ]]
 }
 
+# The bash package's .bashrc loads ~/.local/lib/bash/inkline.so, so the
+# installer is told to leave ~/.bashrc alone.
+install_inkline_arch() {
+    failures=0
+
+    command -v curl >/dev/null 2>&1 || { fail "curl is required to install inkline"; return 1; }
+    local script
+    info "install inkline from its latest GitHub release"
+    script="$(curl -fsSL https://raw.githubusercontent.com/ramtinJ95/inkline/main/install.sh)" \
+        || { fail "could not download the inkline installer"; return 1; }
+    INKLINE_NO_BASHRC=1 bash -c "$script" >/dev/null || fail "failed to install inkline"
+    [[ "$failures" -eq 0 ]] && pass "inkline installed: $HOME/.local/lib/bash/inkline.so"
+    [[ "$failures" -eq 0 ]]
+}
+
 check_broken_symlinks() {
     local root
     for root in "$COMMON_DIR" "$MAC_DIR" "$ARCH_DIR"; do
@@ -456,6 +472,13 @@ case "${1:-}" in
             exit 2
         fi
         install_herdr_arch
+        ;;
+    install-inkline)
+        if [[ $# -ne 2 || "$2" != "arch" ]]; then
+            usage >&2
+            exit 2
+        fi
+        install_inkline_arch
         ;;
     stow|restow)
         if [[ $# -ne 2 ]]; then

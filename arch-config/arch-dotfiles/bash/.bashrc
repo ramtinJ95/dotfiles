@@ -112,12 +112,12 @@ ssh_auth() {
 . "$HOME/.local/share/../bin/env"
 export PATH="$HOME/.cargo/bin:$PATH"
 
-# zsh-style autosuggestions + syntax highlighting (~/personal/inkline)
+# zsh-style autosuggestions + syntax highlighting (https://github.com/ramtinJ95/inkline)
 if [[ $- == *i* ]]; then
   if [[ -f ~/.local/lib/bash/inkline.so ]]; then
     enable -f ~/.local/lib/bash/inkline.so inkline
   else
-    echo "inkline not installed: build ~/personal/inkline and install target/release/libinkline.so to ~/.local/lib/bash/inkline.so" >&2
+    echo "inkline not installed: run scripts/dotfiles install-inkline arch in the dotfiles repo" >&2
   fi
 fi
 . "$HOME/.cargo/env"

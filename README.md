@@ -27,6 +27,7 @@ Modular dotfiles managed with GNU Stow for a Hyprland-based desktop environment.
 ```bash
 scripts/dotfiles doctor
 scripts/dotfiles stow arch
+scripts/dotfiles install-inkline arch   # bash suggestions + highlighting
 ```
 
 See [arch-config/arch-dotfiles/README.md](arch-config/arch-dotfiles/README.md) for detailed usage.
@@ -53,7 +54,7 @@ for prerequisites, authentication, and updating an existing machine.
 ### Arch Linux Specific
 - **Hyprland** - Wayland compositor (Omarchy quattro Lua config)
 - **Omarchy shell** - Bar layout, idle/lock timings, and theme-set hook
-- **Bash + inkline** - zsh-style autosuggestions and syntax highlighting (`~/personal/inkline`)
+- **Bash + inkline** - zsh-style autosuggestions and syntax highlighting ([inkline](https://github.com/ramtinJ95/inkline), installed with `scripts/dotfiles install-inkline arch`)
 - **TLP** - Power management
 - **Kitty, Ghostty, k9s** - Arch desktop and terminal tooling
 
