@@ -1,0 +1,2 @@
+(\.git|node_modules|\.claude)
+(\.DS_Store|\.gitignore|\.stow-local-ignore)

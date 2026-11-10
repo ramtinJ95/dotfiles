@@ -2,6 +2,7 @@
 
 import { spawn, spawnSync } from "node:child_process";
 import { realpathSync, statSync } from "node:fs";
+import { homedir } from "node:os";
 import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -16,7 +17,8 @@ import {
 } from "../herdr-agent/herdr-agent.mjs";
 
 const EXAMPLE_DIR = dirname(fileURLToPath(import.meta.url));
-const AGENT_DIR = resolve(EXAMPLE_DIR, "..", "..");
+// Stow resolves this script into the checkout, but npm installs into Pi's home.
+const AGENT_DIR = resolve(process.env.PI_CODING_AGENT_DIR || resolve(homedir(), ".pi/agent"));
 const NPM_MODULES_DIR = resolve(AGENT_DIR, "npm", "node_modules");
 const EXTENSIONS_DIR = resolve(AGENT_DIR, "extensions");
 const CODEX_CONVERSION_PATH = resolve(
@@ -63,10 +65,15 @@ const THINKING_LEVELS = new Set([
 	"xhigh",
 	"max",
 ]);
-const WORKER_INTERACTIVE_PROFILE_PATH = resolve(
-	EXAMPLE_DIR,
-	"worker-profile",
-);
+const WORKER_EXTENSIONS = [
+	CODEX_CONVERSION_PATH,
+	HERDR_STATE_EXTENSION_PATH,
+	resolve(NPM_MODULES_DIR, "@howaboua/pi-notes-compaction"),
+	resolve(NPM_MODULES_DIR, "@howaboua/pi-ask"),
+	resolve(NPM_MODULES_DIR, "@ramtinj95/pi-comment-editor"),
+	resolve(NPM_MODULES_DIR, "@ramtinj95/pi-mermaid-tui"),
+	resolve(EXTENSIONS_DIR, "pi-vim"),
+];
 const ALLOWED_KEYS = new Set([
 	"agent_type",
 	"message",
@@ -394,7 +401,7 @@ export function buildInteractivePiArgs(request) {
 			: (request.thinking ?? config.thinking);
 	const extensions =
 		request.agent_type === "worker"
-			? [WORKER_INTERACTIVE_PROFILE_PATH]
+			? WORKER_EXTENSIONS
 			: [CODEX_CONVERSION_PATH, HERDR_STATE_EXTENSION_PATH];
 	const args = [
 		"--no-extensions",
@@ -403,6 +410,10 @@ export function buildInteractivePiArgs(request) {
 		"--no-approve",
 	];
 	for (const extension of extensions) args.push("--extension", extension);
+	if (request.agent_type === "worker") {
+		for (const skill of ["grok", "grilling"])
+			args.push("--skill", resolve(homedir(), ".agents/skills", skill, "SKILL.md"));
+	}
 	if (request.agent_type === "worker")
 		args.push("--exclude-tools", "spawn_agent");
 	args.push(

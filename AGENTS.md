@@ -18,9 +18,12 @@ Herdr, skills. Editing a file here changes the running setup immediately,
 including the settings, hooks, and skills of the agent doing the editing.
 
 - Edit the repo path, not the `$HOME` symlink; some tools refuse to write through links.
-- Herdr `config.toml`, Pi `settings.json`, and Codex `config.toml` are seeded
+- Herdr `config.toml`, Pi `settings.json`, `pi-codex-conversion.json` and
+  `notes-compaction/settings.json`, and Codex `config.toml` are seeded
   once by `scripts/dotfiles` as ordinary local files. Editing the repo copy does
   not change the live file, and live edits never flow back here.
+  `scripts/pi-setup` explicitly syncs the three Pi seeds with private backups
+  on macOS or Arch; ordinary Stow only seeds absent files.
 - Never read, print, or commit secrets: settings `env` blocks, MCP headers, Pi
   `auth.json`. Never remove Pi runtime state (`auth.json`, `sessions/`, `git/`).
 

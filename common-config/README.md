@@ -11,6 +11,81 @@ they are intentionally split into shared files plus a small OS overlay.
 - `agents/` - Canonical user-level `.agents/AGENTS.md` and `.agents/skills` tree for shared agent instructions and skills
 - `pi/` - Pi agent configuration, extensions, and skills
 
+## Pi Setup
+
+On each Arch machine (Node must be at least 22.19):
+
+```bash
+sudo pacman -S --needed nodejs npm git stow
+cd ~/dotfiles
+git pull --ff-only
+./scripts/pi-setup
+export PATH="$HOME/.local/bin:$PATH"
+pi
+```
+
+For a new checkout, first `git clone git@github.com:ramtinJ95/dotfiles.git ~/dotfiles`.
+The same script works on macOS with Node/npm and GNU Stow installed. Add
+`~/.local/bin` first on your shell's PATH permanently. Close Pi sessions before
+syncing settings on an existing machine, so they cannot overwrite the update.
+
+The script installs **Pi 1.5.0** under `~/.local` without sudo and installs the
+exact extension versions in the shared `settings.json`, including the Herdr Core
+Shepherdr prerelease and notes-compaction. It links **only** the `agents` and `pi`
+packages; it does not install the old Herdr TUI, desktop settings, or Mac local
+LLM servers. Package installation failures stop the command rather than silently
+skipping an extension. Individual install commands have a five-minute timeout.
+It also loads the installed extensions through Pi's resource loader and fails
+on loading errors, without making a model request.
+
+Run `/login` inside Pi on each machine. Credentials are never copied. Additional
+capabilities need their own local prerequisites:
+
+- Herdr-managed interactive agents: the **Herdr app/Core** and its `hc` CLI;
+  launch Pi inside the app. The old `herdr` TUI is not a substitute.
+- Claude delegation: install and authenticate Claude Code separately.
+- Exa tools: set `EXA_API_KEY` (Arch cannot use this Mac's Keychain entry).
+- Semantic browser tools: set `TYPESAFE_API_KEY` and use an existing CDP-enabled
+  browser. Remote host aliases/paths in the browser integration need per-machine
+  setup; see its [README](common-dotfiles/pi/.pi/agent/codex-conversion-custom-tools/browser/README.md).
+- Atuin history and voice: install Atuin/audio prerequisites separately; choose
+  local audio devices rather than copying macOS CoreAudio IDs.
+
+### Updating and ownership
+
+After pulling, rerun `scripts/pi-setup` to synchronize the shared setup.
+It replaces the configured package list with the shared list and merges the
+portable settings, preserving local theme, audio devices, and unrelated keys.
+Changed configs are backed up under `~/.pi/backups/setup-*` with private permissions.
+`--config-only` performs the same configuration update without installing/running Pi.
+
+`settings.json`, `pi-codex-conversion.json`, and `notes-compaction/settings.json`
+are writable **local files** on both platforms. Ordinary `scripts/dotfiles
+stow/restow` only seeds missing files; it does not overwrite local changes.
+To publish changes made through Pi, deliberately update those three repository
+seeds (omit credentials, theme generation state, audio device IDs, and changelog
+metadata), update version pins as needed, test, and commit. Live edits do not
+automatically flow back to the shared seeds.
+
+Pi Stow rules allow only portable assets. Auth, sessions, trust, npm/model caches,
+notes databases, and local LLM trees are not installed from the checkout. The
+setup script can unfold old directory links owned by this checkout and detach
+its config links without deleting runtime data. Existing runtime links remain
+where they are; this is not a credentials/cache migration. Foreign links and
+conflicting local assets stop setup for explicit migration; nothing is adopted.
+
+Verification (isolated temporary homes, no credentials or model calls):
+
+```bash
+node --test scripts/test-pi-setup.mjs
+bash scripts/test-macarchy-stow.sh
+scripts/dotfiles doctor
+```
+
+The setup tests cover clean installs, repeated sync, old folded links, local
+settings preservation, runtime exclusion and conflict refusal. They do not
+claim authentication, Herdr, browser, voice, or Arch runtime validation.
+
 ## Herdr App
 
 The Herdr app rewrites the files in its home (`~/.config/herdr-app`), and its

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
 import { resolve } from "node:path";
 import test from "node:test";
 
@@ -194,20 +194,16 @@ test("builds a worker Pi with the general-purpose worker prompt", () => {
 	const extensions = args
 		.map((arg, index) => (args[index - 1] === "--extension" ? arg : undefined))
 		.filter(Boolean);
-	assert.equal(extensions.length, 1);
-	assert.equal(extensions[0].endsWith("/worker-profile"), true);
-	assert.equal(args.includes("--skill"), false);
-	const profile = JSON.parse(
-		readFileSync(resolve(extensions[0], "package.json"), "utf8"),
-	);
-	assert.equal(profile.pi.extensions.length, 7);
+	assert.equal(extensions.length, 7);
+	const agentDir = resolve(process.env.PI_CODING_AGENT_DIR || resolve(homedir(), ".pi/agent"));
+	for (const extension of extensions) assert.equal(extension.startsWith(agentDir + "/"), true);
+	assert.equal(extensions.some(path => path.endsWith("/pi-auto-trees")), false);
+	assert.equal(extensions.some(path => path.endsWith("/pi-notes-compaction")), true);
+	const skills = args.filter((arg, index) => args[index - 1] === "--skill");
 	assert.deepEqual(
-		profile.pi.skills.map((path) => path.split("/").at(-2)),
-		["grok", "grilling"],
+		skills,
+		["grok", "grilling"].map(skill => resolve(homedir(), ".agents/skills", skill, "SKILL.md")),
 	);
-	for (const resource of [...profile.pi.extensions, ...profile.pi.skills])
-		assert.equal(existsSync(resolve(extensions[0], resource)), true, resource);
-	assert.equal(args.join(" ").length < 1_000, true);
 	assert.deepEqual(
 		args.slice(
 			args.indexOf("--exclude-tools"),

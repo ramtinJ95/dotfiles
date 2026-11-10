@@ -31,6 +31,13 @@ scripts/dotfiles stow arch
 
 See [arch-config/arch-dotfiles/README.md](arch-config/arch-dotfiles/README.md) for detailed usage.
 
+### Pi only (Arch or macOS)
+
+To replicate Pi without installing desktop dotfiles, run `scripts/pi-setup`.
+It installs the pinned Pi runtime/extensions, links shared agent assets, and
+syncs portable settings with backups. See [Pi setup](common-config/README.md#pi-setup)
+for prerequisites, authentication, and updating an existing machine.
+
 ## What's Included
 
 ### Shared Configurations

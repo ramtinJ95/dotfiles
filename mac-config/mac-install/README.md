@@ -42,7 +42,8 @@ or adoption files in dotfiles; they describe one machine’s current state.
 
 The saved profile uses Macarchy’s curated package set and personal opt-outs.
 The old `Brewfile` is **not** applied in addition. Selected presets can still
-require manual setup: Pi installation, Spotify’s first launch and Spicetify
+require separate setup: run `scripts/pi-setup` for Pi (see the
+[shared setup guide](../../common-config/README.md#pi-setup)); Spotify’s first launch and Spicetify
 initialization, and Accessibility grants are not bypassed by this script.
 Spicetify’s saved machine-specific config/backup metadata is deliberately not
 seeded; initialize its native configuration and follow Macarchy’s diagnostics.
@@ -63,6 +64,8 @@ Tmux plugin installation remains separate from Macarchy setup.
   update the seed and review the corresponding local config edit; do not copy
   generated theme colours back into the seed. Review machine-specific paths in
   these existing personal seeds when using a different username or directory.
+  Pi's conversion and notes settings are also local seeds. `scripts/pi-setup`
+  explicitly syncs these Pi seeds with backups; ordinary restow still preserves them.
 
 Neovim is the deliberate personal-tree exception: the helper links
 `~/.config/nvim` to `mac-config/mac-dotfiles/nvim/.config/nvim` as a whole,

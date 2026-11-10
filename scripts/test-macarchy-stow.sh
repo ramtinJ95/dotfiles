@@ -48,6 +48,10 @@ mkdir -p "$fixture/scripts" "$fixture/packages" "$home" \
   "$mac/codex/.codex" "$mac/kitty/.config/kitty" "$mac/nvim/.config/nvim" \
   "$mac/spicetify/.config/spicetify/Themes/text"
 cp "$repo/scripts/dotfiles" "$fixture/scripts/dotfiles"
+cp "$repo/common-config/common-dotfiles/pi/.stow-local-ignore" "$common/pi/.stow-local-ignore"
+mkdir -p "$common/pi/.pi/agent/notes-compaction"
+printf '{}\n' > "$common/pi/.pi/agent/pi-codex-conversion.json"
+printf '{}\n' > "$common/pi/.pi/agent/notes-compaction/settings.json"
 cp -R "$repo/mac-config/mac-dotfiles/macarchy" "$mac/macarchy"
 printf 'herdr\npi\n' > "$fixture/packages/common.txt"
 printf 'codex\nmacarchy\nnvim\nspicetify\n' > "$fixture/packages/mac.txt"

@@ -2,7 +2,8 @@
   "mode": "path",
   "voiceFeaturesOnly": false,
   "prompt": {
-    "heavySystemPromptOverwrite": true
+    "heavySystemPromptOverwrite": true,
+    "currentTimeReminderMinutes": 0
   },
   "scope": {
     "allProviders": "off",
@@ -22,20 +23,26 @@
   "ui": {
     "statusLine": true,
     "toolRenaming": true,
-    "compactTools": false,
+    "compactTools": "off",
     "codeModeDetails": true,
     "backgroundShellWidget": true,
     "backgroundShellToggleShortcut": "alt+w",
     "backgroundShellPrevShortcut": "alt+q",
     "backgroundShellNextShortcut": "alt+e",
-    "backgroundShellCloseShortcut": "alt+r"
+    "backgroundShellCloseShortcut": "alt+r",
+    "noteSaveMarkers": false
   },
   "compaction": {
-    "responsesCompaction": false,
     "version": "v1",
     "v2UserMessageRetention": 64,
-    "contextManagement": "remote",
-    "portableSummary": false
+    "continuity": "notes",
+    "historyStorage": "remote",
+    "shareSubagentContext": false,
+    "method": "pi",
+    "newWindowRequests": "unrestricted",
+    "notesTreeHandoff": true,
+    "idleNotesRollover": 0,
+    "taskBoundaryReminder": 0
   },
   "voice": {
     "protocol": "v3",
@@ -45,29 +52,45 @@
     "dictationShortcut": "ctrl+alt+d",
     "realtimeShortcut": "ctrl+alt+v",
     "dictationShortcutMode": "push",
-    "inputDevice": "coreaudio:BuiltInMicrophoneDevice",
-    "outputDevice": "coreaudio:BuiltInSpeakerDevice",
     "serverShortcut": "ctrl+alt+g",
     "autoResumeRealtime": false,
-    "audioSetupCompleted": true,
     "delegationAcknowledgements": true,
     "forwardReasoningSummaries": true,
     "muteShortcut": "ctrl+alt+m",
     "contextReasoning": "high",
-    "refreshRealtimeAfterCompaction": false
+    "refreshRealtimeAfterCompaction": false,
+    "v3AlternateVoice": "ember",
+    "model": "codex-live-1.1",
+    "apiProvider": "openai",
+    "realtimeVoice": "marin",
+    "realtimeAlternateVoice": "cedar",
+    "webSearch": false,
+    "taskDelegationModel": "openai-codex/gpt-6-luna",
+    "taskDelegationReasoning": "low"
   },
   "openai": {
-    "fast": false,
+    "fast": {
+      "astra": true,
+      "sol": true,
+      "terra": true,
+      "luna": true,
+      "other": true
+    },
     "verbosity": "low",
     "forceCachedWebSockets": true,
     "webSearchModel": "gpt-5.6-luna",
     "harnessIdentifierHeader": false,
     "lunaCacheKeepaliveMinutes": 0,
     "proxyResponsesLite": false,
-    "cacheDiagnostics": "off"
+    "cacheDiagnostics": "off",
+    "daybreak": false,
+    "lunaCacheKeepaliveIntervalMinutes": 2.5
   },
   "executionMode": "code",
   "notebook": {
-    "maxHeapMiB": 4096
+    "maxHeapMiB": 4096,
+    "plainCommandOutput": false,
+    "journals": "week",
+    "checkpointCleanup": "never"
   }
 }

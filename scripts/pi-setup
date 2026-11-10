@@ -1,0 +1,135 @@
+#!/usr/bin/env node
+// Install only Pi/shared agent inputs, without touching desktop/platform packages.
+import { execFileSync } from "node:child_process";
+import { chmodSync, copyFileSync, lstatSync, mkdirSync, readFileSync,
+  readdirSync, realpathSync, renameSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { dirname, join, relative, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const common = join(repo, "common-config/common-dotfiles");
+const home = realpathSync(homedir());
+const agent = join(home, ".pi/agent");
+const source = join(common, "pi/.pi/agent");
+const coreVersion = "1.5.0";
+const args = process.argv.slice(2);
+if (args.includes("--help")) {
+  console.log("Usage: scripts/pi-setup [--config-only]\nInstalls pinned Pi and extensions; synchronizes portable settings with backups.\n--config-only: link/sync configuration without installing or running Pi.");
+  process.exit(0);
+}
+if (args.some(arg => arg !== "--config-only")) throw new Error("Unknown option; use --help");
+const [major, minor] = process.versions.node.split(".").map(Number);
+if (major < 22 || (major === 22 && minor < 19)) throw new Error("Node >=22.19 is required");
+if (process.env.PI_CODING_AGENT_DIR && resolve(process.env.PI_CODING_AGENT_DIR) !== agent) {
+  throw new Error("Unset PI_CODING_AGENT_DIR: this setup manages ~/.pi/agent only");
+}
+const run = (cmd, argv, options = {}) => execFileSync(cmd, argv, {
+  cwd: home, stdio: "inherit", timeout: 300_000, ...options,
+});
+const stat = path => { try { return lstatSync(path); } catch (error) {
+  if (error.code === "ENOENT") return undefined;
+  throw error;
+} };
+const linkTarget = path => realpathSync(path);
+const readJSON = path => JSON.parse(readFileSync(path, "utf8"));
+const object = value => value !== null && typeof value === "object" && !Array.isArray(value);
+function merge(local, shared) {
+  const result = { ...local };
+  for (const [key, value] of Object.entries(shared)) {
+    result[key] = object(value) ? merge(object(local?.[key]) ? local[key] : {}, value) : value;
+  }
+  return result;
+}
+
+// Unfold only links owned by this checkout. Preserve every child, including
+// runtime data, without reading it. Foreign directory ownership is an error.
+function unfold(path, expected) {
+  const current = stat(path);
+  if (current?.isSymbolicLink()) {
+    if (linkTarget(path) !== expected) throw new Error(`Foreign directory link: ${path}; migrate it explicitly`);
+    const children = readdirSync(expected);
+    unlinkSync(path);
+    mkdirSync(path, { mode: 0o700 });
+    for (const child of children) symlinkSync(relative(path, join(expected, child)), join(path, child));
+  } else if (current && !current.isDirectory()) {
+    throw new Error(`Expected a directory: ${path}`);
+  } else mkdirSync(path, { recursive: true, mode: 0o700 });
+}
+
+run("stow", ["--version"], { stdio: "ignore" });
+if (!args.includes("--config-only")) run("npm", ["--version"], { stdio: "ignore" });
+unfold(join(home, ".pi"), join(common, "pi/.pi"));
+unfold(agent, source);
+unfold(join(agent, "notes-compaction"), join(source, "notes-compaction"));
+unfold(join(home, ".agents"), join(common, "agents/.agents"));
+// Refuse asset conflicts before changing settings or installing packages.
+run("stow", ["--simulate", "--restow", "--no-folding", "-d", common, "-t", home, "agents", "pi"]);
+
+let backup;
+for (const name of ["settings.json", "pi-codex-conversion.json", "notes-compaction/settings.json"]) {
+  const target = join(agent, name);
+  const seed = join(source, name);
+  const current = stat(target);
+  if (current?.isSymbolicLink() && linkTarget(target) !== seed) {
+    throw new Error(`Foreign settings link: ${target}; migrate it explicitly`);
+  }
+  const local = current ? readJSON(target) : {};
+  if (!object(local)) throw new Error(`Expected JSON object: ${target}`);
+  const next = merge(local, readJSON(seed));
+  if (name === "settings.json" && local.theme) next.theme = local.theme;
+  if (name === "pi-codex-conversion.json") {
+    for (const key of ["responsesCompaction", "contextManagement", "portableSummary"]) delete next.compaction[key];
+    if (process.platform !== "darwin") {
+      for (const key of ["inputDevice", "outputDevice"]) {
+        if (next.voice[key]?.startsWith("coreaudio:")) {
+          delete next.voice[key];
+          delete next.voice.audioSetupCompleted;
+        }
+      }
+    }
+  }
+  const text = JSON.stringify(next, null, 2) + "\n";
+  if (current && !current.isSymbolicLink() && readFileSync(target, "utf8") === text) continue;
+  if (current) {
+    backup ??= join(home, ".pi/backups", `setup-${Date.now()}-${process.pid}`);
+    const saved = join(backup, name);
+    mkdirSync(dirname(saved), { recursive: true, mode: 0o700 });
+    copyFileSync(target, saved);
+    chmodSync(saved, 0o600);
+  }
+  // Rename replaces an old repo link, never writes through it into the seed.
+  const temporary = `${target}.setup-${process.pid}`;
+  writeFileSync(temporary, text, { mode: 0o600, flag: "wx" });
+  renameSync(temporary, target);
+  console.log(`Synced ${target}`);
+}
+run(join(repo, "scripts/dotfiles"), ["restow", "pi"]);
+if (backup) console.log(`Previous settings: ${backup}`);
+
+if (!args.includes("--config-only")) {
+  const prefix = join(home, ".local");
+  run("npm", ["install", "--global", "--prefix", prefix, `@earendil-works/pi-coding-agent@${coreVersion}`]);
+  const pi = join(prefix, "bin/pi");
+  const env = { ...process.env, PATH: `${join(prefix, "bin")}:${process.env.PATH ?? ""}` };
+  run(pi, ["--version"], { env });
+  // `pi update --extensions` skips exact pins that are not installed yet.
+  // Explicit installation is required for a genuinely clean machine.
+  for (const pkg of readJSON(join(source, "settings.json")).packages) {
+    if (typeof pkg === "string" && pkg.startsWith("npm:")) run(pi, ["install", pkg], { env });
+  }
+  run(pi, ["list"], { env });
+  const { DefaultResourceLoader } = await import(pathToFileURL(join(prefix,
+    "lib/node_modules/@earendil-works/pi-coding-agent/dist/index.js")));
+  const loader = new DefaultResourceLoader({ cwd: home, agentDir: agent });
+  let timeout;
+  try {
+    await Promise.race([loader.reload(), new Promise((_, reject) => {
+      timeout = setTimeout(() => reject(new Error("Extension verification timed out after 60 seconds")), 60_000);
+    })]);
+  } finally { clearTimeout(timeout); }
+  const loaded = loader.getExtensions();
+  if (loaded.errors.length) throw new Error(`Extension loading failed: ${JSON.stringify(loaded.errors)}`);
+  console.log(`Verified ${loaded.extensions.length} extensions load without errors.`);
+  console.log('Pi setup complete. Ensure ~/.local/bin is first on PATH; start pi and /login on this machine.');
+} else console.log("Configuration complete; Pi and extension installation were skipped.");

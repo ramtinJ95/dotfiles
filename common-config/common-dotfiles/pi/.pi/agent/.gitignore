@@ -1,3 +1,5 @@
 auth.json
 sessions/
 cache/
+notes-compaction/*
+!notes-compaction/settings.json

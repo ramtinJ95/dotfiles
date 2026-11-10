@@ -1,0 +1,8 @@
+# Portable assets only. Mutable JSON seeds are copied by scripts/dotfiles.
+# Never link caches, credentials, trust decisions, model caches or Mac local LLMs.
+(\.git|node_modules|\.claude)
+(\.gitignore|\.DS_Store|\.stow-local-ignore)
+^/\.pi/(?!agent(?:/|$)).+
+^/\.pi/agent/(?!AGENTS\.md$|REALTIME-SYSTEM-PROMPT\.md$|ask\.json$|claude-delegation\.json$|infra-command-guard\.json$|keybindings\.json$|pi-gpt-switcher\.json$|extensions(?:/|$)|codex-conversion-custom-tools(?:/|$)|prompts(?:/|$)|shepherdr(?:/|$)).+
+^/\.pi/agent/shepherdr/(?!profiles(?:/|$)).+
+.*\.(log|sqlite|bak)$
