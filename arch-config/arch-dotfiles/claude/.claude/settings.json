@@ -3,24 +3,84 @@
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1"
   },
+  "includeGitInstructions": false,
   "permissions": {
+    "deny": [
+      "ScheduleWakeup",
+      "ShareOnboardingGuide",
+      "ReportFindings"
+    ],
     "defaultMode": "auto"
   },
   "model": "opus",
+  "disableClaudeAiConnectors": true,
+  "skillOverrides": {
+    "claude-api": "user-invocable-only",
+    "dataviz": "user-invocable-only",
+    "fewer-permission-prompts": "user-invocable-only",
+    "keybindings-help": "user-invocable-only",
+    "loop": "off",
+    "run": "user-invocable-only",
+    "schedule": "off",
+    "simplify": "user-invocable-only",
+    "update-config": "user-invocable-only",
+    "typesafe-ai": "user-invocable-only",
+    "practice": "user-invocable-only",
+    "implement": "user-invocable-only",
+    "review-codebase": "user-invocable-only",
+    "anthropic-skills:docs": "user-invocable-only",
+    "anthropic-skills:docx": "user-invocable-only",
+    "anthropic-skills:google-workspace": "user-invocable-only",
+    "anthropic-skills:pdf": "user-invocable-only",
+    "anthropic-skills:pptx": "user-invocable-only",
+    "anthropic-skills:xlsx": "user-invocable-only",
+    "anthropic-skills:import-memory": "user-invocable-only",
+    "anthropic-skills:morning": "user-invocable-only",
+    "anthropic-skills:skill-creator": "user-invocable-only",
+    "anthropic-skills:deep-research": "user-invocable-only",
+    "anthropic-skills:computer-use": "off",
+    "anthropic-skills:built-in-browser": "off",
+    "get-pr-comments": "off",
+    "spellcheck": "off",
+    "code-review": "off"
+  },
+  "disableWorkflows": true,
+  "disableArtifact": true,
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline.sh"
   },
   "enabledPlugins": {
     "ralph-loop@claude-plugins-official": false,
-    "code-review@claude-plugins-official": true
+    "code-review@claude-plugins-official": false,
+    "notes-compaction@claude-mods": true,
+    "shepherdr@claude-mods": true,
+    "pstack@cursor-plugins": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-mods": {
+      "source": {
+        "source": "github",
+        "repo": "ramtinJ95/claude-mods"
+      }
+    },
+    "cursor-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "cursor/plugins"
+      }
+    }
   },
   "effortLevel": "high",
   "modelSettings": {
     "claude-opus-5-5": {
       "effortLevel": "high"
+    },
+    "claude-fable-5-2": {
+      "effortLevel": "high"
     }
   },
+  "autoCompactWindow": 400000,
   "autoMemoryEnabled": false,
   "autoDreamEnabled": false,
   "skipDangerousModePermissionPrompt": true,
