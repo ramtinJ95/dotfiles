@@ -132,8 +132,9 @@ Each harness keeps the filename it expects, but links back to that canonical
 file:
 
 - Pi: `.pi/agent/AGENTS.md`
-- Claude Code: `.claude/CLAUDE.md`
 - Codex: `.codex/AGENTS.md`
+
+Claude Code's `.claude/CLAUDE.md` is a standalone per-platform copy instead.
 
 Cross-harness skills live in `common-dotfiles/agents/.agents/skills`. Pi and
 Codex load that global skill directory directly through `~/.agents/skills`; do

@@ -4,12 +4,14 @@ These rules are for working on this repository. They are not the user's global
 agent instructions, which this repo also stores and which load in every project
 on every harness:
 
-- `common-config/common-dotfiles/agents/.agents/AGENTS.md` (Pi, Codex, Arch Claude link here)
+- `common-config/common-dotfiles/agents/.agents/AGENTS.md` (Pi and Codex link here)
 - `mac-config/mac-dotfiles/claude/.claude/CLAUDE.md`
+- `arch-config/arch-dotfiles/claude/.claude/CLAUDE.md`
 
-Edit those only when the user asks about global agent behavior. On macOS the
-Claude file is currently a standalone copy whose content has drifted from the
-shared AGENTS.md; ask before reconciling them.
+Edit those only when the user asks about global agent behavior. Both Claude
+files are standalone copies whose content has drifted from the shared
+AGENTS.md (they drop Pi-only tools such as `spawn_agent` and `render_mermaid`);
+ask before reconciling them.
 
 ## This repo is live config
 

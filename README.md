@@ -120,8 +120,10 @@ common-config/common-dotfiles/agents/.agents/AGENTS.md
 Harness-specific instruction paths symlink back to that file:
 
 - Pi: `common-config/common-dotfiles/pi/.pi/agent/AGENTS.md`
-- Claude Code: `mac-config/mac-dotfiles/claude/.claude/CLAUDE.md` and `arch-config/arch-dotfiles/claude/.claude/CLAUDE.md`
 - Codex: `mac-config/mac-dotfiles/codex/.codex/AGENTS.md` and `arch-config/arch-dotfiles/codex/.codex/AGENTS.md`
+
+Claude Code's `CLAUDE.md` on both macOS and Arch is a standalone copy, trimmed of
+Pi-only tool references; it does not link back.
 
 Put cross-harness skills in `common-config/common-dotfiles/agents/.agents/skills`.
 Pi discovers `~/.agents/skills` directly, so shared skills should not be
