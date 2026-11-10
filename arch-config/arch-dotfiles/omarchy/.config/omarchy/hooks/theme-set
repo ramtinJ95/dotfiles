@@ -238,7 +238,7 @@ fi
 # herdr-app: Omarchy renders ~/.config/omarchy/themed/herdr-app.json.tpl into the
 # theme; install it where herdr-app reads themes. herdr-app reloads it live.
 herdr_app_theme_src="$HOME/.local/state/omarchy/current/theme/herdr-app.json"
-herdr_app_theme_file="$HOME/.config/herdr-app/themes/omarchy.json"
+herdr_app_theme_file="${HERDR_APP_HOME:-$HOME/.config/herdr-app}/themes/omarchy.json"
 if [[ -d $(dirname "$herdr_app_theme_file") ]]; then
   if [[ ! -f $herdr_app_theme_src ]] || grep -q '{{' "$herdr_app_theme_src"; then
     omarchy-notification-send -u normal "herdr-app theme not updated" \
@@ -248,6 +248,21 @@ if [[ -d $(dirname "$herdr_app_theme_file") ]]; then
     cp "$herdr_app_theme_src" "$tmp_herdr_app"
     chmod 644 "$tmp_herdr_app"
     mv "$tmp_herdr_app" "$herdr_app_theme_file"
+
+    # Select it; other settings in settings.json are kept.
+    herdr_app_settings="${HERDR_APP_HOME:-$HOME/.config/herdr-app}/settings.json"
+    current=$(cat "$herdr_app_settings" 2>/dev/null || echo '{}')
+    if [[ $(jq -r '.theme // empty' <<<"$current") != omarchy ]]; then
+      tmp_herdr_app=$(mktemp "$herdr_app_settings.XXXXXX")
+      if jq '.theme = "omarchy"' <<<"$current" >"$tmp_herdr_app"; then
+        chmod 644 "$tmp_herdr_app"
+        mv "$tmp_herdr_app" "$herdr_app_settings"
+      else
+        rm -f "$tmp_herdr_app"
+        omarchy-notification-send -u normal "herdr-app theme not selected" \
+          "Could not update $herdr_app_settings" >/dev/null 2>&1
+      fi
+    fi
   fi
 fi
 

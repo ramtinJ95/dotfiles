@@ -6,7 +6,7 @@ font_name=${1:-$(omarchy-font-current)}
 
 # herdr-app: terminals and panels use the Omarchy monospace font. herdr-app
 # reloads settings.json live; other settings in it are kept.
-herdr_app_settings="$HOME/.config/herdr-app/settings.json"
+herdr_app_settings="${HERDR_APP_HOME:-$HOME/.config/herdr-app}/settings.json"
 if [[ -d $(dirname "$herdr_app_settings") ]]; then
   current=$(cat "$herdr_app_settings" 2>/dev/null || echo '{}')
   tmp_herdr_app=$(mktemp "$herdr_app_settings.XXXXXX")
