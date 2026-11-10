@@ -8,8 +8,7 @@ packages live in `../../common-config/common-dotfiles` and are installed first.
 Each directory represents a separate Arch-specific package that can be managed
 independently:
 
-- `bash/` - Bash configuration (.bashrc, .blerc)
-- `ble/` - ble.sh (Bash Line Editor)
+- `bash/` - Bash configuration (.bashrc; loads inkline from `~/.local/lib/bash/inkline.so`)
 - `claude/` - Claude Code config, commands, hooks, and skills
 - `codex/` - Codex AGENTS, prompts, and custom agent role definitions
 - `ghostty/` - Ghostty terminal configuration

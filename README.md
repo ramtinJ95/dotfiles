@@ -46,7 +46,7 @@ See [arch-config/arch-dotfiles/README.md](arch-config/arch-dotfiles/README.md) f
 ### Arch Linux Specific
 - **Hyprland** - Wayland compositor (Omarchy quattro Lua config)
 - **Omarchy shell** - Bar layout, idle/lock timings, and theme-set hook
-- **Bash + ble.sh** - Enhanced bash with line editor
+- **Bash + inkline** - zsh-style autosuggestions and syntax highlighting (`~/personal/inkline`)
 - **TLP** - Power management
 - **Kitty, Ghostty, k9s** - Arch desktop and terminal tooling
 
