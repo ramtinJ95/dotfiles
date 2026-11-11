@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Sets up the Herdr app on this machine, macOS or Linux: clones or fast-forwards herdr-stuff, links each mod into
 # ~/.config/herdr-app/mods, merges each mod's keys.json and common-config/herdr-app/keys.json (personal bindings) into
-# the app's keys.json, installs dotfiles' theme-following chrome and active-tab outline,
+# the app's keys.json, installs dotfiles' appearance and prefix navigation,
 # and on Omarchy makes the app follow the Omarchy theme and font.
 set -u
 
@@ -23,7 +23,8 @@ Clones or fast-forwards herdr-stuff (HERDR_STUFF_DIR, default ~/personal/herdr-s
 links each of its mods into ~/.config/herdr-app/mods, and adds each mod's keys.json
 bindings and common-config/herdr-app/keys.json to ~/.config/herdr-app/keys.json without
 replacing a key you already use. Installs theme-following chrome and an accent-colored
-active-tab outline in the current main-style layout (cloning the shipped main layout).
+active-tab outline plus Ctrl-f navigation in the current main-style layout
+(cloning the shipped main layout).
 Keep the Herdr app open during setup. On Omarchy it also applies the theme and font.
 EOF
 }

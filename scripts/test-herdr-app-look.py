@@ -32,8 +32,10 @@ class AppearanceTests(unittest.TestCase):
             ], "floating": [{"id": "keep", "content": {"mod": "my-mod"}}],
         })
         self.put("mods/tabs/mod.json", {"title": "Tabs"})
-        (self.home / "mods/tabs/main.js").write_text("element" + look.OLD_BORDER + ";\n")
+        (self.home / "mods/tabs/main.js").write_text("export default class Tabs {\n  init() {\n  }\n  render() {\n"
+                                                  + "    return element" + look.OLD_BORDER + ";\n  }\n}\n")
         self.put("mods/terminal-chrome/mod.json", {"place": "none"})
+        self.put("mods/navigation/mod.json", {"place": "none"})
         self.put("settings.json", {"theme": "local", "font_size": 19})
         self.put("shared.json", {"layout": "main", "private-state": "keep"})
 
@@ -74,6 +76,14 @@ class AppearanceTests(unittest.TestCase):
         layout = json.loads((self.home / "layouts/main-personal.json").read_text())
         self.assertEqual(layout["children"][0]["content"]["mod"], "focus-tabs")
         self.assertIn(look.SLOT, layout["floating"])
+        self.assertFalse(any(s["id"] == "navigation-history" for s in layout["floating"]),
+                         "history must live in the visible tab bar, not a culled empty floating view")
+        code = (self.home / "mods/focus-tabs/main.js").read_text()
+        for hook in (look.NAV_IMPORT, look.NAV_INIT, look.NAV_RENDER):
+            self.assertIn(hook, code)
+        source = Path(__file__).resolve().parent.parent / "common-config/herdr-app/mods/navigation"
+        for name in ("controller.js", "model.js"):
+            self.assertEqual((self.home / "mods/focus-tabs/navigation" / name).read_bytes(), (source / name).read_bytes())
         self.assertEqual(layout["floating"][0]["id"], "keep")
         self.assertTrue(layout["children"][1]["hidden"])
         self.assertIn(look.NEW_BORDER, (self.home / "mods/focus-tabs/main.js").read_text())
@@ -127,6 +137,25 @@ class AppearanceTests(unittest.TestCase):
         source = f"tab{look.OLD_BORDER}.bg(t.raised).text_color(t.foreground)"
         self.assertEqual(look.focus_tabs(source), source.replace(look.OLD_BORDER, look.NEW_BORDER))
 
+    def test_navigation_lifecycle_hooks_are_idempotent_and_guarded(self):
+        source = (self.home / "mods/tabs/main.js").read_text()
+        hooked = look.navigation_tabs(source)
+        self.assertEqual(look.navigation_tabs(hooked), hooked)
+        with self.assertRaisesRegex(ValueError, "lifecycle changed"):
+            look.navigation_tabs(source.replace("  init() {\n", "  init(custom) {\n"))
+        with self.assertRaisesRegex(ValueError, "incomplete navigation"):
+            look.navigation_tabs(hooked.replace(look.NAV_RENDER, "  render() {\n"))
+
+    def test_foreign_navigation_assets_are_not_overwritten(self):
+        directory = self.home / "mods/focus-tabs"
+        shutil.copytree(self.home / "mods/tabs", directory)
+        self.put("mods/focus-tabs/mod.json", {"cloned_from": {"name": "tabs"}})
+        self.put("mods/focus-tabs/navigation/keep.json", {"mine": True})
+        before = self.snapshot()
+        with self.assertRaisesRegex(ValueError, "not owned by dotfiles"):
+            look.configure(self.home, self.command)
+        self.assertEqual(before, self.snapshot())
+
     def test_full_install_with_isolated_app_and_checkout(self):
         root = Path(__file__).resolve().parent.parent
         binaries = self.home / "bin"
@@ -150,6 +179,7 @@ class AppearanceTests(unittest.TestCase):
         self.put("keys.json", {"global": {"ctrl-alt-x": "keep-my-binding"}})
         # The fixture's inert placeholder is replaced by the real installer's source link.
         shutil.rmtree(self.home / "mods/terminal-chrome")
+        shutil.rmtree(self.home / "mods/navigation")
         env = {**os.environ, "HOME": str(self.home), "PATH": str(binaries),
                "HERDR_APP_HOME": str(self.home), "HERDR_STUFF_DIR": str(stuff)}
         def install():
@@ -160,6 +190,14 @@ class AppearanceTests(unittest.TestCase):
         controller = self.home / "mods/terminal-chrome"
         self.assertTrue(controller.is_symlink())
         self.assertEqual(controller.resolve(), root / "common-config/herdr-app/mods/terminal-chrome")
+        self.assertEqual((self.home / "mods/navigation").resolve(), root / "common-config/herdr-app/mods/navigation")
+        bindings = json.loads((self.home / "keys.json").read_text())["global"]
+        for key, action in {
+            "ctrl-f shift-h": "tab.prev", "ctrl-f shift-l": "tab.next",
+            "ctrl-f b": "focus-tabs.tabs", "ctrl-f a": "focus-tabs.agents",
+            "ctrl-f tab": "focus-tabs.back",
+        }.items():
+            self.assertEqual(bindings[key], action)
         self.assertEqual(json.loads((self.home / "shared.json").read_text())["layout"], "main-personal")
         self.assertEqual(json.loads((self.home / "keys.json").read_text())["global"]["ctrl-alt-x"], "keep-my-binding")
         first = self.snapshot()

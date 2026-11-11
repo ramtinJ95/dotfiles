@@ -143,6 +143,15 @@ Open the Herdr app first and keep it running during setup. The script then:
   it clones it as `main-personal` and selects that clone; an existing custom
   main-style layout is updated in place, preserving its panels and other mods.
   The controller and tabs clone are wired into that layout automatically;
+- installs Ctrl-f navigation: h/j/k/l for panes, H/L for adjacent tabs, 1–9 for
+  direct tab selection, b for current-space tab search, a for the agent launcher,
+  and Tab to jump back to the previous pane/agent. In the launcher, n/d jump
+  directly to Needs you/Done, w shows working agents, and / starts text search;
+  j/k and Enter browse/select. Counts and scope are shown. Search uses Ctrl-j/k
+  or arrows and Enter; Escape returns to agent browsing (or closes tab search).
+  Agent order stays stable when statuses change.
+  Existing shortcuts remain available; no global OS or editor keys are remapped.
+  See [`navigation/README.md`](herdr-app/mods/navigation/README.md) for the scheme;
 - on Omarchy, makes the app follow the Omarchy theme and font. The arch
   `omarchy` package does the work on every switch: `themed/herdr-app.json.tpl`
   renders the colors, and the `theme-set` and `font-set` hooks install them
@@ -175,6 +184,7 @@ Focused checks (no live config changes):
 ```bash
 python3 -B scripts/test-herdr-app-look.py
 node --test common-config/herdr-app/mods/terminal-chrome/palette.test.js
+node --test common-config/herdr-app/mods/navigation/*.test.js
 ```
 
 ## Shared Agent Instructions and Skills

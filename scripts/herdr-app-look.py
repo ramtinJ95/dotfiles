@@ -1,4 +1,4 @@
-"""Install personal Herdr appearance using supported clones, never shipped-file edits.
+"""Install personal Herdr appearance/navigation without editing shipped files.
 
 Usage: herdr-app-look.py <app home>
 The app must be running. No settings, theme palettes or session state are copied.
@@ -20,6 +20,9 @@ SLOT = {
 }
 OLD_BORDER = ".border_color(c.active ? t.border : t.chrome)"
 NEW_BORDER = ".border_color(c.active ? t.accent : t.chrome)"
+NAV_IMPORT = 'import { NavigationController } from "./navigation/controller.js";\n'
+NAV_INIT = '  init(_props, cx) {\n    this.navigation = new NavigationController(cx);\n'
+NAV_RENDER = '  render() {\n    this.navigation.observe();\n'
 
 
 def personal_layout(layout):
@@ -53,6 +56,36 @@ def focus_tabs(source):
     if source.count(NEW_BORDER) == 1 and OLD_BORDER not in source:
         return source
     raise ValueError("tabs source changed: cannot locate the active-tab border; update the appearance installer")
+
+
+def navigation_tabs(source):
+    if NAV_IMPORT in source:
+        if NAV_INIT not in source or NAV_RENDER not in source:
+            raise ValueError("focus-tabs has an incomplete navigation integration")
+        return source
+    if source.count("  init() {\n") != 1 or source.count("  render() {\n") != 1:
+        raise ValueError("tabs lifecycle changed: cannot attach navigation safely")
+    return NAV_IMPORT + source.replace("  init() {\n", NAV_INIT).replace("  render() {\n", NAV_RENDER)
+
+
+def navigation_assets(mod):
+    destination = mod / "navigation"
+    marker = destination / ".dotfiles-owned"
+    if destination.exists():
+        if destination.is_symlink() or not marker.is_file() or marker.read_text() != "herdr-navigation\n":
+            raise ValueError("focus-tabs/navigation exists but is not owned by dotfiles")
+    else:
+        destination.mkdir()
+        marker.write_text("herdr-navigation\n")
+    source = Path(__file__).resolve().parent.parent / "common-config/herdr-app/mods/navigation"
+    for name in ("controller.js", "model.js"):
+        path = destination / name
+        wanted = (source / name).read_text()
+        if path.exists():
+            replace(path, path.read_text(), wanted)
+        else:
+            with path.open("x") as output:
+                output.write(wanted)
 
 
 def replace(path, source, next_text):
@@ -100,9 +133,12 @@ def configure(home, command):
     if metadata.get("cloned_from", {}).get("name") != "tabs":
         raise ValueError("focus-tabs exists but is not a clone of tabs; refusing to modify it")
     source = (mod / "main.js").read_text()
-    replace(mod / "main.js", source, focus_tabs(source))
+    next_source = navigation_tabs(focus_tabs(source))
+    navigation_assets(mod)
+    replace(mod / "main.js", source, next_source)
     command("check", str(mod))
     command("check", str(home / "mods" / "terminal-chrome"))
+    command("check", str(home / "mods" / "navigation"))
 
     if clone_layout:
         command("do", "layout.clone", json.dumps({"name": "main", "as": name}))
@@ -111,7 +147,7 @@ def configure(home, command):
     next_layout = personal_layout(layout)
     if next_layout != layout:
         replace(path, source, json.dumps(next_layout, indent=2, ensure_ascii=False) + "\n")
-    print(f"OK: {name} follows terminal themes; active tabs use the focus accent")
+    print(f"OK: {name} follows terminal themes; active tabs use the focus accent; navigation enabled")
 
 
 def main():
