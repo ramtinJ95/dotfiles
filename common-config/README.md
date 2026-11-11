@@ -96,7 +96,7 @@ stowed. A script sets it up instead. It works the same on macOS and Arch:
 scripts/herdr-mods install
 ```
 
-Open the Herdr app once first so it writes its home. The script then:
+Open the Herdr app first and keep it running during setup. The script then:
 
 - clones [herdr-stuff](https://github.com/ramtinJ95/herdr-stuff), where the
   mods (tuido, nexus) live, to `~/personal/herdr-stuff` (or `HERDR_STUFF_DIR`),
@@ -106,6 +106,14 @@ Open the Herdr app once first so it writes its home. The script then:
   nexus) and the personal bindings in `herdr-app/keys.json` (the `ctrl-f`
   prefix keys for panes, tabs and spaces) to the app's `keys.json`, keeping the
   OS's own defaults;
+- links the theme-following chrome controller from `herdr-app/mods/` in this
+  dotfiles checkout. Bars, sidebars and menus follow the terminal background;
+  label colors adapt to the palette with at least 4.5:1 contrast;
+- clones the shipped tabs mod as `focus-tabs` and gives the active tab the
+  same theme accent as the terminal focus ring. If the main layout is selected,
+  it clones it as `main-personal` and selects that clone; an existing custom
+  main-style layout is updated in place, preserving its panels and other mods.
+  The controller and tabs clone are wired into that layout automatically;
 - on Omarchy, makes the app follow the Omarchy theme and font. The arch
   `omarchy` package does the work on every switch: `themed/herdr-app.json.tpl`
   renders the colors, and the `theme-set` and `font-set` hooks install them
@@ -113,10 +121,18 @@ Open the Herdr app once first so it writes its home. The script then:
   theme before the app existed, so the script applies it once (stow the arch
   packages first).
 
-The script never replaces anything: a mod folder of the same name makes it
-fail, and a key you already use stays yours, with a warning. Run it again after
-pulling to pick up new mods or bindings; when everything is in place it changes
-nothing. Restart the app after it links a new mod. To change a shared binding,
+The script never replaces unrelated configuration: a conflicting mod folder,
+custom tab mod or controller slot makes it fail; a key you already use stays
+yours, with a warning. The owned `focus-tabs` clone gets only the targeted
+active-border edit; incompatible upstream tab code fails explicitly. No
+generated themes, fixed palette colors or machine-local session state are
+copied into dotfiles. Other layouts keep their own look; rerun setup with a
+custom main-style layout selected to enable these tweaks there too.
+
+Run it again after pulling to pick up new mods or bindings; unchanged appearance
+files are not rewritten. Clones keep their original upstream implementation;
+they do not automatically receive later shipped mod changes. Restart the app
+after it links a new mod. To change a shared binding,
 edit `herdr-app/keys.json` here and run the script; it adds new keys but won't
 change a key the app's `keys.json` already binds.
 
@@ -124,6 +140,13 @@ Each mod's README lists what it needs: tuido needs the `tuido` CLI set up with
 `tuido init`, and nexus needs `nexus connect`. Herdr stops adding new default
 shortcuts to `keys.json` once the file has been edited, including by this
 script.
+
+Focused checks (no live config changes):
+
+```bash
+python3 -B scripts/test-herdr-app-look.py
+node --test common-config/herdr-app/mods/terminal-chrome/palette.test.js
+```
 
 ## Shared Agent Instructions and Skills
 

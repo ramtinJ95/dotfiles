@@ -1,0 +1,3 @@
+# Herdr generates these editor helpers when it loads/checks a mod.
+gpui-kit.d.ts
+jsconfig.json

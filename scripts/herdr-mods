@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Sets up the Herdr app on this machine, macOS or Linux: clones or fast-forwards herdr-stuff, links each mod into
 # ~/.config/herdr-app/mods, merges each mod's keys.json and common-config/herdr-app/keys.json (personal bindings) into
-# the app's keys.json, and on Omarchy makes the app follow the Omarchy theme and font.
-# The mods' code stays in herdr-stuff, so `git pull` there (or running this again) updates every mod.
+# the app's keys.json, installs dotfiles' theme-following chrome and active-tab outline,
+# and on Omarchy makes the app follow the Omarchy theme and font.
 set -u
 
 REPO_URL="https://github.com/ramtinJ95/herdr-stuff.git"
@@ -22,7 +22,9 @@ Usage: scripts/herdr-mods install
 Clones or fast-forwards herdr-stuff (HERDR_STUFF_DIR, default ~/personal/herdr-stuff),
 links each of its mods into ~/.config/herdr-app/mods, and adds each mod's keys.json
 bindings and common-config/herdr-app/keys.json to ~/.config/herdr-app/keys.json without
-replacing a key you already use. On Omarchy it also applies the theme and font to the app.
+replacing a key you already use. Installs theme-following chrome and an accent-colored
+active-tab outline in the current main-style layout (cloning the shipped main layout).
+Keep the Herdr app open during setup. On Omarchy it also applies the theme and font.
 EOF
 }
 
@@ -104,6 +106,7 @@ apply_omarchy_look() {
 install() {
     command -v git >/dev/null 2>&1 || { fail "git is required"; return 1; }
     command -v python3 >/dev/null 2>&1 || { fail "python3 is required to merge key bindings"; return 1; }
+    command -v herdr-app >/dev/null 2>&1 || { fail "herdr-app is required to configure the personal layout"; return 1; }
     # The app writes its home, keys.json included, on first start; merging into nothing would hide its defaults.
     [[ -f "$APP_HOME/keys.json" ]] || { fail "$APP_HOME/keys.json is missing; open the Herdr app once first"; return 1; }
 
@@ -116,13 +119,27 @@ install() {
     for mod in "$STUFF_DIR"/mods/*/; do
         mod="${mod%/}"
         [[ -f "$mod/mod.json" ]] || continue
+        # Dotfiles-owned behavior wins over a same-named external mod or migration link.
+        if [[ -f "$SCRIPT_DIR/../common-config/herdr-app/mods/$(basename "$mod")/mod.json" ]]; then
+            info "dotfiles owns mod: $(basename "$mod")"
+            continue
+        fi
         link_mod "$mod" && [[ -f "$mod/keys.json" ]] && keys+=("$mod/keys.json")
+    done
+    # Personal appearance code travels with dotfiles, not an unpublished herdr-stuff change.
+    for mod in "$SCRIPT_DIR"/../common-config/herdr-app/mods/*/; do
+        mod="$(cd "$mod" && pwd)" || { fail "could not resolve personal mod"; continue; }
+        link_mod "$mod"
     done
     # Personal bindings shared by every machine, macOS and Linux alike.
     keys+=("$SCRIPT_DIR/../common-config/herdr-app/keys.json")
     python3 -I "$SCRIPT_DIR/herdr-mod-keys.py" "$APP_HOME/keys.json" "${keys[@]}" || fail "could not merge key bindings"
 
     apply_omarchy_look
+
+    if [[ "$failures" -eq 0 ]]; then
+        python3 -I "$SCRIPT_DIR/herdr-app-look.py" "$APP_HOME" || fail "could not configure Herdr appearance"
+    fi
 
     if [[ "$failures" -eq 0 ]]; then
         pass "herdr mods installed; restart the Herdr app to load newly linked mods (each mod's README lists what it needs)"
