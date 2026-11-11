@@ -69,6 +69,14 @@ including the settings, hooks, and skills of the agent doing the editing.
   own `!` line, otherwise it is silently ignored. Never commit runtime state,
   `*.bak*` copies, or `settings.local.json`.
 
+## UI navigation
+
+All UIs created in this repository must support Vim-style keyboard navigation:
+`j`/`k` for lists and `h`/`l` where horizontal navigation applies, with Enter to
+confirm and Escape to go back or cancel. Keep mouse and arrow-key controls, and
+preserve normal typing in text inputs rather than capturing navigation letters.
+Document the shortcuts in the UI and test the keyboard paths.
+
 ## Docs
 
 `README.md`, `common-config/README.md`, and `mac-config/mac-install/README.md`

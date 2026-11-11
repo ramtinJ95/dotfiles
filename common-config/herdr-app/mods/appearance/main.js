@@ -42,8 +42,10 @@ export default class Appearance extends View {
     return v_flex().id("appearance").size_full().p(14).gap(8).bg(t.background).text_color(t.terminal_foreground)
       .track_focus(this.handle)
       .on_key_down((e, cx) => {
-        if (e.key === "down" || e.key === "up") {
-          this.at = (this.at + (e.key === "down" ? 1 : rows.length - 1)) % rows.length;
+        const down = e.key === "down" || e.keystroke === "j";
+        const up = e.key === "up" || e.keystroke === "k";
+        if (down || up) {
+          this.at = (this.at + (down ? 1 : rows.length - 1)) % rows.length;
           this.scroll.scroll_to_item(this.at);
         } else if (e.key === "enter") this.choose(rows[this.at], cx);
         else if (e.key === "escape") closeOverlay(props()?.overlay);
@@ -61,6 +63,6 @@ export default class Appearance extends View {
           .child(v_flex().flex_1().gap(3)
             .child(div().font_semibold().child(row.label))
             .child(div().text_size(11).text_color(t.muted).child(row.detail))))))
-      .child(div().text_size(11).text_color(t.muted).child(this.busy ? "Switching…" : "↑ ↓ choose · Enter apply · Esc cancel · Ctrl-f r reopen"));
+      .child(div().text_size(11).text_color(t.muted).child(this.busy ? "Switching…" : "j/k or ↑/↓ choose · Enter apply · Esc cancel · Ctrl-f r reopen"));
   }
 }
