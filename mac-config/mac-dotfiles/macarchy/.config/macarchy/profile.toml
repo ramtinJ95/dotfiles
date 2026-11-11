@@ -3,6 +3,7 @@ schema_version = 1
 [presets]
 codex = true
 herdr = true
+herdr_app = true
 pi = true
 slack = true
 spicetify = true
