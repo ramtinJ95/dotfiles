@@ -167,6 +167,19 @@ scripts/dotfiles restow mac
 
 Use `scripts/dotfiles restow arch` instead on Arch Linux.
 
+## Corne keyboard
+
+`corne_keebart_piantor_layout.vil` stores the current Corne Choc Pro layout;
+load it through Vial to restore the keyboard configuration. The factory layout
+is preserved separately in `corne_keebart_factory_backup.vil`.
+
+The key below the right dial uses `TD(3)`: single tap sends plain `KC_ESCAPE`,
+and double tap sends Cmd+Shift+4. Keep the single-tap action as plain Escape,
+not Grave/Escape (`QK_GRAVE_ESCAPE`): nesting that special action inside Vial's
+tap dance can leave Escape held after release. Shift/Cmd do not turn this key
+into grave/tilde. The correction was read back from the keyboard and confirmed
+working with physical keypresses.
+
 ## Repository Structure
 
 ```

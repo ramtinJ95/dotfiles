@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "uid": 5010774632021244000,
+  "uid": 5010774632021243529,
   "layout": [
     [
       [
@@ -10,7 +10,7 @@
         "KC_E",
         "KC_R",
         "KC_T",
-        "KC_NO"
+        "KC_MUTE"
       ],
       [
         "KC_LCTRL",
@@ -19,7 +19,7 @@
         "KC_D",
         "KC_F",
         "KC_G",
-        "KC_MUTE"
+        "TD(1)"
       ],
       [
         "KC_LSHIFT",
@@ -40,13 +40,13 @@
         -1
       ],
       [
-        "KC_ESCAPE",
+        "KC_LBRACKET",
         "KC_P",
         "KC_O",
         "KC_I",
         "KC_U",
         "KC_Y",
-        "TO(3)"
+        "TO(2)"
       ],
       [
         "KC_QUOTE",
@@ -55,10 +55,10 @@
         "KC_K",
         "KC_J",
         "KC_H",
-        "LGUI(LSFT(KC_4))"
+        "TD(3)"
       ],
       [
-        "TO(1)",
+        "KC_RBRACKET",
         "KC_SLASH",
         "KC_DOT",
         "KC_COMMA",
@@ -165,8 +165,8 @@
         "KC_NO",
         "KC_BRID",
         "KC_BRIU",
-        "MS_WHLL",
-        "MS_WHLR",
+        "KC_NO",
+        "KC_NO",
         "KC_LALT"
       ],
       [
@@ -1188,18 +1188,18 @@
     ]
   ],
   "encoder_layout": [
-  [
     [
-      "KC_VOLD",
-      "KC_VOLU"
+      [
+        "KC_VOLD",
+        "KC_VOLU"
       ],
       [
         "KC_VOLD",
         "KC_VOLU"
       ],
       [
-        "LGUI(LALT(KC_LEFT))",
-        "LGUI(LALT(KC_RGHT))"
+        "KC_WH_D",
+        "KC_WH_U"
       ],
       [
         "KC_VOLD",
@@ -1244,16 +1244,16 @@
     ],
     [
       [
-      "RGB_VAD",
-      "RGB_VAI"
+        "RGB_VAD",
+        "RGB_VAI"
       ],
       [
         "RGB_HUI",
         "RGB_HUD"
       ],
       [
-      "KC_NO",
-      "KC_NO"
+        "KC_NO",
+        "KC_NO"
       ],
       [
         "RGB_SAI",
@@ -1479,8 +1479,18 @@
   ],
   "layout_options": 68,
   "macro": [
-    [],
-    [],
+    [
+      [
+        "text",
+        "LCTL(KC_F)"
+      ]
+    ],
+    [
+      [
+        "text",
+        "LCTL(KC_G)"
+      ]
+    ],
     [],
     [],
     [],
@@ -1507,16 +1517,9 @@
       200
     ],
     [
+      "LCTL(KC_F)",
       "KC_NO",
-      "KC_NO",
-      "KC_NO",
-      "KC_NO",
-      200
-    ],
-    [
-      "KC_NO",
-      "KC_NO",
-      "KC_NO",
+      "LCTL(KC_G)",
       "KC_NO",
       200
     ],
@@ -1524,6 +1527,13 @@
       "KC_NO",
       "KC_NO",
       "KC_NO",
+      "KC_NO",
+      200
+    ],
+    [
+      "KC_ESCAPE",
+      "KC_NO",
+      "LGUI(LSFT(KC_4))",
       "KC_NO",
       200
     ],
@@ -1726,8 +1736,8 @@
   ],
   "combo": [
     [
-      "KC_NO",
-      "KC_NO",
+      "KC_LCTRL",
+      "KC_F",
       "KC_NO",
       "KC_NO",
       "KC_NO"
