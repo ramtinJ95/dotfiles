@@ -17,6 +17,19 @@ they are intentionally split into shared files plus a small OS overlay.
 packages each link `.claude/statusline.sh` to it, so both platforms run one
 script; its OS-specific `stat`, credential and date calls switch on `uname`.
 
+## Claude Code Cosy Theme
+
+`claude/themes/cosy.json` is the Cosy Café layout's palette as a Claude Code
+theme: walnut message bands, moss and brick diffs, lamplight accents. A Herdr
+theme sets only the 16 terminal colors, so Claude Code's own bands and diffs
+need this to match. The mac and arch `claude` packages each link
+`.claude/themes/cosy.json` to it. Arch selects it (`"theme": "custom:cosy"` in
+its `settings.json`); elsewhere pick Cosy in `/theme`. It applies to Claude
+Code in every terminal and layout: Claude Code does not follow the work/café
+look picker as Pi does. Claude Code reloads a theme when its file in
+`~/.claude/themes` changes, not when the linked file here does: restart it
+after an edit.
+
 ## Pi Setup
 
 On each Arch machine (Node must be at least 22.19):

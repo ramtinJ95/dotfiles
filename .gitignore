@@ -35,6 +35,7 @@ common-config/common-dotfiles/pi/.pi/openai-codex-images/
 !/mac-config/mac-dotfiles/claude/.claude/keybindings.json
 !/mac-config/mac-dotfiles/claude/.claude/mcp.json
 !/mac-config/mac-dotfiles/claude/.claude/statusline.sh
+!/mac-config/mac-dotfiles/claude/.claude/themes/
 !/mac-config/mac-dotfiles/claude/.claude/commands/
 !/mac-config/mac-dotfiles/claude/.claude/hooks/
 !/mac-config/mac-dotfiles/claude/.claude/skills/

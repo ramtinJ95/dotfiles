@@ -84,7 +84,7 @@
   "autoMemoryEnabled": false,
   "autoDreamEnabled": false,
   "skipDangerousModePermissionPrompt": true,
-  "theme": "auto",
+  "theme": "custom:cosy",
   "editorMode": "vim",
   "switchModelsOnFlag": false,
   "autoMode": {
