@@ -2,34 +2,31 @@
   "env": {
     "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "CLAUDE_CODE_FORK_SUBAGENT": "0",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "opus",
+    "CLAUDE_CODE_SUBAGENT_MODEL_FORCE": "1",
     "NODE_USE_ENV_PROXY": "1"
   },
   "includeGitInstructions": false,
   "permissions": {
     "allow": [
-      "Bash(herdr agent:*)",
-      "Bash(herdr api snapshot:*)",
-      "Bash(herdr pane current:*)",
-      "Bash(herdr pane layout:*)",
-      "Bash(herdr pane list:*)",
-      "Bash(herdr pane read:*)",
-      "Bash(herdr pane split:*)",
-      "Bash(herdr status:*)",
-      "Bash(herdr tab create:*)",
-      "Bash(herdr tab list:*)",
-      "Bash(herdr tab rename:*)",
-      "Bash(herdr workspace list:*)",
+      "Bash(hc ls:*)",
+      "Bash(hc get:*)",
+      "Bash(hc read:*)",
+      "Bash(hc wait:*)",
+      "Bash(hc templates:*)",
       "Bash(ssh infra-testbench:*)",
       "mcp__github"
     ],
     "deny": [
-      "Bash(herdr server:*)",
+      "Bash(hc server:*)",
       "ScheduleWakeup",
       "ShareOnboardingGuide",
       "ReportFindings"
     ],
     "defaultMode": "auto"
   },
+  "model": "fable",
   "disableClaudeAiConnectors": true,
   "skillOverrides": {
     "claude-api": "user-invocable-only",
@@ -55,6 +52,9 @@
     "anthropic-skills:import-memory": "user-invocable-only",
     "anthropic-skills:morning": "user-invocable-only",
     "anthropic-skills:skill-creator": "user-invocable-only",
+    "anthropic-skills:deep-research": "user-invocable-only",
+    "anthropic-skills:computer-use": "off",
+    "anthropic-skills:built-in-browser": "off",
     "scribebase-article-ingest": "off",
     "scribebase-ingest": "off",
     "visualize-code-changes": "off",
@@ -97,18 +97,6 @@
           }
         ]
       }
-    ],
-    "SessionStart": [
-      {
-        "matcher": "^(startup|resume|clear|compact|fork)$",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash '/Users/ramtin/.claude/hooks/herdr-agent-state.sh' session",
-            "timeout": 10
-          }
-        ]
-      }
     ]
   },
   "disableWorkflows": true,
@@ -118,11 +106,12 @@
     "command": "~/.claude/statusline.sh"
   },
   "enabledPlugins": {
+    "ralph-loop@claude-plugins-official": false,
+    "code-review@claude-plugins-official": false,
     "notes-compaction@claude-mods": true,
     "shepherdr@claude-mods": true,
     "review-pane@claude-mods": true,
-    "pstack@cursor-plugins": true,
-    "nexus@claude-mods": true
+    "pstack@cursor-plugins": true
   },
   "extraKnownMarketplaces": {
     "claude-mods": {
@@ -148,7 +137,8 @@
       ],
       "allowUnixSockets": [
         "/Users/ramtin/.config/herdr/herdr.sock",
-        "/Users/ramtin/dotfiles/common-config/common-dotfiles/herdr/.config/herdr/herdr.sock"
+        "/Users/ramtin/dotfiles/common-config/common-dotfiles/herdr/.config/herdr/herdr.sock",
+        "/Users/ramtin/.local/state/herdr-core/default/default.sock"
       ]
     },
     "excludedCommands": [
@@ -157,7 +147,6 @@
       "git ls-remote *",
       "git pull *",
       "git push *",
-      "herdr *",
       "scp *",
       "ssh *"
     ]
@@ -168,6 +157,9 @@
       "effortLevel": "medium"
     },
     "claude-opus-5-5": {
+      "effortLevel": "high"
+    },
+    "claude-fable-5-2": {
       "effortLevel": "high"
     }
   },
@@ -187,8 +179,7 @@
   "autoMode": {
     "allow": [
       "$defaults",
-      "Running herdr CLI commands (pane/tab/agent control) to delegate work to a trusted agent in a separate terminal pane, including commands the sandbox blocks",
-      "allow anything related to herdr thats just workflow stuff nothing else",
+      "Running hc (Herdr Core) commands for terminal and agent workflow in the user's Herdr app: listing, reading, waiting on, labelling and messaging terminals, and starting one to delegate work to a trusted agent, including when the sandbox blocks them; this does not cover hc server, hc update or hc machine",
       "Running ssh and scp against infra-testbench (the user's personal experimental VM on the tailnet), including commands the sandbox would otherwise block; this does not cover any other host"
     ],
     "soft_deny": [
