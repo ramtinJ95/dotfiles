@@ -77,6 +77,12 @@ Omarchy updates that local palette on theme changes; Pi hot-reloads it. No gener
 palette or polling extension is tracked here. Restart existing Pi sessions after
 setup. macOS and non-Omarchy machines retain their local theme as before.
 
+Inside Herdr, the `herdr-appearance` Pi extension temporarily uses warm, readable
+code panels in Cosy/Cabin layouts. Leaving them restores the native work theme;
+the saved Pi preference and generated Omarchy/Macarchy palettes are unchanged.
+**Ctrl-f r** opens Herdr's layout/look picker after `scripts/herdr-mods install`.
+See [work/café looks](herdr-app/mods/appearance/README.md).
+
 Custom-tool `*.toml` definitions are **regular local files**, not Stow links:
 the adapter's discovery ignores file symlinks. Their companion scripts remain
 linked. Setup syncs definitions from the checkout with private backups under

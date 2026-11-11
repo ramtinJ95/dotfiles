@@ -4,6 +4,7 @@
     "ctrl-f ?": "app.help",
     "ctrl-f shift-/": "app.help",
     "ctrl-f s": "app.settings",
+    "ctrl-f r": "mod.open:appearance",
     "ctrl-f q": "window.close",
     "ctrl-f w": "mod.open:picker",
     "ctrl-f g": "app.palette",
