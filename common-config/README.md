@@ -65,6 +65,12 @@ portable settings, preserving local theme, audio devices, and unrelated keys.
 Changed configs are backed up under `~/.pi/backups/setup-*` with private permissions.
 `--config-only` performs the same configuration update without installing/running Pi.
 
+On Linux with an active Omarchy-generated `~/.local/state/omarchy/current/theme/pi.json`,
+both Pi setup and Arch Stow select `omarchy-system` using `omarchy theme set pi --activate`.
+Omarchy updates that local palette on theme changes; Pi hot-reloads it. No generated
+palette or polling extension is tracked here. Restart existing Pi sessions after
+setup. macOS and non-Omarchy machines retain their local theme as before.
+
 Custom-tool `*.toml` definitions are **regular local files**, not Stow links:
 the adapter's discovery ignores file symlinks. Their companion scripts remain
 linked. Setup syncs definitions from the checkout with private backups under

@@ -33,7 +33,8 @@ test("Pi setup: clean clone, repeat sync, local state, old links, and conflicts"
     const home = join(scratch, "home");
     mkdirSync(home);
     const run = (target = home) => execFileSync(process.execPath, [join(fixture, "scripts/pi-setup"), "--config-only"], {
-      env: { ...process.env, HOME: target, PI_CODING_AGENT_DIR: "" }, cwd: scratch, encoding: "utf8", stdio: "pipe", timeout: 30_000,
+      env: { ...process.env, PATH: `${join(scratch, "bin")}:${process.env.PATH}`, HOME: target, PI_CODING_AGENT_DIR: "" },
+      cwd: scratch, encoding: "utf8", stdio: "pipe", timeout: 30_000,
     });
     // Even a dirty source checkout cannot publish runtime state.
     put(join(source, "auth.json"), "source-private-fixture");
@@ -82,6 +83,48 @@ test("Pi setup: clean clone, repeat sync, local state, old links, and conflicts"
     assert.equal(readFileSync(join(agent, "auth.json"), "utf8"), "local-private-fixture");
     assert.equal(readFileSync(join(agent, "sessions/keep"), "utf8"), "session-fixture");
     assert.equal(readdirSync(join(home, ".pi/backups")).length, 1);
+
+    // A generated Omarchy palette opts Linux setup into native synchronization.
+    // Stub only the external command; exercise the real setup/Stow path.
+    put(join(scratch, "bin/uname"), '#!/bin/sh\nprintf "Linux\\n"\n');
+    put(join(scratch, "bin/omarchy"), `#!${process.execPath}
+import assert from "node:assert/strict";
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+assert.deepEqual(process.argv.slice(2), ["theme", "set", "pi", "--activate"]);
+const agent = join(process.env.HOME, ".pi/agent");
+const settings = JSON.parse(readFileSync(join(agent, "settings.json"), "utf8"));
+settings.theme = "omarchy-system";
+writeFileSync(join(agent, "settings.json"), JSON.stringify(settings, null, 2) + "\\n");
+mkdirSync(join(agent, "themes"), { recursive: true });
+copyFileSync(join(process.env.HOME, ".local/state/omarchy/current/theme/pi.json"),
+  join(agent, "themes/omarchy-system.json"));
+`);
+    for (const cmd of ["uname", "omarchy"]) chmodSync(join(scratch, "bin", cmd), 0o755);
+    const omarchy = join(scratch, "omarchy");
+    const palette = join(omarchy, ".local/state/omarchy/current/theme/pi.json");
+    put(palette, '{"name":"omarchy-system","vars":{"background":"#1f1f28"}}\n');
+    run(omarchy);
+    const omarchyAgent = join(omarchy, ".pi/agent");
+    assert.equal(readJSON(join(omarchyAgent, "settings.json")).theme, "omarchy-system");
+    assert.equal(readFileSync(join(omarchyAgent, "themes/omarchy-system.json"), "utf8"), readFileSync(palette, "utf8"));
+    run(omarchy);
+    assert.equal(existsSync(join(omarchy, ".pi/backups")), false, "Omarchy setup is idempotent");
+    const themed = readJSON(join(omarchyAgent, "settings.json"));
+    put(join(omarchyAgent, "settings.json"), JSON.stringify({ ...themed, theme: "dark" }));
+    run(omarchy);
+    assert.equal(readJSON(join(omarchyAgent, "settings.json")).theme, "omarchy-system");
+
+    // Even with the same files, macOS must retain its own theme ownership.
+    put(join(scratch, "bin/uname"), '#!/bin/sh\nprintf "Darwin\\n"\n');
+    put(join(omarchyAgent, "settings.json"), JSON.stringify({ ...themed, theme: "macarchy-current" }));
+    run(omarchy);
+    assert.equal(readJSON(join(omarchyAgent, "settings.json")).theme, "macarchy-current");
+
+    // A failed native sync is a setup error, not a successful dark fallback.
+    put(join(scratch, "bin/uname"), '#!/bin/sh\nprintf "Linux\\n"\n');
+    put(join(scratch, "bin/omarchy"), '#!/bin/sh\nexit 1\n');
+    assert.throws(() => run(omarchy), /could not activate Omarchy/);
 
     const legacy = join(scratch, "legacy");
     mkdirSync(legacy);

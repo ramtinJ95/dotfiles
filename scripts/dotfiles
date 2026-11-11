@@ -240,6 +240,14 @@ seed_pi_configs() {
         [[ -f "$source" ]] || continue
         seed_native_config "$source" "$HOME/.pi/agent/codex-conversion-custom-tools/$(basename "$source")"
     done
+
+    # Omarchy owns this generated palette and refreshes it on every theme change.
+    # Activate it for both full Arch installs and Pi-only setup, not in the shared
+    # settings seed (macOS and non-Omarchy machines keep their local theme).
+    if [[ "$(uname -s)" == Linux && -f "$HOME/.local/state/omarchy/current/theme/pi.json" ]]; then
+        info "activate Omarchy's generated Pi theme"
+        omarchy theme set pi --activate || fail "could not activate Omarchy's Pi theme"
+    fi
 }
 
 run_profile() {
