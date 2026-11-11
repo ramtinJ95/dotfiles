@@ -4,7 +4,11 @@
 
 * For technical work, use concise technical prose.
 * Keep implementation plans local and out of the repository unless explicitly asked to check one in. PRs explain decisions and outcomes, not internal implementation plans.
-* After a relevant PR merges, mention `/skill:pr-diary` once in the normal completion message. Do not open a modal or invoke it automatically.
+* After a relevant PR merges, mention `/skill:pr-diary` once in the normal completion message. Do not open a modal or invoke it automatically. In Claude Code, the global `/pr-diary` rule applies instead of this one.
+
+## Terminals
+
+* Run long-lived programs, servers and agent workers in Herdr app terminals (Herdr Core) through `hc`, not the old `herdr` TUI. Use `hc wait` instead of sleeping, and `hc read` to inspect a terminal.
 
 ## Codebase understanding
 
