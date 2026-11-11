@@ -11,6 +11,12 @@ they are intentionally split into shared files plus a small OS overlay.
 - `agents/` - Canonical user-level `.agents/AGENTS.md` and `.agents/skills` tree for shared agent instructions and skills
 - `pi/` - Pi agent configuration, extensions, and skills
 
+## Claude Code Statusline
+
+`claude/statusline.sh` is not a Stow package. The mac and arch `claude`
+packages each link `.claude/statusline.sh` to it, so both platforms run one
+script; its OS-specific `stat`, credential and date calls switch on `uname`.
+
 ## Pi Setup
 
 On each Arch machine (Node must be at least 22.19):

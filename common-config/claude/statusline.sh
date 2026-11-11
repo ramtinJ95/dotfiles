@@ -1,0 +1,147 @@
+#!/bin/bash
+
+CACHE_FILE="/tmp/.claude-usage-cache"
+CACHE_TTL=60
+
+# Shared by the mac and arch claude packages; only these helpers differ by OS.
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    file_mtime() { stat -f %m "$1"; }
+    read_credentials() { security find-generic-password -s "Claude Code-credentials" -w; }
+    iso_to_epoch() { TZ=UTC date -j -f "%Y-%m-%dT%H:%M:%S" "${1%%.*}" +%s; }
+else
+    file_mtime() { stat -c %Y "$1"; }
+    read_credentials() { cat "$HOME/.claude/.credentials.json"; }
+    iso_to_epoch() { date -d "$1" +%s; }
+fi
+
+input=$(cat)
+
+MODEL=$(echo "$input" | jq -r '.model.display_name // "?"')
+CTX_PCT=$(echo "$input" | jq -r '.context_window.used_percentage // 0' | cut -d. -f1)
+CTX_SIZE=$(echo "$input" | jq -r '.context_window.context_window_size // 0')
+INPUT_TOKENS=$(echo "$input" | jq -r '.context_window.current_usage.input_tokens // 0')
+CACHE_CREATE=$(echo "$input" | jq -r '.context_window.current_usage.cache_creation_input_tokens // 0')
+CACHE_READ=$(echo "$input" | jq -r '.context_window.current_usage.cache_read_input_tokens // 0')
+USED_TOKENS=$(( INPUT_TOKENS + CACHE_CREATE + CACHE_READ ))
+
+format_tokens() {
+    local t=$1
+    if (( t >= 1000000 )); then
+        local whole=$(( t / 1000000 ))
+        local frac=$(( (t % 1000000) / 100000 ))
+        echo "${whole}.${frac}M"
+    elif (( t >= 1000 )); then
+        local whole=$(( t / 1000 ))
+        local frac=$(( (t % 1000) / 100 ))
+        echo "${whole}.${frac}k"
+    else
+        echo "$t"
+    fi
+}
+
+USED_FMT=$(format_tokens "$USED_TOKENS")
+TOTAL_FMT=$(format_tokens "$CTX_SIZE")
+
+now=$(date +%s)
+cached_at=0
+if [[ -f "$CACHE_FILE" ]]; then
+    cached_at=$(file_mtime "$CACHE_FILE" 2>/dev/null || echo 0)
+fi
+
+if (( now - cached_at >= CACHE_TTL )); then
+    TOKEN=$(read_credentials 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin)['claudeAiOauth']['accessToken'])" 2>/dev/null)
+    if [[ -n "$TOKEN" ]]; then
+        RESP=$(curl -sf --max-time 3 https://api.anthropic.com/api/oauth/usage \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "anthropic-beta: oauth-2025-04-20" 2>/dev/null)
+        if [[ -n "$RESP" ]]; then
+            echo "$RESP" > "$CACHE_FILE"
+        fi
+    fi
+fi
+
+FIVE_H="?"
+SEVEN_D="?"
+FIVE_H_RESET=""
+SEVEN_D_RESET=""
+
+if [[ -f "$CACHE_FILE" ]]; then
+    FIVE_H=$(jq -r '.five_hour.utilization // "?"' "$CACHE_FILE" | cut -d. -f1)
+    SEVEN_D=$(jq -r '.seven_day.utilization // "?"' "$CACHE_FILE" | cut -d. -f1)
+
+    FIVE_H_RESET_AT=$(jq -r '.five_hour.resets_at // empty' "$CACHE_FILE" 2>/dev/null)
+    SEVEN_D_RESET_AT=$(jq -r '.seven_day.resets_at // empty' "$CACHE_FILE" 2>/dev/null)
+
+    if [[ -n "$FIVE_H_RESET_AT" ]]; then
+        reset_epoch=$(iso_to_epoch "$FIVE_H_RESET_AT" 2>/dev/null)
+        if [[ -n "$reset_epoch" ]] && (( reset_epoch > now )); then
+            remaining=$(( reset_epoch - now ))
+            hours=$(( remaining / 3600 ))
+            mins=$(( (remaining % 3600) / 60 ))
+            if (( hours > 0 )); then
+                FIVE_H_RESET=" ${hours}h${mins}m"
+            else
+                FIVE_H_RESET=" ${mins}m"
+            fi
+        fi
+    fi
+
+    if [[ -n "$SEVEN_D_RESET_AT" ]]; then
+        reset_epoch=$(iso_to_epoch "$SEVEN_D_RESET_AT" 2>/dev/null)
+        if [[ -n "$reset_epoch" ]] && (( reset_epoch > now )); then
+            remaining=$(( reset_epoch - now ))
+            days=$(( remaining / 86400 ))
+            hours=$(( (remaining % 86400) / 3600 ))
+            SEVEN_D_RESET=" ${days}d${hours}h"
+        fi
+    fi
+fi
+
+CTX_WARN_START=200000
+CTX_WARN_FULL=400000
+CTX_SEGMENT="${USED_FMT}/${TOTAL_FMT} (${CTX_PCT}%)"
+if (( USED_TOKENS >= CTX_WARN_FULL )); then
+    CTX_SEGMENT=$'\033[1;38;2;255;0;0m'"${CTX_SEGMENT}"$'\033[0m'
+elif (( USED_TOKENS >= CTX_WARN_START )); then
+    # Fade yellow (255,255,0) to red (255,0,0) by lowering green across the warning range.
+    green=$(( 255 - (USED_TOKENS - CTX_WARN_START) * 255 / (CTX_WARN_FULL - CTX_WARN_START) ))
+    CTX_SEGMENT=$'\033[38;2;255;'"${green}"$';0m'"${CTX_SEGMENT}"$'\033[0m'
+fi
+
+CWD=$(echo "$input" | jq -r --arg pwd "$PWD" '.workspace.current_dir // .cwd // $pwd')
+SHOWN_PATH="$CWD"
+if [[ "$CWD" == "$HOME" || "$CWD" == "$HOME"/* ]]; then
+    SHOWN_PATH="~${CWD#"$HOME"}"
+fi
+LOCATION=$'\033[1;34m'"${SHOWN_PATH}"$'\033[0m'
+
+# --no-optional-locks keeps this frequent refresh from taking index.lock away from Claude's own git commands.
+GIT_STATUS=$(git -C "$CWD" --no-optional-locks status --porcelain=v2 --branch 2>/dev/null)
+if [[ -n "$GIT_STATUS" ]]; then
+    read -r BRANCH OID STAGED MODIFIED UNTRACKED CONFLICTED < <(echo "$GIT_STATUS" | awk '
+        /^# branch\.head / { head = $3 }
+        /^# branch\.oid / { oid = substr($3, 1, 7) }
+        /^[12] / { if (substr($2, 1, 1) != ".") s++; if (substr($2, 2, 1) != ".") m++ }
+        /^u / { c++ }
+        /^\? / { u++ }
+        END { print head, oid, s + 0, m + 0, u + 0, c + 0 }')
+    if [[ "$BRANCH" == "(detached)" ]]; then
+        BRANCH="detached@${OID}"
+    fi
+    LOCATION+=" "$'\033[35m'"⎇ ${BRANCH}"$'\033[0m'
+
+    { read -r GIT_DIR; read -r COMMON_DIR; read -r TOPLEVEL; } < <(git -C "$CWD" rev-parse --path-format=absolute --git-dir --git-common-dir --show-toplevel 2>/dev/null)
+    if [[ "$GIT_DIR" != "$COMMON_DIR" ]]; then
+        LOCATION+=" "$'\033[33m'"worktree ${TOPLEVEL##*/}"$'\033[0m'
+    fi
+
+    CHANGES=""
+    (( CONFLICTED > 0 )) && CHANGES+=" "$'\033[1;31m'"✖${CONFLICTED}"$'\033[0m'
+    (( STAGED > 0 )) && CHANGES+=" "$'\033[32m'"+${STAGED}"$'\033[0m'
+    (( MODIFIED > 0 )) && CHANGES+=" "$'\033[33m'"!${MODIFIED}"$'\033[0m'
+    (( UNTRACKED > 0 )) && CHANGES+=" "$'\033[2m'"?${UNTRACKED}"$'\033[0m'
+    LOCATION+="${CHANGES}"
+fi
+
+echo "$LOCATION"
+echo "${MODEL} | ${CTX_SEGMENT} | 5h: ${FIVE_H}%${FIVE_H_RESET} | 7d: ${SEVEN_D}%${SEVEN_D_RESET}"
