@@ -6,6 +6,7 @@ import { chmodSync, copyFileSync, lstatSync, mkdirSync, readFileSync,
 import { homedir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { syncPiTools, checkPiTools, verifyPiToolDiscovery } from "./pi-tools.mjs";
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const common = join(repo, "common-config/common-dotfiles");
@@ -62,9 +63,12 @@ if (!args.includes("--config-only")) run("npm", ["--version"], { stdio: "ignore"
 unfold(join(home, ".pi"), join(common, "pi/.pi"));
 unfold(agent, source);
 unfold(join(agent, "notes-compaction"), join(source, "notes-compaction"));
+unfold(join(agent, "extensions"), join(source, "extensions"));
+unfold(join(agent, "codex-conversion-custom-tools"), join(source, "codex-conversion-custom-tools"));
 unfold(join(home, ".agents"), join(common, "agents/.agents"));
 // Refuse asset conflicts before changing settings or installing packages.
 run("stow", ["--simulate", "--restow", "--no-folding", "-d", common, "-t", home, "agents", "pi"]);
+syncPiTools({ agent, source });
 
 let backup;
 for (const name of ["settings.json", "pi-codex-conversion.json", "notes-compaction/settings.json"]) {
@@ -105,6 +109,7 @@ for (const name of ["settings.json", "pi-codex-conversion.json", "notes-compacti
   console.log(`Synced ${target}`);
 }
 run(join(repo, "scripts/dotfiles"), ["restow", "pi"]);
+checkPiTools({ agent, source });
 if (backup) console.log(`Previous settings: ${backup}`);
 
 if (!args.includes("--config-only")) {
@@ -130,6 +135,11 @@ if (!args.includes("--config-only")) {
   } finally { clearTimeout(timeout); }
   const loaded = loader.getExtensions();
   if (loaded.errors.length) throw new Error(`Extension loading failed: ${JSON.stringify(loaded.errors)}`);
+  if (!loaded.extensions.some(extension => extension.tools.has("agents"))) {
+    throw new Error("Herdr Core agents tool is missing from the loaded extensions");
+  }
+  await verifyPiToolDiscovery({ agent, source, sdk: join(prefix,
+    "lib/node_modules/@earendil-works/pi-coding-agent/dist/index.js") });
   console.log(`Verified ${loaded.extensions.length} extensions load without errors.`);
   console.log('Pi setup complete. Ensure ~/.local/bin is first on PATH; start pi and /login on this machine.');
 } else console.log("Configuration complete; Pi and extension installation were skipped.");

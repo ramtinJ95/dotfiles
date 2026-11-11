@@ -5,4 +5,9 @@
 ^/\.pi/(?!agent(?:/|$)).+
 ^/\.pi/agent/(?!AGENTS\.md$|REALTIME-SYSTEM-PROMPT\.md$|ask\.json$|claude-delegation\.json$|infra-command-guard\.json$|keybindings\.json$|pi-gpt-switcher\.json$|extensions(?:/|$)|codex-conversion-custom-tools(?:/|$)|prompts(?:/|$)|shepherdr(?:/|$)).+
 ^/\.pi/agent/shepherdr/(?!profiles(?:/|$)).+
+# The adapter ignores symlink TOMLs. Seed/sync these as real files instead.
+^/\.pi/agent/codex-conversion-custom-tools/[^/]+\.toml$
+# Never reinstall the retired TUI adapters, even in a dirty checkout.
+^/\.pi/agent/codex-conversion-custom-tools/(herdr-agent|spawn-agent)(/|$)
+^/\.pi/agent/extensions/herdr-agent-state\.ts$
 .*\.(log|sqlite|bak)$

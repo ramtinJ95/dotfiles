@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync,
   readFileSync, readdirSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import { checkPiTools, syncPiTools, verifyPiToolDiscovery } from "./pi-tools.mjs";
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const readJSON = path => JSON.parse(readFileSync(path, "utf8"));
@@ -20,7 +21,7 @@ test("Pi setup: clean clone, repeat sync, local state, old links, and conflicts"
     // Only versionable files, never the live npm cache/auth/session tree.
     const files = execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard", "-z",
       "common-config/common-dotfiles/pi", "common-config/common-dotfiles/agents"], { cwd: repo, encoding: "utf8" }).split("\0").filter(Boolean);
-    files.push("scripts/dotfiles", "scripts/pi-setup", "packages/common.txt");
+    files.push("scripts/dotfiles", "scripts/pi-setup", "scripts/pi-tools.mjs", "packages/common.txt");
     for (const file of new Set(files)) {
       const from = join(repo, file), to = join(fixture, file);
       if (!existsSync(from)) continue; // deleted files still present in the index
@@ -54,6 +55,9 @@ test("Pi setup: clean clone, repeat sync, local state, old links, and conflicts"
     assert.equal(existsSync(join(home, ".config/herdr")), false);
     assert.equal(existsSync(join(home, "workspace")), false);
     assert.equal(lstatSync(join(agent, "extensions/exa-deep-research.ts")).isSymbolicLink(), true);
+    assert.equal(lstatSync(join(agent, "codex-conversion-custom-tools/browser.toml")).isFile(), true);
+    assert.equal(lstatSync(join(agent, "codex-conversion-custom-tools/browser/browser.mjs")).isSymbolicLink(), true);
+    assert.deepEqual(checkPiTools({ agent, source }), ["browser"]);
     assert.equal(lstatSync(join(agent, "shepherdr/profiles/reviewer/profile.json")).isSymbolicLink(), true);
     assert.equal(readJSON(join(agent, "settings.json")).packages.length, 11);
     assert.equal(readJSON(join(agent, "notes-compaction/settings.json")).normalCompaction, false);
@@ -100,5 +104,76 @@ test("Pi setup: clean clone, repeat sync, local state, old links, and conflicts"
     symlinkSync(join(home, ".pi"), join(foreign, ".pi"));
     assert.throws(() => run(foreign), /Foreign directory link/);
     console.log("Verified clean/legacy setup, idempotence, pinned package list, runtime isolation, and conflict refusal.");
+  } finally { rmSync(scratch, { recursive: true, force: true }); }
+});
+
+test("tool migration: discoverable files, backups, retired adapters and ownership", () => {
+  const scratch = mkdtempSync(join(tmpdir(), "pi-tools-test-"));
+  try {
+    const source = join(scratch, "checkout/.pi/agent");
+    const agent = join(scratch, "home/.pi/agent");
+    const tools = "codex-conversion-custom-tools";
+    const definition = 'usage = "await tools.browser(args)"\ncommand = "./browser/browser.mjs"\n';
+    put(join(source, tools, "browser.toml"), definition);
+    mkdirSync(join(agent, tools), { recursive: true });
+    symlinkSync(join(source, tools, "browser.toml"), join(agent, tools, "browser.toml"));
+    // A real path existing behind a symlink is not enough for adapter discovery.
+    assert.throws(() => checkPiTools({ agent, source }), /Undiscoverable/);
+    for (const name of [`${tools}/spawn_agent.toml`, `${tools}/herdr_agent.toml`,
+      `${tools}/spawn-agent/spawn-agent.mjs`, `${tools}/herdr-agent/herdr-agent.mjs`,
+      "extensions/herdr-agent-state.ts"]) {
+      mkdirSync(dirname(join(agent, name)), { recursive: true });
+      symlinkSync(join(source, name), join(agent, name)); // source was removed by git pull
+    }
+    put(join(agent, "sessions/keep"), "runtime");
+    syncPiTools({ agent, source });
+    assert.deepEqual(checkPiTools({ agent, source }), ["browser"]);
+    assert.equal(readFileSync(join(agent, tools, "browser.toml"), "utf8"), definition);
+    assert.equal(lstatSync(join(agent, tools, "browser.toml")).isFile(), true);
+    assert.equal(readFileSync(join(agent, "sessions/keep"), "utf8"), "runtime");
+    const backups = join(dirname(agent), "backups");
+    const saved = readdirSync(backups);
+    assert.equal(saved.length, 1);
+    assert.equal(readFileSync(join(backups, saved[0], "browser.toml"), "utf8"), definition);
+    syncPiTools({ agent, source });
+    assert.deepEqual(readdirSync(backups), saved, "unchanged sync is idempotent");
+
+    // A conflicting retired file must stop the whole plan, before browser sync.
+    put(join(agent, tools, "herdr_agent.toml"), "personal tool");
+    put(join(source, tools, "browser.toml"), definition + "defer_loading = true\n");
+    assert.throws(() => syncPiTools({ agent, source }), /not a checkout-owned link/);
+    assert.equal(readFileSync(join(agent, tools, "browser.toml"), "utf8"), definition);
+    assert.equal(readFileSync(join(agent, tools, "herdr_agent.toml"), "utf8"), "personal tool");
+    rmSync(join(agent, tools, "herdr_agent.toml"));
+
+    // A foreign browser definition is never adopted or rewritten.
+    rmSync(join(agent, tools, "browser.toml"));
+    put(join(scratch, "foreign.toml"), "foreign");
+    symlinkSync(join(scratch, "foreign.toml"), join(agent, tools, "browser.toml"));
+    assert.throws(() => syncPiTools({ agent, source }), /Foreign tool link/);
+    assert.equal(readFileSync(join(scratch, "foreign.toml"), "utf8"), "foreign");
+  } finally { rmSync(scratch, { recursive: true, force: true }); }
+});
+
+test("installed adapter: valid discovery, disabled definition and missing script", {
+  skip: !process.env.PI_TEST_SDK,
+}, async () => {
+  const scratch = mkdtempSync(join(tmpdir(), "pi-adapter-test-"));
+  try {
+    const agent = join(scratch, "home/.pi/agent"), source = join(scratch, "source");
+    const tools = "codex-conversion-custom-tools";
+    const definition = 'usage = "await tools.browser(args)"\ncommand = "./browser/browser.mjs"\n';
+    put(join(source, tools, "browser.toml"), definition);
+    syncPiTools({ agent, source });
+    put(join(agent, tools, "browser/browser.mjs"), "// fixture: never executed\n");
+    symlinkSync(join(homedir(), ".pi/agent/npm"), join(agent, "npm"));
+    const options = { agent, source, sdk: resolve(process.env.PI_TEST_SDK) };
+    const result = await verifyPiToolDiscovery(options);
+    assert.deepEqual(result.tools.map(tool => tool.name), ["browser"]);
+    put(join(agent, tools, "browser.toml"), 'usage = "test"\ncommand = 42\n');
+    await assert.rejects(verifyPiToolDiscovery(options), /command must be a non-empty string/);
+    put(join(agent, tools, "browser.toml"), definition);
+    rmSync(join(agent, tools, "browser/browser.mjs"));
+    await assert.rejects(verifyPiToolDiscovery(options), /ENOENT|Missing tool script/);
   } finally { rmSync(scratch, { recursive: true, force: true }); }
 });

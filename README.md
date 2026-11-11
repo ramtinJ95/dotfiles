@@ -36,7 +36,9 @@ See [arch-config/arch-dotfiles/README.md](arch-config/arch-dotfiles/README.md) f
 
 To replicate Pi without installing desktop dotfiles, run `scripts/pi-setup`.
 It installs the pinned Pi runtime/extensions, links shared agent assets, and
-syncs portable settings with backups. See [Pi setup](common-config/README.md#pi-setup)
+syncs portable settings and discoverable custom-tool files with backups.
+Agent coordination uses Herdr Core's `agents` tool; window changes use `herdr-app`.
+See [Pi setup](common-config/README.md#pi-setup)
 for prerequisites, authentication, and updating an existing machine.
 
 ## What's Included

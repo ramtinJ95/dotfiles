@@ -233,6 +233,13 @@ seed_pi_configs() {
     for name in settings.json pi-codex-conversion.json notes-compaction/settings.json; do
         seed_native_config "$COMMON_DIR/pi/.pi/agent/$name" "$HOME/.pi/agent/$name"
     done
+    # Custom-tool discovery does not follow file symlinks. Restow keeps local
+    # edits; pi-setup explicitly synchronizes these definitions with backups.
+    local source
+    for source in "$COMMON_DIR/pi/.pi/agent/codex-conversion-custom-tools/"*.toml; do
+        [[ -f "$source" ]] || continue
+        seed_native_config "$source" "$HOME/.pi/agent/codex-conversion-custom-tools/$(basename "$source")"
+    done
 }
 
 run_profile() {

@@ -52,6 +52,8 @@ cp "$repo/common-config/common-dotfiles/pi/.stow-local-ignore" "$common/pi/.stow
 mkdir -p "$common/pi/.pi/agent/notes-compaction"
 printf '{}\n' > "$common/pi/.pi/agent/pi-codex-conversion.json"
 printf '{}\n' > "$common/pi/.pi/agent/notes-compaction/settings.json"
+mkdir -p "$common/pi/.pi/agent/codex-conversion-custom-tools"
+printf 'command = "browser"\n' > "$common/pi/.pi/agent/codex-conversion-custom-tools/browser.toml"
 cp -R "$repo/mac-config/mac-dotfiles/macarchy" "$mac/macarchy"
 printf 'herdr\npi\n' > "$fixture/packages/common.txt"
 printf 'codex\nmacarchy\nnvim\nspicetify\n' > "$fixture/packages/mac.txt"
@@ -70,7 +72,7 @@ printf 'generated\n' > "$mac/spicetify/.config/spicetify/Themes/text/color.ini"
 printf 'body {}\n' > "$mac/spicetify/.config/spicetify/Themes/text/user.css"
 
 HOME="$home" "$fixture/scripts/dotfiles" stow mac
-for path in .config/herdr/config.toml .pi/agent/settings.json .codex/config.toml; do
+for path in .config/herdr/config.toml .pi/agent/settings.json .codex/config.toml .pi/agent/codex-conversion-custom-tools/browser.toml; do
     [[ -f "$home/$path" && ! -L "$home/$path" ]]
 done
 [[ -L "$home/.config/macarchy/profile.toml" ]]
@@ -88,7 +90,10 @@ printf 'personal edit\n' > "$home/.config/nvim/new-plugin.lua"
 [[ -L "$home/.config/spicetify/Themes/text/user.css" ]]
 
 printf '[theme]\nname = "local-choice"\n' > "$home/.config/herdr/config.toml"
+printf 'command = "local-browser"\n' > "$home/.pi/agent/codex-conversion-custom-tools/browser.toml"
 HOME="$home" "$fixture/scripts/dotfiles" restow mac
+grep -q local-browser "$home/.pi/agent/codex-conversion-custom-tools/browser.toml"
+[[ ! -L "$home/.pi/agent/codex-conversion-custom-tools/browser.toml" ]]
 grep -q local-choice "$home/.config/herdr/config.toml"
 grep -q catppuccin "$common/herdr/.config/herdr/config.toml"
 [[ -f "$home/.config/nvim/new-plugin.lua" && -L "$home/.config/nvim" ]]

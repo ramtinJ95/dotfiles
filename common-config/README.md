@@ -35,14 +35,20 @@ Shepherdr prerelease and notes-compaction. It links **only** the `agents` and `p
 packages; it does not install the old Herdr TUI, desktop settings, or Mac local
 LLM servers. Package installation failures stop the command rather than silently
 skipping an extension. Individual install commands have a five-minute timeout.
-It also loads the installed extensions through Pi's resource loader and fails
-on loading errors, without making a model request.
+It also loads the installed extensions through Pi's resource loader, requires
+the Core `agents` tool, and checks custom tools through the installed adapter's
+actual discovery/parser. Loading, missing-tool and disabled-tool errors fail
+setup without making a model request.
 
 Run `/login` inside Pi on each machine. Credentials are never copied. Additional
 capabilities need their own local prerequisites:
 
 - Herdr-managed interactive agents: the **Herdr app/Core** and its `hc` CLI;
   launch Pi inside the app. The old `herdr` TUI is not a substitute.
+  In Pi, use `agents` (`tools.agents` in Code Mode) for agent operations,
+  `herdr-app` for window/layout operations, and `hc` for non-agent processes.
+  The shared Herdr skill describes this division. Legacy `spawn_agent`,
+  `herdr_agent` and the TUI state hook are no longer installed.
 - Claude delegation: install and authenticate Claude Code separately.
 - Exa tools: set `EXA_API_KEY` (Arch cannot use this Mac's Keychain entry).
 - Semantic browser tools: set `TYPESAFE_API_KEY` and use an existing CDP-enabled
@@ -59,10 +65,30 @@ portable settings, preserving local theme, audio devices, and unrelated keys.
 Changed configs are backed up under `~/.pi/backups/setup-*` with private permissions.
 `--config-only` performs the same configuration update without installing/running Pi.
 
+Custom-tool `*.toml` definitions are **regular local files**, not Stow links:
+the adapter's discovery ignores file symlinks. Their companion scripts remain
+linked. Setup syncs definitions from the checkout with private backups under
+`~/.pi/backups/tools-*`, and removes only checkout-owned legacy Herdr adapter
+links. Foreign links or locally copied legacy adapters stop migration for review.
+For a targeted repair without Stow, package installs or settings changes:
+
+```bash
+node scripts/pi-tools.mjs --sync
+node scripts/pi-tools.mjs --check
+# Optional: verify with the actual installed adapter and Pi SDK as well.
+node scripts/pi-tools.mjs --check --sdk ~/.local/lib/node_modules/@earendil-works/pi-coding-agent/dist/index.js
+```
+
+Use the SDK path for the Pi you actually run (Homebrew may install it under
+`/opt/homebrew/lib/node_modules`). The script expects existing real Pi directories;
+use full setup for a legacy folded-directory migration. After changing
+extensions or global instructions, restart Pi sessions to load the new setup.
+
 `settings.json`, `pi-codex-conversion.json`, and `notes-compaction/settings.json`
 are writable **local files** on both platforms. Ordinary `scripts/dotfiles
 stow/restow` only seeds missing files; it does not overwrite local changes.
-To publish changes made through Pi, deliberately update those three repository
+The same seed-only rule applies to custom-tool TOMLs. To publish changes made
+through Pi, deliberately update those three repository
 seeds (omit credentials, theme generation state, audio device IDs, and changelog
 metadata), update version pins as needed, test, and commit. Live edits do not
 automatically flow back to the shared seeds.
@@ -78,12 +104,15 @@ Verification (isolated temporary homes, no credentials or model calls):
 
 ```bash
 node --test scripts/test-pi-setup.mjs
+# Optional installed-adapter tests; use your active Pi SDK path.
+PI_TEST_SDK=/opt/homebrew/lib/node_modules/@earendil-works/pi-coding-agent/dist/index.js node --test scripts/test-pi-setup.mjs
 bash scripts/test-macarchy-stow.sh
 scripts/dotfiles doctor
 ```
 
-The setup tests cover clean installs, repeated sync, old folded links, local
-settings preservation, runtime exclusion and conflict refusal. They do not
+The setup tests cover clean installs, repeated sync, old folded links, regular
+tool definitions, retired adapter cleanup, local settings preservation, runtime
+exclusion and conflict refusal. They do not
 claim authentication, Herdr, browser, voice, or Arch runtime validation.
 
 ## Herdr App

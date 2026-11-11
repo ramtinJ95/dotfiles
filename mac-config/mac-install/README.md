@@ -66,6 +66,10 @@ Tmux plugin installation remains separate from Macarchy setup.
   these existing personal seeds when using a different username or directory.
   Pi's conversion and notes settings are also local seeds. `scripts/pi-setup`
   explicitly syncs these Pi seeds with backups; ordinary restow still preserves them.
+  Pi custom-tool TOMLs are also real local files because the adapter ignores
+  file symlinks; their scripts remain linked. `node scripts/pi-tools.mjs --sync`
+  repairs tool discovery and retires checkout-owned old Herdr TUI adapters
+  without running Stow. Pi agent control now uses Core's `agents` tool.
 
 Neovim is the deliberate personal-tree exception: the helper links
 `~/.config/nvim` to `mac-config/mac-dotfiles/nvim/.config/nvim` as a whole,
