@@ -2,7 +2,7 @@
 
 Open **Choose a look** with **Ctrl-f r**. Only three modes are listed:
 Work (`main-personal`, or `main`), Cosy Cabin (`cabin`) and Cosy Café (`cosy`).
-Arrow keys move, Enter applies, Escape cancels. Selecting a café uses its warm
+`j`/`k` or arrow keys move, Enter applies, Escape cancels. Selecting a café uses its warm
 `cosy` palette; selecting Work uses the installed Omarchy/Macarchy palette.
 Herdr's other defaults and old layout copies stay out of this picker.
 The Cosy layout's installer supplies its

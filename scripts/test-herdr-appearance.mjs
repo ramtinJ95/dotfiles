@@ -177,7 +177,7 @@ const uiURL = moduleURL(`
     return proxy;
   }
   export const div = el, h_flex = el, v_flex = el;
-  export const ScrollHandle = { new: () => ({ scroll_to_item() {} }) };
+  export const ScrollHandle = { new: () => ({ scroll_to_item(i) { globalThis.__herdrPickerTest.scrolled.push(i); } }) };
 `);
 const herdrURL = moduleURL(`
   const h = () => globalThis.__herdrPickerTest;
@@ -203,9 +203,9 @@ const { default: Appearance } = await import(moduleURL(pickerSource));
 
 function picker() {
   const h = { layouts: ["main-personal", "cosy", "cabin"], themes: [{ name: "cosy" }, { name: "omarchy" }],
-    layout: "cosy", commands: [], closed: [], errors: [], tasks: [] };
+    layout: "cosy", commands: [], closed: [], errors: [], tasks: [], scrolled: [], stopped: 0 };
   globalThis.__herdrPickerTest = h;
-  h.cx = { notify() {}, stop_propagation() {}, focus_handle: () => ({ focus() {} }), spawn: fn => h.tasks.push(fn(h.cx)) };
+  h.cx = { notify() {}, stop_propagation() { h.stopped++; }, focus_handle: () => ({ focus() {} }), spawn: fn => h.tasks.push(fn(h.cx)) };
   h.view = new Appearance(); h.view.init({}, h.cx);
   return h;
 }
@@ -229,6 +229,38 @@ test("real picker keyboard handler applies layout then native palette; Escape do
   cancel.view.render(cancel.cx).handlers.key({ key: "escape" }, cancel.cx);
   assert.deepEqual(cancel.commands, []);
   assert.deepEqual(cancel.closed, ["looks"]);
+});
+
+test("picker j/k wraps and scrolls selection, then Enter applies the chosen layout", async () => {
+  const h = picker();
+  const key = h.view.render(h.cx).handlers.key;
+  key({ key: "j", keystroke: "j" }, h.cx);
+  assert.equal(h.view.at, 0, "j wraps from the last row to Work");
+  key({ key: "k", keystroke: "k" }, h.cx);
+  assert.equal(h.view.at, 2, "k wraps from Work to the last row");
+  key({ key: "k", keystroke: "k" }, h.cx);
+  assert.equal(h.view.at, 1);
+  assert.deepEqual(h.scrolled, [0, 2, 1]);
+  assert.deepEqual(h.commands, [], "movement alone must not switch layouts");
+  assert.equal(h.stopped, 3, "handled motions stay inside the popup");
+  key({ key: "enter", keystroke: "enter" }, h.cx);
+  await Promise.all(h.tasks);
+  assert.deepEqual(h.commands, [
+    { name: "layout.switch", args: { name: "cabin" } },
+    { name: "app.theme", args: { name: "cosy" } },
+  ]);
+});
+
+test("picker does not capture modified j/k shortcuts or unrelated typing", () => {
+  const h = picker();
+  const key = h.view.render(h.cx).handlers.key;
+  for (const keystroke of ["ctrl-j", "alt-k", "cmd-j", "shift-k", "x"]) {
+    key({ key: keystroke.split("-").at(-1), keystroke }, h.cx);
+  }
+  assert.equal(h.view.at, 2);
+  assert.equal(h.stopped, 0);
+  assert.deepEqual(h.scrolled, []);
+  assert.deepEqual(h.commands, []);
 });
 
 test("picker preflights warm palette before changing layouts or closing the picker", async () => {
