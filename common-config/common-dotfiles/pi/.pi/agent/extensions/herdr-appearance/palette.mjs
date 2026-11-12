@@ -15,9 +15,12 @@ export function relaxedColors() {
   group("#b8ca8a", "success toolDiffAdded syntaxString");
   group("#f09a83", "error toolDiffRemoved thinkingXhigh thinkingMax");
   group("#efc789", "warning syntaxNumber thinkingHigh");
-  group("#aec5e6", "syntaxFunction syntaxType thinkingLow");
-  group("#d3b2d4", "mdListBullet syntaxKeyword syntaxOperator thinkingMedium");
-  group("#a5ccc0", "mdLinkUrl mdCode");
+  // No blue, lilac or teal: the bun, heather and sage of the Cosy Cafe palette.
+  // The bun and not its biscuit, which sits too near `muted` to tell a name
+  // from the punctuation around it.
+  group("#e0915a", "syntaxFunction syntaxType thinkingLow");
+  group("#d4afbc", "mdListBullet syntaxKeyword syntaxOperator thinkingMedium");
+  group("#b4cbbe", "mdLinkUrl mdCode");
   group("#eee2cc", "syntaxVariable");
   const background = {
     selectedBg: "#55402d", searchMatchBg: "#55402d",
