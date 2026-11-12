@@ -2,87 +2,87 @@
 # Do not edit directly; change the hook or active Omarchy theme colors.
 
 [mgr]
-cwd = { fg = "#94e2d5" }
-hovered = { fg = "#1f1f28", bg = "#dcd7ba", bold = true }
+cwd = { fg = "#98b5a6" }
+hovered = { fg = "#191412", bg = "#f0b565", bold = true }
 preview_hovered = { underline = true }
-find_keyword = { fg = "#f9e2af", bold = true, italic = true, underline = true }
-find_position = { fg = "#dcd7ba", bg = "reset", bold = true, italic = true }
-marker_copied = { fg = "#a6e3a1", bg = "#a6e3a1" }
-marker_cut = { fg = "#f38ba8", bg = "#f38ba8" }
-marker_marked = { fg = "#89b4fa", bg = "#89b4fa" }
-marker_selected = { fg = "#f9e2af", bg = "#f9e2af" }
-count_copied = { fg = "#1f1f28", bg = "#a6e3a1" }
-count_cut = { fg = "#1f1f28", bg = "#f38ba8" }
-count_selected = { fg = "#1f1f28", bg = "#f9e2af" }
+find_keyword = { fg = "#e9b25f", bold = true, italic = true, underline = true }
+find_position = { fg = "#bd93a3", bg = "reset", bold = true, italic = true }
+marker_copied = { fg = "#a5b76c", bg = "#a5b76c" }
+marker_cut = { fg = "#dc7562", bg = "#dc7562" }
+marker_marked = { fg = "#d2ab82", bg = "#d2ab82" }
+marker_selected = { fg = "#e9b25f", bg = "#e9b25f" }
+count_copied = { fg = "#191412", bg = "#a5b76c" }
+count_cut = { fg = "#191412", bg = "#dc7562" }
+count_selected = { fg = "#191412", bg = "#e9b25f" }
 border_symbol = "│"
-border_style = { fg = "#585b70" }
+border_style = { fg = "#8f7b68" }
 
 [tabs]
-active = { fg = "#1f1f28", bg = "#dcd7ba", bold = true }
-inactive = { fg = "#585b70", bg = "#1f1f28" }
+active = { fg = "#191412", bg = "#f0b565", bold = true }
+inactive = { fg = "#8f7b68", bg = "#4b3a2b" }
 
 [mode]
-normal_main = { fg = "#1f1f28", bg = "#dcd7ba", bold = true }
-normal_alt = { fg = "#dcd7ba", bg = "#1f1f28" }
-select_main = { fg = "#1f1f28", bg = "#a6e3a1", bold = true }
-select_alt = { fg = "#a6e3a1", bg = "#1f1f28" }
-unset_main = { fg = "#1f1f28", bg = "#dcd7ba", bold = true }
-unset_alt = { fg = "#dcd7ba", bg = "#1f1f28" }
+normal_main = { fg = "#191412", bg = "#f0b565", bold = true }
+normal_alt = { fg = "#f0b565", bg = "#4b3a2b" }
+select_main = { fg = "#191412", bg = "#a5b76c", bold = true }
+select_alt = { fg = "#a5b76c", bg = "#4b3a2b" }
+unset_main = { fg = "#191412", bg = "#bd93a3", bold = true }
+unset_alt = { fg = "#bd93a3", bg = "#4b3a2b" }
 
 [status]
-perm_sep = { fg = "#585b70" }
-perm_type = { fg = "#89b4fa" }
-perm_read = { fg = "#f9e2af" }
-perm_write = { fg = "#f38ba8" }
-perm_exec = { fg = "#a6e3a1" }
-progress_label = { fg = "#dcd7ba", bold = true }
-progress_normal = { fg = "#dcd7ba", bg = "#1f1f28" }
-progress_error = { fg = "#f38ba8", bg = "#1f1f28" }
+perm_sep = { fg = "#8f7b68" }
+perm_type = { fg = "#d2ab82" }
+perm_read = { fg = "#e9b25f" }
+perm_write = { fg = "#dc7562" }
+perm_exec = { fg = "#a5b76c" }
+progress_label = { fg = "#e9dcc3", bold = true }
+progress_normal = { fg = "#f0b565", bg = "#4b3a2b" }
+progress_error = { fg = "#dc7562", bg = "#4b3a2b" }
 
 [pick]
-border = { fg = "#dcd7ba" }
-active = { fg = "#dcd7ba", bold = true }
+border = { fg = "#f0b565" }
+active = { fg = "#bd93a3", bold = true }
 inactive = {}
 
 [input]
-border = { fg = "#dcd7ba" }
+border = { fg = "#f0b565" }
 title = {}
 value = {}
 selected = { reversed = true }
 
 [cmp]
-border = { fg = "#dcd7ba" }
+border = { fg = "#f0b565" }
 
 [tasks]
-border = { fg = "#dcd7ba" }
+border = { fg = "#f0b565" }
 title = {}
-hovered = { fg = "#dcd7ba", underline = true }
+hovered = { fg = "#bd93a3", underline = true }
 
 [which]
-mask = { bg = "#1f1f28" }
-cand = { fg = "#94e2d5" }
-rest = { fg = "#585b70" }
-desc = { fg = "#dcd7ba" }
+mask = { bg = "#4b3a2b" }
+cand = { fg = "#98b5a6" }
+rest = { fg = "#8f7b68" }
+desc = { fg = "#bd93a3" }
 separator = "  "
-separator_style = { fg = "#585b70" }
+separator_style = { fg = "#8f7b68" }
 
 [help]
-on = { fg = "#94e2d5" }
-run = { fg = "#dcd7ba" }
+on = { fg = "#98b5a6" }
+run = { fg = "#bd93a3" }
 hovered = { reversed = true, bold = true }
-footer = { fg = "#1f1f28", bg = "#dcd7ba" }
+footer = { fg = "#191412", bg = "#e9dcc3" }
 
 [notify]
-title_info = { fg = "#a6e3a1" }
-title_warn = { fg = "#f9e2af" }
-title_error = { fg = "#f38ba8" }
+title_info = { fg = "#a5b76c" }
+title_warn = { fg = "#e9b25f" }
+title_error = { fg = "#dc7562" }
 
 [filetype]
 rules = [
-  { mime = "image/*", fg = "#94e2d5" },
-  { mime = "{audio,video}/*", fg = "#f9e2af" },
-  { mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "#dcd7ba" },
-  { mime = "application/{pdf,doc,rtf}", fg = "#a6e3a1" },
-  { url = "*/", fg = "#dcd7ba" },
-  { url = "*", fg = "#dcd7ba" },
+  { mime = "image/*", fg = "#98b5a6" },
+  { mime = "{audio,video}/*", fg = "#e9b25f" },
+  { mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "#bd93a3" },
+  { mime = "application/{pdf,doc,rtf}", fg = "#a5b76c" },
+  { url = "*/", fg = "#f0b565" },
+  { url = "*", fg = "#e9dcc3" },
 ]
