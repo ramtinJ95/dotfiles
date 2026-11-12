@@ -7,28 +7,26 @@ starship_config="$HOME/.config/starship.toml"
 yazi_flavor_dir="$HOME/.config/yazi/flavors/omarchy.yazi"
 yazi_theme_file="$HOME/.config/yazi/theme.toml"
 
-color() {
-  local key=$1 fallback=$2 value
-
-  value=$(awk -F= -v key="$key" '
-    {
-      k = $1
-      gsub(/[[:space:]]/, "", k)
-      if (k == key) {
-        v = $0
-        sub(/^[^=]*=/, "", v)
-        gsub(/^[[:space:]]+|[[:space:]]+$/, "", v)
-        gsub(/^"|"$/, "", v)
-        print v
-        exit
-      }
-    }
-  ' "$colors_file")
-
-  printf '%s' "${value:-$fallback}"
-}
-
 [[ -f $colors_file ]] || exit 0
+
+# The theme's colors as Omarchy resolves them. A theme names them the new way
+# (red, muted, selection) or the old (color1, color8, selection_background) and
+# omarchy-theme-color answers to both; reading colors.toml by hand found only
+# the old names, so every newer theme got the fallbacks below instead.
+declare -A theme_colors
+while IFS=$'\t' read -r key value; do
+  theme_colors[$key]=$value
+done < <(omarchy-theme-color --file "$colors_file" --all)
+
+if (( ${#theme_colors[@]} == 0 )); then
+  omarchy-notification-send -u normal "Theme hook: no colors" \
+    "omarchy-theme-color read nothing from $colors_file" >/dev/null 2>&1
+  exit 1
+fi
+
+color() {
+  printf '%s' "${theme_colors[$1]:-$2}"
+}
 
 background=$(color background "#11111b")
 foreground=$(color foreground "#cdd6f4")
@@ -99,7 +97,12 @@ if [[ -f $starship_config ]]; then
   awk '
     /^# BEGIN OMARCHY GENERATED PALETTE$/ { skip = 1; next }
     /^# END OMARCHY GENERATED PALETTE$/ { skip = 0; next }
-    !skip { print }
+    skip { next }
+    # Blank lines are held until a line follows them, so the ones the removed
+    # block leaves at the end go: the block below brings its own, and each
+    # run used to add one more.
+    /^[[:space:]]*$/ { blanks++; next }
+    { for (; blanks > 0; blanks--) print ""; print }
   ' "$tmp_starship" >"$tmp_starship.clean"
 
   cat >>"$tmp_starship.clean" <<STARSHIP
