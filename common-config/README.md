@@ -30,6 +30,23 @@ look picker as Pi does. Claude Code reloads a theme when its file in
 `~/.claude/themes` changes, not when the linked file here does: restart it
 after an edit.
 
+Its colors are the Cosy Cafe Omarchy theme's (`claude.json` there is this file
+under Omarchy's name): there is no blue, and a change belongs in both.
+
+## Cosy Cafe Omarchy Themes
+
+The whole desktop in the café's palette, dark and light. Each is its own
+repository, installed per machine and not stowed from here:
+
+```sh
+omarchy theme install https://github.com/ramtinJ95/omarchy-cosy-cafe-theme
+omarchy theme install https://github.com/ramtinJ95/omarchy-cosy-cafe-paper-theme
+omarchy theme set cosy-cafe          # or cosy-cafe-paper
+```
+
+The arch `theme-set` hook then draws starship's palette, tmux, yazi and the
+kitty tabs from the theme's colors.
+
 ## Pi Setup
 
 On each Arch machine (Node must be at least 22.19):
