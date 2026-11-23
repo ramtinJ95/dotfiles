@@ -29,6 +29,16 @@
       "skillFolderHash": "678c375b883794bf4292715a43acbba5c84681aa",
       "installedAt": "2026-09-17T04:44:05.715Z",
       "updatedAt": "2026-09-17T04:44:05.715Z"
+    },
+    "untangle-codebase": {
+      "source": "caldoai/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/caldoai/skills.git",
+      "skillPath": "skills/untangle-codebase/SKILL.md",
+      "skillFolderHash": "bf2f9fc0f8dcd62103862d30260007dfecd7ea35",
+      "pluginName": "untangle-codebase",
+      "installedAt": "2026-11-13T07:54:34.216Z",
+      "updatedAt": "2026-11-13T07:54:34.216Z"
     }
   },
   "dismissed": {
@@ -40,14 +50,15 @@
     "codex",
     "cursor",
     "droid",
+    "fx",
     "gemini-cli",
     "github-copilot",
     "kilo",
     "kimi-code-cli",
     "opencode",
+    "pi",
     "warp",
     "zed",
-    "claude-code",
-    "pi"
+    "claude-code"
   ]
 }

@@ -3,7 +3,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { setInterval, clearInterval } from "node:timers";
 import { Theme, type ExtensionAPI, type ThemeColor, type ThemeBg } from "@earendil-works/pi-coding-agent";
-import { RELAXED_LAYOUTS, relaxedColors, nativeColors } from "./palette.mjs";
+import { relaxedColors, nativeColors } from "./palette.mjs";
 
 // Herdr documents shared("layout") as the active layout. Watching its small
 // persisted state avoids spawning a CLI (or touching global Pi settings) per poll.
@@ -39,7 +39,7 @@ export default function (pi: ExtensionAPI) {
         catch (error) {
           if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
         }
-        const next = typeof layout === "string" && RELAXED_LAYOUTS.has(layout);
+        const next = layout === "cosy";
         if (next !== relaxed || next && ctx.ui.theme.name !== "herdr-relaxed" || refreshNative && !next && overridden) {
           if (next) {
             const { foreground, background } = relaxedColors();

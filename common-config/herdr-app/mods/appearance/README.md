@@ -1,8 +1,8 @@
 # Looks: work or café
 
-Open **Choose a look** with **Ctrl-f r**. Only three modes are listed:
-Work (`main-personal`, or `main`), Cosy Cabin (`cabin`) and Cosy Café (`cosy`).
-`j`/`k` or arrow keys move, Enter applies, Escape cancels. Selecting a café uses its warm
+Open **Choose a look** with **Ctrl-f r**. Only two modes are listed:
+Work (`main-personal`, or `main`) and Cosy Café (`cosy`).
+`j`/`k` or arrow keys move, Enter applies, Escape cancels. Selecting Cosy Café uses its warm
 `cosy` palette; selecting Work uses the installed Omarchy/Macarchy palette.
 Herdr's other defaults and old layout copies stay out of this picker.
 The Cosy layout's installer supplies its
@@ -14,7 +14,7 @@ For a targeted install, copy this directory to
 `common-config/herdr-app/keys.json`. Never edit Herdr's shipped layouts/mods.
 
 The shared Pi extension `herdr-appearance` follows Herdr's documented
-`shared("layout")` state. In Cosy/Cabin it applies an in-memory warm palette:
+`shared("layout")` state. In Cosy Café it applies an in-memory warm palette:
 espresso tool panels, cream output, and readable nested `dim` text (at least
 4.5:1 contrast against every panel). On returning to Work it reloads Pi's
 original native theme from disk, including any palette changes made while relaxing,

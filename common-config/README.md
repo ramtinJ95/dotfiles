@@ -108,7 +108,7 @@ palette or polling extension is tracked here. Restart existing Pi sessions after
 setup. macOS and non-Omarchy machines retain their local theme as before.
 
 Inside Herdr, the `herdr-appearance` Pi extension temporarily uses warm, readable
-code panels in Cosy/Cabin layouts. Leaving them restores the native work theme;
+code panels in the Cosy Café layout. Leaving it restores the native work theme;
 the saved Pi preference and generated Omarchy/Macarchy palettes are unchanged.
 **Ctrl-f r** opens Herdr's layout/look picker after `scripts/herdr-mods install`.
 See [work/café looks](herdr-app/mods/appearance/README.md).

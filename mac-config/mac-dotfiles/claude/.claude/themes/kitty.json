@@ -1,0 +1,5 @@
+{
+  "name": "Kitty",
+  "base": "dark-ansi",
+  "overrides": { "composerSidebarBackground": "ansi:black" }
+}

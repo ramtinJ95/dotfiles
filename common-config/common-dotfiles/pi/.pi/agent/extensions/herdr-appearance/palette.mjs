@@ -1,7 +1,5 @@
-// Warm, readable Pi surfaces for Herdr's café layouts. In particular, nested
+// Warm, readable Pi surfaces for Herdr's Cosy Café layout. In particular, nested
 // Codex output uses `dim`, so it must remain readable inside every tool panel.
-export const RELAXED_LAYOUTS = new Set(["cosy", "cabin"]);
-
 export function relaxedColors() {
   const foreground = {};
   const group = (color, names) => names.split(" ").forEach(name => { foreground[name] = color; });

@@ -428,11 +428,121 @@
           }
         },
         "type": "chat"
+      },
+      {
+        "id": "gpt-6.2-astra",
+        "name": "GPT-6.2 Astra",
+        "api": "openai-codex-responses",
+        "provider": "openai-codex",
+        "baseUrl": "https://chatgpt.com/backend-api",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 8,
+          "output": 40,
+          "cacheRead": 0.4,
+          "cacheWrite": 10,
+          "tiers": [
+            {
+              "inputTokensAbove": 272000,
+              "input": 16,
+              "output": 60,
+              "cacheRead": 0.8,
+              "cacheWrite": 20
+            }
+          ]
+        },
+        "contextWindow": 272000,
+        "maxTokens": 128000,
+        "thinkingLevelMap": {
+          "off": null,
+          "minimal": "low",
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh",
+          "max": "max"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true,
+          "supportsAdditionalTools": true,
+          "supportsToolSearch": true,
+          "supportsMidConvoSystemMessages": true
+        },
+        "inputLimits": {
+          "images": {
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
+        },
+        "type": "chat"
+      },
+      {
+        "id": "gpt-6.2-sol",
+        "name": "GPT-6.2 Sol",
+        "api": "openai-codex-responses",
+        "provider": "openai-codex",
+        "baseUrl": "https://chatgpt.com/backend-api",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 2,
+          "output": 10,
+          "cacheRead": 0.1,
+          "cacheWrite": 2.5,
+          "tiers": [
+            {
+              "inputTokensAbove": 272000,
+              "input": 4,
+              "output": 15,
+              "cacheRead": 0.2,
+              "cacheWrite": 5
+            }
+          ]
+        },
+        "contextWindow": 500000,
+        "maxTokens": 128000,
+        "thinkingLevelMap": {
+          "off": null,
+          "minimal": "low",
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh",
+          "max": "max"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true,
+          "supportsAdditionalTools": true,
+          "supportsToolSearch": true,
+          "supportsMidConvoSystemMessages": true
+        },
+        "inputLimits": {
+          "images": {
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
+        },
+        "type": "chat"
       }
     ],
-    "lastModified": 1793966526000,
-    "etag": "W/\"95a2e44a856349a2e4505efd9edc3494\"",
-    "checkedAt": 1793971255685
+    "lastModified": 1795000942000,
+    "etag": "W/\"aaf342fe216399116c33de3f80ff2f3e\"",
+    "checkedAt": 1795003444517
   },
   "berget": {
     "models": [
@@ -618,7 +728,7 @@
     ],
     "lastModified": 1792665058000,
     "etag": "W/\"442429959944e1c3cc56a984d9f6051a\"",
-    "checkedAt": 1794381985132
+    "checkedAt": 1795461444472
   },
   "amazon-bedrock": {
     "models": [
@@ -8511,6 +8621,6 @@
     ],
     "lastModified": 1794318915000,
     "etag": "W/\"df29ce52198fbf32d274b2cdcaf27bb8\"",
-    "checkedAt": 1794383244378
+    "checkedAt": 1795454785156
   }
 }

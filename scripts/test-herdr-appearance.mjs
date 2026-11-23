@@ -17,13 +17,15 @@ test("relaxed code panels are warm and nested output stays readable", () => {
   }
 });
 
-test("picker offers only Work, Cosy Cabin and Cosy Café, hiding defaults and old copies", () => {
-  const names = ["main", "main-copy", "terminals", "cabin", "cosy", "main-personal", "win98"];
+test("picker offers only Work and Cosy Café, hiding defaults and old copies", () => {
+  const names = ["main", "main-copy", "terminals", "cosy", "main-personal", "win98"];
   const rows = layoutChoices(names);
-  assert.deepEqual(rows.map(r => r.label), ["Work", "Cosy Cabin", "Cosy Café"]);
-  assert.deepEqual(rows.map(r => r.name), ["main-personal", "cabin", "cosy"]);
+  assert.deepEqual(rows.map(r => r.label), ["Work", "Cosy Café"]);
+  assert.deepEqual(rows.map(r => r.name), ["main-personal", "cosy"]);
   assert.equal(rows.filter(r => r.work).length, 1);
   assert.equal(layoutChoices(["main", "cosy"])[0].name, "main");
+  assert.deepEqual(layoutChoices(["cosy"]).map(r => r.name), ["cosy"]);
+  assert.deepEqual(layoutChoices(["terminals", "main-copy"]), []);
 });
 
 test("native palette reload resolves aliases and preserves literals; invalid references are explicit", () => {
@@ -37,12 +39,12 @@ test("native palette reload resolves aliases and preserves literals; invalid ref
   assert.throws(() => nativeColors(null), /no colors/);
 });
 
-test("picker restores native work colors on either platform and warm colors in both cafés", () => {
-  const rows = layoutChoices(["main-personal", "cosy", "cabin"]);
+test("picker restores native work colors on either platform and warm colors in Cosy Café", () => {
+  const rows = layoutChoices(["main-personal", "cosy"]);
   for (const native of ["omarchy", "macarchy-current", "macarchy"]) {
     const themes = [{ name: native }, { name: "cosy" }];
     assert.equal(paletteFor(rows[0], themes, "cosy", true), native);
-    for (const row of rows.slice(1, 3)) assert.equal(paletteFor(row, themes, native, true), "cosy");
+    assert.equal(paletteFor(rows[1], themes, native, true), "cosy");
   }
   assert.equal(paletteFor(rows[0], [{ name: "ink" }], { light: "paper", dark: "ink" }, true), "ink");
   assert.throws(() => paletteFor(rows[1], [], "ink", true), /cosy palette is missing/);
@@ -111,8 +113,8 @@ test("Pi bridge is session-local, reacts to layout changes, restores latest work
     h.start();
     assert.equal(h.theme.name, "herdr-relaxed");
     assert.ok(h.calls.every(value => typeof value === "object"), "never save the relaxed palette by name");
-    h.switch("cabin");
-    assert.equal(h.calls.length, 1, "no redundant apply between warm layouts");
+    h.switch("cosy");
+    assert.equal(h.calls.length, 1, "no redundant apply when the layout is unchanged");
     h.theme = h.work; // Pi's /reload reapplies saved settings after session_start.
     h.reconcile();
     assert.equal(h.theme.name, "herdr-relaxed", "repair a post-startup native reset without changing layout");
@@ -202,7 +204,7 @@ const pickerSource = (await readFile(pickerURL, "utf8"))
 const { default: Appearance } = await import(moduleURL(pickerSource));
 
 function picker() {
-  const h = { layouts: ["main-personal", "cosy", "cabin"], themes: [{ name: "cosy" }, { name: "omarchy" }],
+  const h = { layouts: ["main-personal", "cosy"], themes: [{ name: "cosy" }, { name: "omarchy" }],
     layout: "cosy", commands: [], closed: [], errors: [], tasks: [], scrolled: [], stopped: 0 };
   globalThis.__herdrPickerTest = h;
   h.cx = { notify() {}, stop_propagation() { h.stopped++; }, focus_handle: () => ({ focus() {} }), spawn: fn => h.tasks.push(fn(h.cx)) };
@@ -212,9 +214,8 @@ function picker() {
 
 test("real picker keyboard handler applies layout then native palette; Escape does not apply", async () => {
   const h = picker();
-  assert.equal(h.view.at, 2, "current café is selected initially");
+  assert.equal(h.view.at, 1, "current café is selected initially");
   const root = h.view.render(h.cx);
-  root.handlers.key({ key: "up" }, h.cx);
   root.handlers.key({ key: "up" }, h.cx);
   root.handlers.key({ key: "enter" }, h.cx);
   root.handlers.key({ key: "enter" }, h.cx);
@@ -237,16 +238,18 @@ test("picker j/k wraps and scrolls selection, then Enter applies the chosen layo
   key({ key: "j", keystroke: "j" }, h.cx);
   assert.equal(h.view.at, 0, "j wraps from the last row to Work");
   key({ key: "k", keystroke: "k" }, h.cx);
-  assert.equal(h.view.at, 2, "k wraps from Work to the last row");
+  assert.equal(h.view.at, 1, "k wraps from Work to the last row");
   key({ key: "k", keystroke: "k" }, h.cx);
+  assert.equal(h.view.at, 0);
+  key({ key: "j", keystroke: "j" }, h.cx);
   assert.equal(h.view.at, 1);
-  assert.deepEqual(h.scrolled, [0, 2, 1]);
+  assert.deepEqual(h.scrolled, [0, 1, 0, 1]);
   assert.deepEqual(h.commands, [], "movement alone must not switch layouts");
-  assert.equal(h.stopped, 3, "handled motions stay inside the popup");
+  assert.equal(h.stopped, 4, "handled motions stay inside the popup");
   key({ key: "enter", keystroke: "enter" }, h.cx);
   await Promise.all(h.tasks);
   assert.deepEqual(h.commands, [
-    { name: "layout.switch", args: { name: "cabin" } },
+    { name: "layout.switch", args: { name: "cosy" } },
     { name: "app.theme", args: { name: "cosy" } },
   ]);
 });
@@ -257,7 +260,7 @@ test("picker does not capture modified j/k shortcuts or unrelated typing", () =>
   for (const keystroke of ["ctrl-j", "alt-k", "cmd-j", "shift-k", "x"]) {
     key({ key: keystroke.split("-").at(-1), keystroke }, h.cx);
   }
-  assert.equal(h.view.at, 2);
+  assert.equal(h.view.at, 1);
   assert.equal(h.stopped, 0);
   assert.deepEqual(h.scrolled, []);
   assert.deepEqual(h.commands, []);
